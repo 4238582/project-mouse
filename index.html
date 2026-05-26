@@ -700,6 +700,33 @@
       <button class="btn btn-primary" onclick="saveFirebaseConfig()" style="margin-top:8px;">☁️ CONNECT FIREBASE</button>
     </div>
 
+    <!-- UPDATE SECTION -->
+    <div class="config-screen" style="margin-top:16px;border-color:#2a2a4a;">
+      <div class="config-title" style="color:#88aaff;">🔄 App Updates</div>
+      <div class="config-desc">Check for the latest version of Project Mouse. Updates install automatically — no reinstall needed!</div>
+      
+      <div style="display:flex;justify-content:space-between;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;">
+        <div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px;">Current Version</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--accent);" id="currentVersion">v1.1.0</div>
+        </div>
+        <div id="updateBadge" style="display:none;background:var(--success);color:#000;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;">UPDATE AVAILABLE</div>
+        <div id="upToDateBadge" style="display:none;background:rgba(0,230,118,0.15);color:var(--success);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid var(--success);">✅ UP TO DATE</div>
+      </div>
+
+      <div id="updateInfo" style="display:none;background:rgba(0,230,118,0.05);border:1px solid var(--success);border-radius:10px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">New Version</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--success);" id="newVersion"></div>
+        <div style="font-size:12px;color:#aaa;margin-top:8px;" id="changelogText"></div>
+      </div>
+
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-secondary" style="flex:1;" onclick="checkForUpdates()">🔍 Check for Updates</button>
+        <button class="btn btn-primary" style="flex:1;display:none;" id="applyUpdateBtn" onclick="applyUpdate()">⬇️ APPLY UPDATE</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px;" id="lastChecked"></div>
+    </div>
+
     <div class="config-screen" style="margin-top:16px;">
       <div class="config-title" style="color:var(--danger);">Danger Zone</div>
       <div class="config-desc">Clear all local data. This cannot be undone.</div>
@@ -984,6 +1011,91 @@ function showToast(msg) {
   window._toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
 }
 
+// =================== AUTO UPDATE ===================
+const CURRENT_VERSION = '1.1.0';
+const VERSION_URL = 'https://majestic-elf-6ab83b.netlify.app/version.json';
+
+async function checkForUpdates() {
+  showToast('🔍 Checking for updates...');
+  document.getElementById('updateBadge').style.display = 'none';
+  document.getElementById('upToDateBadge').style.display = 'none';
+  document.getElementById('updateInfo').style.display = 'none';
+  document.getElementById('applyUpdateBtn').style.display = 'none';
+
+  try {
+    const res = await fetch(VERSION_URL + '?t=' + Date.now());
+    const data = await res.json();
+    const lastCheckedEl = document.getElementById('lastChecked');
+    lastCheckedEl.textContent = 'Last checked: ' + new Date().toLocaleTimeString();
+    localStorage.setItem('pm_last_checked', new Date().toLocaleString());
+
+    if(isNewerVersion(data.version, CURRENT_VERSION)) {
+      // Update available!
+      document.getElementById('updateBadge').style.display = 'block';
+      document.getElementById('updateInfo').style.display = 'block';
+      document.getElementById('newVersion').textContent = 'v' + data.version;
+      document.getElementById('changelogText').textContent = '✨ ' + (data.changelog || 'New improvements available!');
+      document.getElementById('applyUpdateBtn').style.display = 'block';
+      showToast('🐭 Update available! v' + data.version);
+    } else {
+      document.getElementById('upToDateBadge').style.display = 'block';
+      showToast('✅ You have the latest version!');
+    }
+  } catch(e) {
+    showToast('⚠️ Could not check for updates. Check your connection.');
+  }
+}
+
+function isNewerVersion(remote, current) {
+  const r = remote.split('.').map(Number);
+  const c = current.split('.').map(Number);
+  for(let i = 0; i < 3; i++) {
+    if(r[i] > c[i]) return true;
+    if(r[i] < c[i]) return false;
+  }
+  return false;
+}
+
+async function applyUpdate() {
+  showToast('⬇️ Downloading update...');
+  try {
+    // Clear service worker cache so fresh files load
+    if('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      for(let reg of regs) await reg.unregister();
+    }
+    // Clear cache storage
+    const keys = await caches.keys();
+    for(let key of keys) await caches.delete(key);
+
+    showToast('✅ Update ready! Reloading...');
+    setTimeout(() => {
+      window.location.reload(true);
+    }, 1500);
+  } catch(e) {
+    // Fallback - just force reload
+    showToast('✅ Applying update...');
+    setTimeout(() => window.location.reload(true), 1000);
+  }
+}
+
+// Auto check on startup silently
+async function silentUpdateCheck() {
+  try {
+    const res = await fetch(VERSION_URL + '?t=' + Date.now());
+    const data = await res.json();
+    if(isNewerVersion(data.version, CURRENT_VERSION)) {
+      // Show subtle notification
+      const notif = document.createElement('div');
+      notif.style.cssText = 'position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:#1e1e2e;border:1px solid var(--accent);color:var(--accent);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:998;cursor:pointer;white-space:nowrap;';
+      notif.innerHTML = '🐭 Update available! Tap to install';
+      notif.onclick = () => { switchTab('setup'); notif.remove(); };
+      document.body.appendChild(notif);
+      setTimeout(() => notif.remove(), 6000);
+    }
+  } catch(e) {} // Silent fail
+}
+
 // =================== INIT ===================
 renderCars();
 setMode(currentMode);
@@ -992,6 +1104,16 @@ setMode(currentMode);
 if('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
+
+// Show current version in setup tab
+document.getElementById('currentVersion').textContent = 'v' + CURRENT_VERSION;
+
+// Show last checked time
+const lastChecked = localStorage.getItem('pm_last_checked');
+if(lastChecked) document.getElementById('lastChecked').textContent = 'Last checked: ' + lastChecked;
+
+// Silent update check on load
+setTimeout(silentUpdateCheck, 3000);
 
 // Install prompt for Android/Desktop
 let deferredPrompt;
