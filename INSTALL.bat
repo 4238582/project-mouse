@@ -15,73 +15,67 @@ echo.
 echo  Installing Project Mouse on your computer...
 echo.
 
-:: Set install location
 set INSTALL_DIR=%LOCALAPPDATA%\ProjectMouse
 
-:: Create install folder
 echo  [1/5] Creating installation folder...
 if not exist "%INSTALL_DIR%" mkdir "%INSTALL_DIR%"
-echo        Done! Installed to: %INSTALL_DIR%
+echo        Done!
 echo.
 
-:: Copy all files
 echo  [2/5] Copying application files...
 xcopy /E /I /Y "%~dp0*.*" "%INSTALL_DIR%\" >nul 2>&1
 echo        Done!
 echo.
 
-:: Create Desktop Shortcut using PowerShell
-echo  [3/5] Creating Desktop shortcut...
-powershell -Command ^
-  "$ws = New-Object -ComObject WScript.Shell; ^
-   $s = $ws.CreateShortcut('%USERPROFILE%\Desktop\Project Mouse.lnk'); ^
-   $s.TargetPath = 'chrome.exe'; ^
-   $s.Arguments = '--app=\"file:///%INSTALL_DIR:\=/%/index.html\" --window-size=430,900'; ^
-   $s.IconLocation = '%INSTALL_DIR%\ProjectMouse.ico'; ^
-   $s.Description = 'Project Mouse - Car Photo Manager'; ^
-   $s.Save()"
-echo        Desktop shortcut created!
+echo  [3/5] Creating Desktop shortcut with icon...
+powershell -NoProfile -Command ^
+  "$ico = '%INSTALL_DIR%\ProjectMouse.ico';" ^
+  "$ws = New-Object -ComObject WScript.Shell;" ^
+  "$s = $ws.CreateShortcut([Environment]::GetFolderPath('Desktop') + '\Project Mouse.lnk');" ^
+  "$s.TargetPath = (Get-Command chrome.exe -ErrorAction SilentlyContinue).Source;" ^
+  "if (-not $s.TargetPath) { $s.TargetPath = 'C:\Program Files\Google\Chrome\Application\chrome.exe' };" ^
+  "$s.Arguments = '--app=""file:///%INSTALL_DIR:\=/%/index.html"" --window-size=430,900';" ^
+  "$s.IconLocation = $ico + ',0';" ^
+  "$s.WorkingDirectory = '%INSTALL_DIR%';" ^
+  "$s.Description = 'Project Mouse - Car Photo Manager';" ^
+  "$s.Save();" ^
+  "Write-Host 'Shortcut created with icon'"
+echo        Desktop shortcut created with chibi mouse icon!
 echo.
 
-:: Create Start Menu shortcut
 echo  [4/5] Adding to Start Menu...
 if not exist "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Project Mouse" ^
   mkdir "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Project Mouse"
-powershell -Command ^
-  "$ws = New-Object -ComObject WScript.Shell; ^
-   $s = $ws.CreateShortcut('%APPDATA%\Microsoft\Windows\Start Menu\Programs\Project Mouse\Project Mouse.lnk'); ^
-   $s.TargetPath = 'chrome.exe'; ^
-   $s.Arguments = '--app=\"file:///%INSTALL_DIR:\=/%/index.html\" --window-size=430,900'; ^
-   $s.IconLocation = '%INSTALL_DIR%\ProjectMouse.ico'; ^
-   $s.Description = 'Project Mouse - Car Photo Manager'; ^
-   $s.Save()"
+powershell -NoProfile -Command ^
+  "$ico = '%INSTALL_DIR%\ProjectMouse.ico';" ^
+  "$ws = New-Object -ComObject WScript.Shell;" ^
+  "$s = $ws.CreateShortcut('%APPDATA%\Microsoft\Windows\Start Menu\Programs\Project Mouse\Project Mouse.lnk');" ^
+  "$s.TargetPath = 'C:\Program Files\Google\Chrome\Application\chrome.exe';" ^
+  "$s.Arguments = '--app=""file:///%INSTALL_DIR:\=/%/index.html"" --window-size=430,900';" ^
+  "$s.IconLocation = $ico + ',0';" ^
+  "$s.Description = 'Project Mouse - Car Photo Manager';" ^
+  "$s.Save()"
 echo        Start Menu entry added!
 echo.
 
-:: Create uninstaller
-echo  [5/5] Creating uninstaller...
-echo @echo off > "%INSTALL_DIR%\Uninstall Project Mouse.bat"
-echo title Uninstall Project Mouse >> "%INSTALL_DIR%\Uninstall Project Mouse.bat"
-echo echo Uninstalling Project Mouse... >> "%INSTALL_DIR%\Uninstall Project Mouse.bat"
-echo del "%USERPROFILE%\Desktop\Project Mouse.lnk" >> "%INSTALL_DIR%\Uninstall Project Mouse.bat"
-echo rmdir /S /Q "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Project Mouse" >> "%INSTALL_DIR%\Uninstall Project Mouse.bat"
-echo rmdir /S /Q "%INSTALL_DIR%" >> "%INSTALL_DIR%\Uninstall Project Mouse.bat"
-echo echo Done! Project Mouse has been uninstalled. >> "%INSTALL_DIR%\Uninstall Project Mouse.bat"
-echo pause >> "%INSTALL_DIR%\Uninstall Project Mouse.bat"
-echo        Uninstaller created!
+echo  [5/5] Finalizing...
+:: Rebuild icon cache so Windows shows it immediately
+ie4uinit.exe -show >nul 2>&1
+taskkill /IM explorer.exe /F >nul 2>&1
+start explorer.exe >nul 2>&1
+echo        Icon cache refreshed!
 echo.
 
 echo  ============================================================
 echo.
 echo    Project Mouse installed successfully!
 echo.
-echo    - Desktop shortcut created
-echo    - Start Menu entry added  
-echo    - Double-click the icon on your Desktop to launch
+echo    - Chibi mouse icon on your Desktop
+echo    - Added to Start Menu
+echo    - Double-click the desktop icon to launch!
 echo.
 echo  ============================================================
 echo.
 pause
 
-:: Launch the app after install
-start "" "chrome.exe" --app="file:///%INSTALL_DIR:\=/%/index.html" --window-size=430,900
+start "" "C:\Program Files\Google\Chrome\Application\chrome.exe" --app="file:///%INSTALL_DIR:\=/%/index.html" --window-size=430,900
