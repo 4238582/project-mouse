@@ -752,8 +752,94 @@
 <div class="toast" id="toast"></div>
 
 <script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDOChD59h6qGKNA0rf5_gO53ZMAhNmftvo",
+  authDomain: "project-mouse-b7b28.firebaseapp.com",
+  projectId: "project-mouse-b7b28",
+  storageBucket: "project-mouse-b7b28.firebasestorage.app",
+  messagingSenderId: "469755055370",
+  appId: "1:469755055370:web:ab291f20b371d0abbbfef3"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+let currentUser = null;
+
+onAuthStateChanged(auth, async (user) => {
+  currentUser = user;
+  const loginBtn = document.getElementById('loginBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const userInfo = document.getElementById('userInfo');
+  const cloudLoggedOut = document.getElementById('cloudLoggedOut');
+  const cloudLoggedIn = document.getElementById('cloudLoggedIn');
+  if(user) {
+    if(loginBtn) loginBtn.style.display = 'none';
+    if(logoutBtn) logoutBtn.style.display = 'flex';
+    if(userInfo) { userInfo.textContent = '☁️ ' + user.displayName; userInfo.style.display = 'block'; }
+    if(cloudLoggedOut) cloudLoggedOut.style.display = 'none';
+    if(cloudLoggedIn) cloudLoggedIn.style.display = 'block';
+    if(currentMode === 'cloud') await syncFromCloud();
+  } else {
+    if(loginBtn) loginBtn.style.display = 'flex';
+    if(logoutBtn) logoutBtn.style.display = 'none';
+    if(userInfo) userInfo.style.display = 'none';
+    if(cloudLoggedOut) cloudLoggedOut.style.display = 'block';
+    if(cloudLoggedIn) cloudLoggedIn.style.display = 'none';
+  }
+});
+
+window.googleLogin = async function() {
+  try {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+    showToast('✅ Signed in! Syncing your cars...');
+    setMode('cloud');
+  } catch(e) {
+    showToast('⚠️ Login failed: ' + e.message);
+  }
+}
+
+window.googleLogout = async function() {
+  await signOut(auth);
+  showToast('👋 Signed out!');
+  setMode('local');
+}
+
+window.syncToCloud = async function() {
+  if(!currentUser) { showToast('⚠️ Please sign in first!'); return; }
+  try {
+    const userDoc = doc(db, 'users', currentUser.uid, 'data', 'inventory');
+    await setDoc(userDoc, { cars: JSON.stringify(cars), updatedAt: new Date().toISOString() });
+    showToast('☁️ Synced to cloud!');
+  } catch(e) {
+    showToast('⚠️ Sync failed: ' + e.message);
+  }
+}
+
+window.syncFromCloud = async function() {
+  if(!currentUser) { showToast('⚠️ Please sign in first!'); return; }
+  try {
+    const userDoc = doc(db, 'users', currentUser.uid, 'data', 'inventory');
+    const snap = await getDoc(userDoc);
+    if(snap.exists() && snap.data().cars) {
+      cars = JSON.parse(snap.data().cars);
+      saveCars();
+      renderCars();
+      showToast('☁️ Cars loaded from cloud!');
+    } else {
+      showToast('☁️ No cloud data found yet.');
+    }
+  } catch(e) {
+    showToast('⚠️ Load failed: ' + e.message);
+  }
+}
+
 // =================== STATE ===================
-let cars = JSON.parse(localStorage.getItem('pm_cars') || '[]');
 let currentMode = localStorage.getItem('pm_mode') || 'local';
 
 // =================== TABS ===================
@@ -991,15 +1077,6 @@ function setMode(mode) {
   }
 }
 
-function saveFirebaseConfig() {
-  const key = document.getElementById('fbApiKey').value.trim();
-  const proj = document.getElementById('fbProjectId').value.trim();
-  const bucket = document.getElementById('fbBucket').value.trim();
-  if(!key || !proj || !bucket) { showToast('⚠️ Fill in all Firebase fields'); return; }
-  localStorage.setItem('pm_fb', JSON.stringify({key, proj, bucket}));
-  showToast('☁️ Firebase config saved! Full sync coming in next update.');
-}
-
 function clearAllData() {
   if(!confirm('Delete ALL cars and photos? This cannot be undone.')) return;
   cars = [];
@@ -1114,89 +1191,7 @@ async function silentUpdateCheck() {
   } catch(e) {} // Silent fail
 }
 
-// =================== FIREBASE ===================
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDOChD59h6qGKNA0rf5_gO53ZMAhNmftvo",
-  authDomain: "project-mouse-b7b28.firebaseapp.com",
-  projectId: "project-mouse-b7b28",
-  storageBucket: "project-mouse-b7b28.firebasestorage.app",
-  messagingSenderId: "469755055370",
-  appId: "1:469755055370:web:ab291f20b371d0abbbfef3"
-};
-
-const fbApp = initializeApp(firebaseConfig);
-const auth = getAuth(fbApp);
-const db = getFirestore(fbApp);
-let currentUser = null;
-
-// Auth state
-onAuthStateChanged(auth, async (user) => {
-  currentUser = user;
-  if(user) {
-    document.getElementById('loginBtn').style.display = 'none';
-    document.getElementById('logoutBtn').style.display = 'flex';
-    document.getElementById('userInfo').textContent = '☁️ ' + user.displayName;
-    document.getElementById('userInfo').style.display = 'block';
-    if(currentMode === 'cloud') await syncFromCloud();
-  } else {
-    document.getElementById('loginBtn').style.display = 'flex';
-    document.getElementById('logoutBtn').style.display = 'none';
-    document.getElementById('userInfo').style.display = 'none';
-  }
-});
-
-async function googleLogin() {
-  try {
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
-    showToast('✅ Signed in! Syncing your cars...');
-    setMode('cloud');
-  } catch(e) {
-    showToast('⚠️ Login failed. Try again.');
-  }
-}
-
-async function googleLogout() {
-  await signOut(auth);
-  showToast('👋 Signed out!');
-  setMode('local');
-}
-
-async function syncToCloud() {
-  if(!currentUser) return;
-  try {
-    const userDoc = doc(db, 'users', currentUser.uid, 'data', 'inventory');
-    // Store cars without photo data to stay within limits
-    const carsToSync = cars.map(c => ({...c, photos: c.photos.map(p => ({...p, data: p.data ? p.data.substring(0,100) + '...' : ''}))}));
-    await setDoc(userDoc, { cars: JSON.stringify(cars), updatedAt: new Date().toISOString() });
-    showToast('☁️ Synced to cloud!');
-  } catch(e) {
-    showToast('⚠️ Sync failed: ' + e.message);
-  }
-}
-
-async function syncFromCloud() {
-  if(!currentUser) return;
-  try {
-    const userDoc = doc(db, 'users', currentUser.uid, 'data', 'inventory');
-    const snap = await getDoc(userDoc);
-    if(snap.exists()) {
-      const data = snap.data();
-      if(data.cars) {
-        cars = JSON.parse(data.cars);
-        saveCars();
-        renderCars();
-        showToast('☁️ Cars loaded from cloud!');
-      }
-    }
-  } catch(e) {
-    showToast('⚠️ Could not load from cloud.');
-  }
-}
 
 // =================== INIT ===================
 renderCars();
