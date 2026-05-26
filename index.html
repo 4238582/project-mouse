@@ -56,14 +56,21 @@
   }
 
   .logo-icon {
-    width: 36px;
-    height: 36px;
-    background: var(--accent);
-    border-radius: 8px;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    background: white;
+    flex-shrink: 0;
+  }
+
+  .logo-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .logo-text {
@@ -581,7 +588,7 @@
 
 <header>
   <div class="logo">
-    <div class="logo-icon">🖱️</div>
+    <div class="logo-icon"><img src="icon-192.png" alt="Project Mouse"></div>
     <div>
       <div class="logo-text">Project Mouse</div>
       <div class="logo-sub">Car Photo Manager</div>
