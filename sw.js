@@ -1,7 +1,10 @@
-const CACHE_NAME = 'project-mouse-v1';
+const CACHE_NAME = 'project-mouse-v3';
 const ASSETS = [
   './index.html',
-  './manifest.json'
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
+  './mouse.png'
 ];
 
 self.addEventListener('install', event => {
@@ -21,6 +24,11 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+  // Always fetch fresh from network for HTML
+  if(event.request.url.endsWith('.html') || event.request.url.endsWith('/')) {
+    event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
+    return;
+  }
   event.respondWith(
     caches.match(event.request).then(cached => cached || fetch(event.request))
   );
