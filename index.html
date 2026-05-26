@@ -1194,6 +1194,21 @@ async function silentUpdateCheck() {
 
 
 // =================== INIT ===================
+// Expose all functions to window for HTML onclick handlers
+window.switchTab = switchTab;
+window.addCar = addCar;
+window.toggleCard = toggleCard;
+window.handleUpload = handleUpload;
+window.deletePhoto = deletePhoto;
+window.viewPhoto = viewPhoto;
+window.deleteCar = deleteCar;
+window.copyCarInfo = copyCarInfo;
+window.setMode = setMode;
+window.clearAllData = clearAllData;
+window.checkForUpdates = checkForUpdates;
+window.applyUpdate = applyUpdate;
+window.installApp = installApp;
+
 renderCars();
 setMode(currentMode);
 
