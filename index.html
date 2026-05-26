@@ -599,6 +599,15 @@
     <div class="stat">Photos: <span id="totalPhotos">0</span></div>
     <div class="stat">Done: <span id="doneCars">0</span></div>
   </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div id="userInfo" style="display:none;font-size:11px;color:var(--accent);"></div>
+    <button id="loginBtn" onclick="googleLogin()" style="display:flex;align-items:center;gap:6px;background:white;color:#000;border:none;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;">
+      <img src="https://www.google.com/favicon.ico" width="14"> Sign in
+    </button>
+    <button id="logoutBtn" onclick="googleLogout()" style="display:none;align-items:center;gap:6px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);padding:6px 12px;border-radius:20px;font-size:12px;cursor:pointer;">
+      Sign out
+    </button>
+  </div>
 </header>
 
 <div class="tabs">
@@ -683,28 +692,25 @@
     </div>
 
     <div id="cloudSetup" class="config-screen" style="display:none;">
-      <div class="config-title">☁️ Cloud Sync Setup</div>
-      <div class="config-desc">Follow these steps to enable real-time sync between your iPhone and computer. It's free and takes about 5 minutes.</div>
-      <ul class="step-list">
-        <li><div class="step-num">1</div><div>Go to <span class="highlight">firebase.google.com</span> and sign in with your Google account</div></li>
-        <li><div class="step-num">2</div><div>Click <span class="highlight">Create a project</span> → name it "ProjectMouse" → Continue</div></li>
-        <li><div class="step-num">3</div><div>Go to <span class="highlight">Build → Firestore Database</span> → Create database → Start in test mode</div></li>
-        <li><div class="step-num">4</div><div>Go to <span class="highlight">Build → Storage</span> → Get started → Done</div></li>
-        <li><div class="step-num">5</div><div>Go to <span class="highlight">Project Settings</span> → Your apps → Web icon → Register app → Copy the config and paste below</div></li>
-      </ul>
-      <div class="input-group">
-        <label>Firebase API Key</label>
-        <input type="text" id="fbApiKey" placeholder="AIza...">
+      <div class="config-title">☁️ Cloud Sync</div>
+      <div class="config-desc">Sign in with Google to sync your cars and photos between your iPhone and computer in real time!</div>
+      
+      <div id="cloudLoggedOut">
+        <button onclick="googleLogin()" style="width:100%;padding:14px;background:white;color:#000;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">
+          <img src="https://www.google.com/favicon.ico" width="20"> Sign in with Google
+        </button>
       </div>
-      <div class="input-group">
-        <label>Firebase Project ID</label>
-        <input type="text" id="fbProjectId" placeholder="projectmouse-xxxxx">
+
+      <div id="cloudLoggedIn" style="display:none;">
+        <div style="background:rgba(0,230,118,0.1);border:1px solid var(--success);border-radius:10px;padding:14px;margin-bottom:14px;text-align:center;">
+          <div style="color:var(--success);font-weight:700;">✅ Cloud Sync Active!</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px;">Your cars sync between all devices</div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button onclick="syncToCloud()" class="btn btn-primary" style="flex:1;">☁️ SYNC NOW</button>
+          <button onclick="syncFromCloud()" class="btn btn-secondary" style="flex:1;">⬇️ Load from Cloud</button>
+        </div>
       </div>
-      <div class="input-group">
-        <label>Firebase Storage Bucket</label>
-        <input type="text" id="fbBucket" placeholder="projectmouse-xxxxx.appspot.com">
-      </div>
-      <button class="btn btn-primary" onclick="saveFirebaseConfig()" style="margin-top:8px;">☁️ CONNECT FIREBASE</button>
     </div>
 
     <!-- UPDATE SECTION -->
@@ -745,7 +751,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script>
+<script type="module">
 // =================== STATE ===================
 let cars = JSON.parse(localStorage.getItem('pm_cars') || '[]');
 let currentMode = localStorage.getItem('pm_mode') || 'local';
@@ -978,6 +984,11 @@ function setMode(mode) {
   document.getElementById('modeCloud').classList.toggle('active', mode==='cloud');
   document.getElementById('localInfo').style.display = mode==='local' ? 'block' : 'none';
   document.getElementById('cloudSetup').style.display = mode==='cloud' ? 'block' : 'none';
+  if(mode==='cloud') {
+    const loggedIn = !!currentUser;
+    document.getElementById('cloudLoggedOut').style.display = loggedIn ? 'none' : 'block';
+    document.getElementById('cloudLoggedIn').style.display = loggedIn ? 'block' : 'none';
+  }
 }
 
 function saveFirebaseConfig() {
@@ -1101,6 +1112,90 @@ async function silentUpdateCheck() {
       setTimeout(() => notif.remove(), 6000);
     }
   } catch(e) {} // Silent fail
+}
+
+// =================== FIREBASE ===================
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDOChD59h6qGKNA0rf5_gO53ZMAhNmftvo",
+  authDomain: "project-mouse-b7b28.firebaseapp.com",
+  projectId: "project-mouse-b7b28",
+  storageBucket: "project-mouse-b7b28.firebasestorage.app",
+  messagingSenderId: "469755055370",
+  appId: "1:469755055370:web:ab291f20b371d0abbbfef3"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+let currentUser = null;
+
+// Auth state
+onAuthStateChanged(auth, async (user) => {
+  currentUser = user;
+  if(user) {
+    document.getElementById('loginBtn').style.display = 'none';
+    document.getElementById('logoutBtn').style.display = 'flex';
+    document.getElementById('userInfo').textContent = '☁️ ' + user.displayName;
+    document.getElementById('userInfo').style.display = 'block';
+    if(currentMode === 'cloud') await syncFromCloud();
+  } else {
+    document.getElementById('loginBtn').style.display = 'flex';
+    document.getElementById('logoutBtn').style.display = 'none';
+    document.getElementById('userInfo').style.display = 'none';
+  }
+});
+
+async function googleLogin() {
+  try {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+    showToast('✅ Signed in! Syncing your cars...');
+    setMode('cloud');
+  } catch(e) {
+    showToast('⚠️ Login failed. Try again.');
+  }
+}
+
+async function googleLogout() {
+  await signOut(auth);
+  showToast('👋 Signed out!');
+  setMode('local');
+}
+
+async function syncToCloud() {
+  if(!currentUser) return;
+  try {
+    const userDoc = doc(db, 'users', currentUser.uid, 'data', 'inventory');
+    // Store cars without photo data to stay within limits
+    const carsToSync = cars.map(c => ({...c, photos: c.photos.map(p => ({...p, data: p.data ? p.data.substring(0,100) + '...' : ''}))}));
+    await setDoc(userDoc, { cars: JSON.stringify(cars), updatedAt: new Date().toISOString() });
+    showToast('☁️ Synced to cloud!');
+  } catch(e) {
+    showToast('⚠️ Sync failed: ' + e.message);
+  }
+}
+
+async function syncFromCloud() {
+  if(!currentUser) return;
+  try {
+    const userDoc = doc(db, 'users', currentUser.uid, 'data', 'inventory');
+    const snap = await getDoc(userDoc);
+    if(snap.exists()) {
+      const data = snap.data();
+      if(data.cars) {
+        cars = JSON.parse(data.cars);
+        saveCars();
+        renderCars();
+        showToast('☁️ Cars loaded from cloud!');
+      }
+    }
+  } catch(e) {
+    showToast('⚠️ Could not load from cloud.');
+  }
 }
 
 // =================== INIT ===================
