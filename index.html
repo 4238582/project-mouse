@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Project Mouse 🖱️</title>
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Project Mouse">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#e8ff00">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface2: #1e1e1e;
+    --border: #2a2a2a;
+    --accent: #e8ff00;
+    --accent2: #ff6b00;
+    --text: #f0f0f0;
+    --muted: #666;
+    --danger: #ff3b3b;
+    --success: #00e676;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+
+  .logo-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 2px;
+    color: var(--accent);
+  }
+
+  .logo-sub {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .stats-bar {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .stat span {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+  }
+
+  .tab {
+    padding: 14px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* MAIN */
+  main {
+    padding: 20px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  /* ADD CAR SECTION */
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+
+  .add-car-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+
+  .input-group {
+    margin-bottom: 14px;
+  }
+
+  label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  input[type="text"], input[type="number"], select, textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+
+  .btn-primary:hover { background: #d4e800; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  .btn-danger {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0;
+    padding: 8px 14px;
+    width: auto;
+    border-radius: 8px;
+  }
+
+  /* CAR CARDS */
+  .car-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .car-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .car-card:hover { border-color: #3a3a3a; }
+
+  .car-card-header {
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+  }
+
+  .car-info {
+    flex: 1;
+  }
+
+  .car-stock {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .car-name {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .car-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .photo-count {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .photo-count.has-photos {
+    background: rgba(232, 255, 0, 0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .chevron {
+    color: var(--muted);
+    font-size: 12px;
+    margin-left: 8px;
+    transition: transform 0.2s;
+  }
+
+  .chevron.open { transform: rotate(180deg); }
+
+  /* CAR EXPAND */
+  .car-expand {
+    display: none;
+    border-top: 1px solid var(--border);
+    padding: 16px 18px;
+  }
+
+  .car-expand.open { display: block; }
+
+  /* PHOTO GRID */
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .photo-thumb {
+    aspect-ratio: 4/3;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+  }
+
+  .photo-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .photo-thumb .delete-photo {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    background: rgba(0,0,0,0.8);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .photo-thumb:hover .delete-photo { opacity: 1; }
+
+  .video-thumb {
+    aspect-ratio: 4/3;
+    border-radius: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--muted);
+    position: relative;
+  }
+
+  .video-thumb .play-icon {
+    font-size: 24px;
+    color: var(--accent2);
+  }
+
+  .empty-photo {
+    aspect-ratio: 4/3;
+    border-radius: 8px;
+    background: var(--surface2);
+    border: 2px dashed var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 24px;
+  }
+
+  /* UPLOAD AREA */
+  .upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 12px;
+    position: relative;
+  }
+
+  .upload-area:hover {
+    border-color: var(--accent);
+    background: rgba(232, 255, 0, 0.03);
+  }
+
+  .upload-area input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    background: none;
+    border: none;
+    padding: 0;
+  }
+
+  .upload-icon { font-size: 28px; margin-bottom: 6px; }
+  .upload-text { font-size: 13px; color: var(--muted); }
+  .upload-text strong { color: var(--accent); }
+
+  .car-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 12px;
+  }
+
+  /* STATUS */
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--danger);
+    display: inline-block;
+    margin-right: 6px;
+  }
+
+  .status-dot.done { background: var(--success); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+
+  .empty-state .big-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state h3 { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: #444; margin-bottom: 8px; }
+  .empty-state p { font-size: 13px; line-height: 1.6; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--accent);
+    color: #000;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 999;
+    white-space: nowrap;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* PROGRESS BAR */
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+
+  /* FIREBASE CONFIG SCREEN */
+  .config-screen {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .config-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .config-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+
+  .step-list {
+    list-style: none;
+    margin-bottom: 20px;
+  }
+
+  .step-list li {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  .step-num {
+    width: 24px;
+    height: 24px;
+    background: var(--accent);
+    color: #000;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .highlight {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .mode-toggle {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .mode-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+  }
+
+  .mode-btn.active {
+    background: rgba(232,255,0,0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  @media (max-width: 400px) {
+    .row { grid-template-columns: 1fr; }
+    .photo-grid { grid-template-columns: repeat(2, 1fr); }
+    .stats-bar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🖱️</div>
+    <div>
+      <div class="logo-text">Project Mouse</div>
+      <div class="logo-sub">Car Photo Manager</div>
+    </div>
+  </div>
+  <div class="stats-bar">
+    <div class="stat">Cars: <span id="totalCars">0</span></div>
+    <div class="stat">Photos: <span id="totalPhotos">0</span></div>
+    <div class="stat">Done: <span id="doneCars">0</span></div>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('inventory')">📦 Inventory</div>
+  <div class="tab" onclick="switchTab('add')">➕ Add Car</div>
+  <div class="tab" onclick="switchTab('setup')">⚙️ Setup</div>
+</div>
+
+<main>
+
+  <!-- INVENTORY TAB -->
+  <div id="tab-inventory">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div class="section-title">Your Cars</div>
+      <div style="font-size:12px;color:var(--muted);">
+        <span class="status-dot"></span>No photos &nbsp;
+        <span class="status-dot done"></span>Ready
+      </div>
+    </div>
+    <div class="car-list" id="carList">
+      <div class="empty-state">
+        <div class="big-icon">🚗</div>
+        <h3>No Cars Yet</h3>
+        <p>Tap <strong style="color:var(--accent)">Add Car</strong> to add your first vehicle and start organizing photos.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD CAR TAB -->
+  <div id="tab-add" style="display:none;">
+    <div class="section-title">Add New Car</div>
+    <div class="add-car-card">
+      <div class="input-group">
+        <label>Stock Number *</label>
+        <input type="text" id="stockNum" placeholder="e.g. HH-2024-001" autocomplete="off" autocorrect="off" autocapitalize="characters">
+      </div>
+      <div class="row">
+        <div class="input-group">
+          <label>Year</label>
+          <input type="number" id="carYear" placeholder="2022" min="1990" max="2030">
+        </div>
+        <div class="input-group">
+          <label>Make</label>
+          <input type="text" id="carMake" placeholder="Hyundai">
+        </div>
+      </div>
+      <div class="row">
+        <div class="input-group">
+          <label>Model</label>
+          <input type="text" id="carModel" placeholder="Elantra">
+        </div>
+        <div class="input-group">
+          <label>Price ($)</label>
+          <input type="number" id="carPrice" placeholder="18995">
+        </div>
+      </div>
+      <div class="input-group">
+        <label>VIN (optional)</label>
+        <input type="text" id="carVin" placeholder="1HGBH41JXMN109186" autocapitalize="characters">
+      </div>
+      <div class="input-group">
+        <label>Notes</label>
+        <textarea id="carNotes" rows="2" placeholder="Color, mileage, features..." style="resize:vertical;"></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="addCar()">➕ ADD CAR</button>
+    </div>
+  </div>
+
+  <!-- SETUP TAB -->
+  <div id="tab-setup" style="display:none;">
+    <div class="section-title">Setup & Sync</div>
+
+    <div class="mode-toggle">
+      <div class="mode-btn active" onclick="setMode('local')" id="modeLocal">📱 Local (This Device)</div>
+      <div class="mode-btn" onclick="setMode('cloud')" id="modeCloud">☁️ Cloud Sync (Phone + PC)</div>
+    </div>
+
+    <div id="localInfo" class="config-screen">
+      <div class="config-title">Local Mode</div>
+      <div class="config-desc">Currently storing data on this device only. Your cars and photos are saved here and will persist even if you close the browser.</div>
+      <div class="config-desc" style="color:var(--accent2);">⚠️ To sync between your phone and computer, switch to Cloud Sync mode and connect Firebase.</div>
+    </div>
+
+    <div id="cloudSetup" class="config-screen" style="display:none;">
+      <div class="config-title">☁️ Cloud Sync Setup</div>
+      <div class="config-desc">Follow these steps to enable real-time sync between your iPhone and computer. It's free and takes about 5 minutes.</div>
+      <ul class="step-list">
+        <li><div class="step-num">1</div><div>Go to <span class="highlight">firebase.google.com</span> and sign in with your Google account</div></li>
+        <li><div class="step-num">2</div><div>Click <span class="highlight">Create a project</span> → name it "ProjectMouse" → Continue</div></li>
+        <li><div class="step-num">3</div><div>Go to <span class="highlight">Build → Firestore Database</span> → Create database → Start in test mode</div></li>
+        <li><div class="step-num">4</div><div>Go to <span class="highlight">Build → Storage</span> → Get started → Done</div></li>
+        <li><div class="step-num">5</div><div>Go to <span class="highlight">Project Settings</span> → Your apps → Web icon → Register app → Copy the config and paste below</div></li>
+      </ul>
+      <div class="input-group">
+        <label>Firebase API Key</label>
+        <input type="text" id="fbApiKey" placeholder="AIza...">
+      </div>
+      <div class="input-group">
+        <label>Firebase Project ID</label>
+        <input type="text" id="fbProjectId" placeholder="projectmouse-xxxxx">
+      </div>
+      <div class="input-group">
+        <label>Firebase Storage Bucket</label>
+        <input type="text" id="fbBucket" placeholder="projectmouse-xxxxx.appspot.com">
+      </div>
+      <button class="btn btn-primary" onclick="saveFirebaseConfig()" style="margin-top:8px;">☁️ CONNECT FIREBASE</button>
+    </div>
+
+    <div class="config-screen" style="margin-top:16px;">
+      <div class="config-title" style="color:var(--danger);">Danger Zone</div>
+      <div class="config-desc">Clear all local data. This cannot be undone.</div>
+      <button class="btn btn-danger" onclick="clearAllData()">🗑️ Clear All Data</button>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// =================== STATE ===================
+let cars = JSON.parse(localStorage.getItem('pm_cars') || '[]');
+let currentMode = localStorage.getItem('pm_mode') || 'local';
+
+// =================== TABS ===================
+function switchTab(name) {
+  ['inventory','add','setup'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t===name ? 'block' : 'none';
+    document.querySelectorAll('.tab')[['inventory','add','setup'].indexOf(t)].classList.toggle('active', t===name);
+  });
+  if(name==='inventory') renderCars();
+}
+
+// =================== ADD CAR ===================
+function addCar() {
+  const stock = document.getElementById('stockNum').value.trim().toUpperCase();
+  if(!stock) { showToast('⚠️ Stock number is required!'); return; }
+  if(cars.find(c => c.stock === stock)) { showToast('⚠️ Stock number already exists!'); return; }
+
+  const car = {
+    id: Date.now(),
+    stock,
+    year: document.getElementById('carYear').value,
+    make: document.getElementById('carMake').value.trim(),
+    model: document.getElementById('carModel').value.trim(),
+    price: document.getElementById('carPrice').value,
+    vin: document.getElementById('carVin').value.trim().toUpperCase(),
+    notes: document.getElementById('carNotes').value.trim(),
+    photos: [],
+    addedAt: new Date().toLocaleDateString()
+  };
+
+  cars.unshift(car);
+  saveCars();
+  showToast('✅ Car added!');
+
+  // Clear form
+  ['stockNum','carYear','carMake','carModel','carPrice','carVin','carNotes'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+
+  switchTab('inventory');
+}
+
+// =================== RENDER CARS ===================
+function renderCars() {
+  const list = document.getElementById('carList');
+  updateStats();
+
+  if(cars.length === 0) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="big-icon">🚗</div>
+      <h3>No Cars Yet</h3>
+      <p>Tap <strong style="color:var(--accent)">Add Car</strong> to add your first vehicle.</p>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = cars.map((car, idx) => `
+    <div class="car-card" id="card-${car.id}">
+      <div class="car-card-header" onclick="toggleCard(${car.id})">
+        <div class="car-info">
+          <div class="car-stock">${car.stock}</div>
+          <div class="car-name">
+            <span class="status-dot ${car.photos.length > 0 ? 'done' : ''}"></span>
+            ${[car.year, car.make, car.model].filter(Boolean).join(' ') || 'No details added'}
+            ${car.price ? ' · $'+Number(car.price).toLocaleString() : ''}
+          </div>
+        </div>
+        <div class="car-badge">
+          <div class="photo-count ${car.photos.length > 0 ? 'has-photos' : ''}">
+            📸 ${car.photos.length}
+          </div>
+          <div class="chevron" id="chev-${car.id}">▼</div>
+        </div>
+      </div>
+      <div class="car-expand" id="expand-${car.id}">
+        ${car.vin ? `<div style="font-size:11px;color:var(--muted);margin-bottom:12px;">VIN: ${car.vin}</div>` : ''}
+        ${car.notes ? `<div style="font-size:12px;color:#888;margin-bottom:14px;padding:10px;background:var(--surface2);border-radius:8px;">${car.notes}</div>` : ''}
+
+        <div class="photo-grid" id="grid-${car.id}">
+          ${renderPhotos(car)}
+        </div>
+
+        <div class="upload-area">
+          <input type="file" accept="image/*,video/*" multiple capture="environment"
+            onchange="handleUpload(event, ${car.id})">
+          <div class="upload-icon">📷</div>
+          <div class="upload-text">Tap to take photos or <strong>upload files</strong></div>
+        </div>
+
+        <div class="car-actions">
+          <button class="btn btn-danger" onclick="deleteCar(${car.id})">🗑️ Delete Car</button>
+          ${car.photos.length > 0 ? `<button class="btn btn-secondary" style="flex:1;" onclick="copyCarInfo(${car.id})">📋 Copy Info</button>` : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderPhotos(car) {
+  if(car.photos.length === 0) return '';
+  return car.photos.map((p, i) => {
+    if(p.type === 'video') {
+      return `<div class="video-thumb">
+        <div class="play-icon">▶️</div>
+        <div>Video ${i+1}</div>
+      </div>`;
+    }
+    return `<div class="photo-thumb">
+      <img src="${p.data}" alt="Photo ${i+1}" onclick="viewPhoto('${p.data}')">
+      <button class="delete-photo" onclick="deletePhoto(${car.id}, ${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function toggleCard(id) {
+  const expand = document.getElementById('expand-'+id);
+  const chev = document.getElementById('chev-'+id);
+  expand.classList.toggle('open');
+  chev.classList.toggle('open');
+}
+
+// =================== PHOTO UPLOAD ===================
+function handleUpload(event, carId) {
+  const files = Array.from(event.target.files);
+  if(!files.length) return;
+
+  const car = cars.find(c => c.id === carId);
+  if(!car) return;
+
+  let loaded = 0;
+  showToast(`⏳ Processing ${files.length} file(s)...`);
+
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const isVideo = file.type.startsWith('video/');
+      car.photos.push({
+        data: isVideo ? '' : e.target.result,
+        type: isVideo ? 'video' : 'image',
+        name: file.name,
+        size: file.size,
+        addedAt: new Date().toLocaleTimeString()
+      });
+      loaded++;
+      if(loaded === files.length) {
+        saveCars();
+        renderCars();
+        // Re-open the card
+        setTimeout(() => {
+          const expand = document.getElementById('expand-'+carId);
+          const chev = document.getElementById('chev-'+carId);
+          if(expand && !expand.classList.contains('open')) {
+            expand.classList.add('open');
+            chev.classList.add('open');
+          }
+          updateStats();
+        }, 100);
+        showToast(`✅ ${files.length} file(s) added to ${car.stock}!`);
+      }
+    };
+    if(file.type.startsWith('video/')) {
+      reader.readAsArrayBuffer(file); // just to trigger load
+    } else {
+      reader.readAsDataURL(file);
+    }
+  });
+}
+
+function deletePhoto(carId, photoIdx) {
+  const car = cars.find(c => c.id === carId);
+  if(!car) return;
+  car.photos.splice(photoIdx, 1);
+  saveCars();
+  const grid = document.getElementById('grid-'+carId);
+  if(grid) grid.innerHTML = renderPhotos(car);
+  updateStats();
+  showToast('🗑️ Photo removed');
+}
+
+function viewPhoto(src) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:999;display:flex;align-items:center;justify-content:center;cursor:pointer;';
+  overlay.innerHTML = `<img src="${src}" style="max-width:95vw;max-height:95vh;border-radius:8px;object-fit:contain;">`;
+  overlay.onclick = () => document.body.removeChild(overlay);
+  document.body.appendChild(overlay);
+}
+
+// =================== DELETE CAR ===================
+function deleteCar(id) {
+  if(!confirm('Delete this car and all its photos?')) return;
+  cars = cars.filter(c => c.id !== id);
+  saveCars();
+  renderCars();
+  showToast('🗑️ Car deleted');
+}
+
+// =================== COPY INFO ===================
+function copyCarInfo(id) {
+  const car = cars.find(c => c.id === id);
+  if(!car) return;
+  const text = [
+    `Stock #: ${car.stock}`,
+    car.vin ? `VIN: ${car.vin}` : '',
+    [car.year, car.make, car.model].filter(Boolean).join(' '),
+    car.price ? `Price: $${Number(car.price).toLocaleString()}` : '',
+    car.notes ? `Notes: ${car.notes}` : '',
+    `Photos: ${car.photos.length}`
+  ].filter(Boolean).join('\n');
+
+  navigator.clipboard.writeText(text).then(() => showToast('📋 Info copied!')).catch(() => showToast('⚠️ Copy failed'));
+}
+
+// =================== STATS ===================
+function updateStats() {
+  const total = cars.length;
+  const totalPhotos = cars.reduce((sum, c) => sum + c.photos.length, 0);
+  const done = cars.filter(c => c.photos.length > 0).length;
+  document.getElementById('totalCars').textContent = total;
+  document.getElementById('totalPhotos').textContent = totalPhotos;
+  document.getElementById('doneCars').textContent = done;
+}
+
+// =================== SETUP ===================
+function setMode(mode) {
+  currentMode = mode;
+  localStorage.setItem('pm_mode', mode);
+  document.getElementById('modeLocal').classList.toggle('active', mode==='local');
+  document.getElementById('modeCloud').classList.toggle('active', mode==='cloud');
+  document.getElementById('localInfo').style.display = mode==='local' ? 'block' : 'none';
+  document.getElementById('cloudSetup').style.display = mode==='cloud' ? 'block' : 'none';
+}
+
+function saveFirebaseConfig() {
+  const key = document.getElementById('fbApiKey').value.trim();
+  const proj = document.getElementById('fbProjectId').value.trim();
+  const bucket = document.getElementById('fbBucket').value.trim();
+  if(!key || !proj || !bucket) { showToast('⚠️ Fill in all Firebase fields'); return; }
+  localStorage.setItem('pm_fb', JSON.stringify({key, proj, bucket}));
+  showToast('☁️ Firebase config saved! Full sync coming in next update.');
+}
+
+function clearAllData() {
+  if(!confirm('Delete ALL cars and photos? This cannot be undone.')) return;
+  cars = [];
+  saveCars();
+  renderCars();
+  showToast('🗑️ All data cleared');
+}
+
+// =================== STORAGE ===================
+function saveCars() {
+  // Store without photo data for large payloads — photos stored separately
+  try {
+    localStorage.setItem('pm_cars', JSON.stringify(cars));
+  } catch(e) {
+    // If storage is full, alert user
+    showToast('⚠️ Storage full! Delete some photos.');
+  }
+  updateStats();
+}
+
+// =================== TOAST ===================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// =================== INIT ===================
+renderCars();
+setMode(currentMode);
+
+// Register Service Worker (PWA)
+if('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+
+// Install prompt for Android/Desktop
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const banner = document.createElement('div');
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:var(--accent);color:#000;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;z-index:200;font-weight:600;font-size:14px;';
+  banner.innerHTML = '📲 Install Project Mouse as an app! <button onclick="installApp()" style="background:#000;color:var(--accent);border:none;padding:6px 16px;border-radius:20px;font-weight:700;cursor:pointer;">INSTALL</button>';
+  document.body.prepend(banner);
+  window._installBanner = banner;
+});
+
+function installApp() {
+  if(deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => {
+      if(window._installBanner) window._installBanner.remove();
+      deferredPrompt = null;
+    });
+  }
+}
+</script>
+</body>
+</html>

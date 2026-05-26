@@ -1,0 +1,194 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="30%" r="80%">
+      <stop offset="0%" style="stop-color:#ffe066"/>
+      <stop offset="60%" style="stop-color:#ffb347"/>
+      <stop offset="100%" style="stop-color:#e8630a"/>
+    </radialGradient>
+    <radialGradient id="bodyCol" cx="40%" cy="30%" r="65%">
+      <stop offset="0%" style="stop-color:#fff4e0"/>
+      <stop offset="100%" style="stop-color:#f5ddb0"/>
+    </radialGradient>
+    <radialGradient id="orangeFur" cx="40%" cy="30%" r="65%">
+      <stop offset="0%" style="stop-color:#ffaa44"/>
+      <stop offset="100%" style="stop-color:#cc6600"/>
+    </radialGradient>
+    <radialGradient id="eyeL" cx="35%" cy="30%" r="60%">
+      <stop offset="0%" style="stop-color:#444"/>
+      <stop offset="100%" style="stop-color:#111"/>
+    </radialGradient>
+    <radialGradient id="blush" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#ffaaaa;stop-opacity:0.9"/>
+      <stop offset="100%" style="stop-color:#ff8888;stop-opacity:0"/>
+    </radialGradient>
+    <filter id="dropshadow">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#00000033"/>
+    </filter>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <!-- Rounded square clip -->
+    <clipPath id="roundSquare">
+      <rect width="512" height="512" rx="110" ry="110"/>
+    </clipPath>
+  </defs>
+
+  <!-- BACKGROUND rounded square -->
+  <rect width="512" height="512" rx="110" ry="110" fill="url(#bg)"/>
+
+  <!-- BG decoration circles -->
+  <circle cx="80" cy="80" r="60" fill="white" opacity="0.08"/>
+  <circle cx="440" cy="100" r="40" fill="white" opacity="0.07"/>
+  <circle cx="60" cy="420" r="50" fill="white" opacity="0.06"/>
+  <circle cx="460" cy="430" r="70" fill="white" opacity="0.05"/>
+
+  <!-- Subtle star sparkles -->
+  <g fill="white" opacity="0.5" filter="url(#glow)">
+    <polygon points="80,155 84,165 95,165 86,172 89,183 80,176 71,183 74,172 65,165 76,165" transform="scale(0.6) translate(60,80)"/>
+    <polygon points="80,155 84,165 95,165 86,172 89,183 80,176 71,183 74,172 65,165 76,165" transform="scale(0.5) translate(700,60)"/>
+    <polygon points="80,155 84,165 95,165 86,172 89,183 80,176 71,183 74,172 65,165 76,165" transform="scale(0.4) translate(200,850)"/>
+  </g>
+
+  <!-- ===== MOUSE CHARACTER ===== -->
+
+  <!-- TAIL -->
+  <path d="M 295 430 Q 370 460 390 410 Q 408 365 365 355"
+        fill="none" stroke="#f5ddb0" stroke-width="12" stroke-linecap="round"/>
+  <path d="M 295 430 Q 370 460 390 410 Q 408 365 365 355"
+        fill="none" stroke="#ffe8c0" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- BODY -->
+  <ellipse cx="256" cy="360" rx="105" ry="95" fill="url(#bodyCol)" filter="url(#dropshadow)"/>
+
+  <!-- ORANGE BACK/SIDES of body -->
+  <ellipse cx="175" cy="370" rx="55" ry="70" fill="url(#orangeFur)"/>
+  <ellipse cx="337" cy="370" rx="55" ry="70" fill="url(#orangeFur)"/>
+  <!-- Blend body back on top -->
+  <ellipse cx="256" cy="360" rx="90" ry="82" fill="url(#bodyCol)"/>
+
+  <!-- BELLY highlight -->
+  <ellipse cx="256" cy="372" rx="58" ry="52" fill="white" opacity="0.35"/>
+
+  <!-- LEFT EAR - orange outside -->
+  <ellipse cx="152" cy="155" rx="52" ry="58" fill="url(#orangeFur)" filter="url(#dropshadow)"/>
+  <!-- LEFT EAR - pink inside -->
+  <ellipse cx="152" cy="160" rx="32" ry="38" fill="#ffb3c1"/>
+  <ellipse cx="152" cy="162" rx="20" ry="26" fill="#ff8fa3"/>
+
+  <!-- RIGHT EAR - orange outside -->
+  <ellipse cx="360" cy="155" rx="52" ry="58" fill="url(#orangeFur)" filter="url(#dropshadow)"/>
+  <!-- RIGHT EAR - pink inside -->
+  <ellipse cx="360" cy="160" rx="32" ry="38" fill="#ffb3c1"/>
+  <ellipse cx="360" cy="162" rx="20" ry="26" fill="#ff8fa3"/>
+
+  <!-- HEAD - orange top -->
+  <circle cx="256" cy="240" r="115" fill="url(#orangeFur)" filter="url(#dropshadow)"/>
+  <!-- HEAD - cream face -->
+  <ellipse cx="256" cy="258" rx="95" ry="98" fill="url(#bodyCol)"/>
+
+  <!-- HEAD HIGHLIGHT -->
+  <ellipse cx="230" cy="195" rx="45" ry="32" fill="white" opacity="0.18"/>
+
+  <!-- ORANGE HAIR TUFT on top -->
+  <ellipse cx="256" cy="138" rx="35" ry="22" fill="url(#orangeFur)"/>
+  <ellipse cx="232" cy="143" rx="18" ry="14" fill="url(#orangeFur)"/>
+  <ellipse cx="280" cy="143" rx="18" ry="14" fill="url(#orangeFur)"/>
+  <!-- Hair strands -->
+  <path d="M 245 128 Q 240 108 248 95" fill="none" stroke="#cc6600" stroke-width="4" stroke-linecap="round"/>
+  <path d="M 256 125 Q 256 103 260 90" fill="none" stroke="#cc6600" stroke-width="4" stroke-linecap="round"/>
+  <path d="M 267 128 Q 272 108 265 95" fill="none" stroke="#cc6600" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- LEFT EYE -->
+  <ellipse cx="210" cy="248" rx="30" ry="32" fill="#111" filter="url(#dropshadow)"/>
+  <!-- Eye shine - big -->
+  <circle cx="200" cy="238" r="11" fill="white"/>
+  <!-- Eye shine - small -->
+  <circle cx="218" cy="255" r="5" fill="white" opacity="0.7"/>
+  <circle cx="198" cy="254" r="3" fill="white" opacity="0.5"/>
+
+  <!-- RIGHT EYE -->
+  <ellipse cx="302" cy="248" rx="30" ry="32" fill="#111" filter="url(#dropshadow)"/>
+  <!-- Eye shine - big -->
+  <circle cx="292" cy="238" r="11" fill="white"/>
+  <!-- Eye shine - small -->
+  <circle cx="310" cy="255" r="5" fill="white" opacity="0.7"/>
+  <circle cx="290" cy="254" r="3" fill="white" opacity="0.5"/>
+
+  <!-- BLUSH LEFT -->
+  <ellipse cx="178" cy="278" rx="28" ry="18" fill="url(#blush)"/>
+  <!-- BLUSH RIGHT -->
+  <ellipse cx="334" cy="278" rx="28" ry="18" fill="url(#blush)"/>
+
+  <!-- NOSE -->
+  <ellipse cx="256" cy="292" rx="9" ry="7" fill="#ff8fa3"/>
+  <ellipse cx="253" cy="290" rx="3" ry="2" fill="white" opacity="0.7"/>
+
+  <!-- MOUTH -->
+  <path d="M 243 302 Q 256 316 269 302" fill="none" stroke="#d07090" stroke-width="3" stroke-linecap="round"/>
+  <!-- Cute tooth -->
+  <rect x="250" y="302" width="12" height="9" rx="2" fill="white"/>
+  <line x1="256" y1="302" x2="256" y2="311" stroke="#eee" stroke-width="1.5"/>
+
+  <!-- WHISKERS LEFT -->
+  <line x1="218" y1="288" x2="158" y2="278" stroke="#8888" stroke-width="2" stroke-linecap="round"/>
+  <line x1="218" y1="295" x2="155" y2="295" stroke="#8888" stroke-width="2" stroke-linecap="round"/>
+  <line x1="218" y1="302" x2="160" y2="310" stroke="#8888" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- WHISKERS RIGHT -->
+  <line x1="294" y1="288" x2="354" y2="278" stroke="#8888" stroke-width="2" stroke-linecap="round"/>
+  <line x1="294" y1="295" x2="357" y2="295" stroke="#8888" stroke-width="2" stroke-linecap="round"/>
+  <line x1="294" y1="302" x2="352" y2="310" stroke="#8888" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- LEFT PAW -->
+  <ellipse cx="165" cy="388" rx="32" ry="22" fill="url(#bodyCol)" filter="url(#dropshadow)"/>
+  <ellipse cx="152" cy="400" rx="13" ry="10" fill="#ffe8c0"/>
+  <ellipse cx="166" cy="405" rx="13" ry="10" fill="#ffe8c0"/>
+  <ellipse cx="180" cy="400" rx="13" ry="10" fill="#ffe8c0"/>
+  <!-- Paw pads -->
+  <ellipse cx="152" cy="402" rx="7" ry="6" fill="#ffb3c1" opacity="0.9"/>
+  <ellipse cx="166" cy="407" rx="7" ry="6" fill="#ffb3c1" opacity="0.9"/>
+  <ellipse cx="180" cy="402" rx="7" ry="6" fill="#ffb3c1" opacity="0.9"/>
+
+  <!-- RIGHT PAW -->
+  <ellipse cx="347" cy="388" rx="32" ry="22" fill="url(#bodyCol)" filter="url(#dropshadow)"/>
+  <ellipse cx="334" cy="400" rx="13" ry="10" fill="#ffe8c0"/>
+  <ellipse cx="348" cy="405" rx="13" ry="10" fill="#ffe8c0"/>
+  <ellipse cx="362" cy="400" rx="13" ry="10" fill="#ffe8c0"/>
+  <!-- Paw pads -->
+  <ellipse cx="334" cy="402" rx="7" ry="6" fill="#ffb3c1" opacity="0.9"/>
+  <ellipse cx="348" cy="407" rx="7" ry="6" fill="#ffb3c1" opacity="0.9"/>
+  <ellipse cx="362" cy="402" rx="7" ry="6" fill="#ffb3c1" opacity="0.9"/>
+
+  <!-- FEET -->
+  <ellipse cx="210" cy="448" rx="36" ry="18" fill="url(#bodyCol)" filter="url(#dropshadow)"/>
+  <ellipse cx="302" cy="448" rx="36" ry="18" fill="url(#bodyCol)" filter="url(#dropshadow)"/>
+
+  <!-- Tiny camera -->
+  <rect x="234" y="336" width="44" height="32" rx="6" fill="#333" opacity="0.88"/>
+  <circle cx="256" cy="352" r="10" fill="#222"/>
+  <circle cx="256" cy="352" r="7" fill="#ffb347" opacity="0.7"/>
+  <circle cx="256" cy="352" r="3" fill="white" opacity="0.5"/>
+  <rect x="239" y="332" width="14" height="6" rx="3" fill="#444"/>
+  <!-- Flash -->
+  <rect x="258" y="334" width="8" height="5" rx="1" fill="#ffe066" opacity="0.8"/>
+
+  <!-- SPARKLES -->
+  <g filter="url(#glow)" opacity="0.95">
+    <path d="M 118 200 L 121 192 L 124 200 L 121 208 Z" fill="white"/>
+    <line x1="113" y1="200" x2="129" y2="200" stroke="white" stroke-width="1.5"/>
+    <path d="M 400 195 L 403 187 L 406 195 L 403 203 Z" fill="white"/>
+    <line x1="395" y1="195" x2="411" y2="195" stroke="white" stroke-width="1.5"/>
+  </g>
+
+  <!-- Small hearts -->
+  <g opacity="0.85">
+    <path d="M 95 310 C 95 306 91 302 87 306 C 83 302 79 306 79 310 C 79 315 87 321 87 321 C 87 321 95 315 95 310Z" fill="white"/>
+    <path d="M 440 300 C 440 296 436 292 432 296 C 428 292 424 296 424 300 C 424 305 432 311 432 311 C 432 311 440 305 440 300Z" fill="white"/>
+  </g>
+
+  <!-- Bottom label -->
+  <rect x="140" y="470" width="232" height="28" rx="14" fill="black" opacity="0.25"/>
+  <text x="256" y="489" text-anchor="middle" font-family="Georgia, serif" font-size="14"
+        fill="white" letter-spacing="3" font-weight="bold">PROJECT MOUSE</text>
+</svg>
