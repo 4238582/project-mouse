@@ -1,5 +1,5 @@
 {
-  "version": "1.5.0",
+  "version": "1.6.0",
   "releaseDate": "2026-05-27",
-  "changelog": "Camera angle guide now matches D2C Media exactly, with skip/back arrows."
+  "changelog": "Download all of a car's photos as one ZIP file."
 }

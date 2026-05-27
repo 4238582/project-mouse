@@ -11,6 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="Project Mouse">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="theme-color" content="#e8ff00">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
 :root {
@@ -204,7 +205,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <div class="config-desc">Check for the latest version of Project Mouse.</div>
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Current Version</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v1.5.0</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v1.6.0</div>
       </div>
       <button class="btn btn-secondary" onclick="window.checkForUpdates()">🔍 Check for Updates</button>
       <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;" id="lastChecked"></div>
@@ -437,6 +438,7 @@ function renderCars() {
         <div class="car-actions">
           <button class="btn-danger" onclick="window.deleteCar(${car.id})">🗑️ Delete</button>
           ${car.photos.length > 0 ? `<button class="btn btn-secondary" style="flex:1;" onclick="window.copyCarInfo(${car.id})">📋 Copy Info</button>` : ''}
+          ${car.photos.filter(p => p.type !== 'video').length > 0 ? `<button class="btn btn-primary" style="flex:1;" onclick="window.downloadPhotos(${car.id})">⬇️ Download Photos</button>` : ''}
         </div>
       </div>
     </div>`).join('');
@@ -654,6 +656,45 @@ window.copyCarInfo = function(id) {
   navigator.clipboard.writeText(text).then(() => showToast('📋 Info copied!')).catch(() => showToast('⚠️ Copy failed'));
 };
 
+window.downloadPhotos = async function(id) {
+  const car = cars.find(c => c.id === id);
+  if(!car) return;
+  const photos = car.photos.filter(p => p.type !== 'video' && p.data);
+  if(photos.length === 0) { showToast('⚠️ No photos to download'); return; }
+  if(typeof JSZip === 'undefined') { showToast('⚠️ Zip library not loaded — try refreshing'); return; }
+
+  showToast('📦 Building ZIP of ' + photos.length + ' photos...');
+  try {
+    const zip = new JSZip();
+    // Track how many times each angle name was used so files don't overwrite
+    const used = {};
+    photos.forEach((p, i) => {
+      let base = (p.angle || p.name || 'photo').replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'photo';
+      used[base] = (used[base] || 0) + 1;
+      const suffix = used[base] > 1 ? ' (' + used[base] + ')' : '';
+      // Number prefix keeps photos in shooting order inside the zip
+      const num = String(i + 1).padStart(2, '0');
+      const fname = num + ' - ' + base + suffix + '.jpg';
+      // strip the "data:image/jpeg;base64," prefix
+      const b64 = p.data.split(',')[1];
+      zip.file(fname, b64, { base64: true });
+    });
+
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = car.stock + ' - photos.zip';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast('✅ Downloaded ' + photos.length + ' photos!');
+  } catch(e) {
+    showToast('⚠️ Download failed: ' + e.message);
+  }
+};
+
 window.setMode = function(mode) {
   currentMode = mode;
   localStorage.setItem('pm_mode', mode);
@@ -678,7 +719,7 @@ window.checkForUpdates = async function() {
   try {
     const res = await fetch('https://majestic-elf-6ab83b.netlify.app/version.json?t=' + Date.now());
     const data = await res.json();
-    const CURRENT = '1.5.0';
+    const CURRENT = '1.6.0';
     const r = data.version.split('.').map(Number);
     const c = CURRENT.split('.').map(Number);
     let newer = false;
@@ -693,7 +734,7 @@ window.checkForUpdates = async function() {
 // ============ INIT ============
 renderCars();
 window.setMode(currentMode);
-document.getElementById('currentVersion').textContent = 'v1.5.0';
+document.getElementById('currentVersion').textContent = 'v1.6.0';
 const lc = localStorage.getItem('pm_last_checked');
 if(lc) document.getElementById('lastChecked').textContent = 'Last checked: ' + lc;
 
