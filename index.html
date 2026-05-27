@@ -102,6 +102,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <div class="stat">Done: <span id="doneCars">0</span></div>
     </div>
     <div id="userNameEl" class="user-name" style="display:none;"></div>
+    <span id="syncDot" title="Live sync off" style="width:8px;height:8px;border-radius:50%;background:var(--muted);display:none;"></span>
     <button id="loginBtn" class="btn-signin" onclick="window.googleLogin()">
       <img src="https://www.google.com/favicon.ico" width="14"> Sign in
     </button>
@@ -169,14 +170,12 @@ input:focus, textarea:focus { border-color: var(--accent); }
         </button>
       </div>
       <div id="cloudLoggedIn" style="display:none;">
-        <div style="background:rgba(0,230,118,0.1);border:1px solid var(--success);border-radius:10px;padding:12px;margin-bottom:12px;text-align:center;">
-          <div style="color:var(--success);font-weight:700;">✅ Cloud Sync Active!</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px;">Your cars sync between all devices</div>
+        <div style="background:rgba(0,230,118,0.1);border:1px solid var(--success);border-radius:10px;padding:14px;margin-bottom:12px;text-align:center;">
+          <div style="color:var(--success);font-weight:700;">✅ Live Sync Active</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px;">Cars sync automatically between all your devices — no buttons, no refresh.</div>
         </div>
-        <div style="display:flex;gap:8px;">
-          <button onclick="window.syncToCloud()" class="btn btn-primary" style="flex:1;">☁️ SYNC NOW</button>
-          <button onclick="window.syncFromCloud()" class="btn btn-secondary" style="flex:1;">⬇️ Load from Cloud</button>
-        </div>
+        <button onclick="window.syncFromCloud()" class="btn btn-secondary" style="width:100%;">⬇️ Force Reload from Cloud</button>
+        <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;">Photos sync too, but a very large photo library may hit cloud limits — car info always syncs.</div>
       </div>
     </div>
 
@@ -185,7 +184,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <div class="config-desc">Check for the latest version of Project Mouse.</div>
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Current Version</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v1.2.0</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v1.3.0</div>
       </div>
       <button class="btn btn-secondary" onclick="window.checkForUpdates()">🔍 Check for Updates</button>
       <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;" id="lastChecked"></div>
@@ -205,7 +204,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
 // ============ FIREBASE ============
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 const fbApp = initializeApp({
   apiKey: "AIzaSyDOChD59h6qGKNA0rf5_gO53ZMAhNmftvo",
@@ -218,6 +217,9 @@ const fbApp = initializeApp({
 const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
 let currentUser = null;
+let cloudUnsub = null;       // active real-time listener
+let applyingRemote = false;  // true while we're loading from cloud (prevents loops)
+let pushTimer = null;        // debounce timer for cloud writes
 
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
@@ -231,17 +233,72 @@ onAuthStateChanged(auth, async (user) => {
     logoutBtn.style.display = 'block';
     userNameEl.textContent = '☁️ ' + user.displayName.split(' ')[0];
     userNameEl.style.display = 'block';
+    const sd = document.getElementById('syncDot');
+    if(sd) sd.style.display = 'inline-block';
     if(cloudOut) cloudOut.style.display = 'none';
     if(cloudIn) cloudIn.style.display = 'block';
-    if(currentMode === 'cloud') await window.syncFromCloud();
+    startCloudSync();
   } else {
     loginBtn.style.display = 'flex';
     logoutBtn.style.display = 'none';
     userNameEl.style.display = 'none';
+    const sd = document.getElementById('syncDot');
+    if(sd) sd.style.display = 'none';
     if(cloudOut) cloudOut.style.display = 'block';
     if(cloudIn) cloudIn.style.display = 'none';
+    stopCloudSync();
   }
 });
+
+// ===== REAL-TIME AUTO SYNC =====
+function startCloudSync() {
+  if(!currentUser || cloudUnsub) return;
+  const ref = doc(db, 'users', currentUser.uid, 'data', 'inventory');
+  // onSnapshot fires instantly whenever the cloud data changes — on ANY device
+  cloudUnsub = onSnapshot(ref, (snap) => {
+    if(snap.metadata.hasPendingWrites) return; // ignore our own just-sent change
+    if(snap.exists() && snap.data().cars) {
+      const cloudCars = snap.data().cars;
+      if(cloudCars !== JSON.stringify(cars)) {
+        applyingRemote = true;
+        cars = JSON.parse(cloudCars);
+        localStorage.setItem('pm_cars', JSON.stringify(cars));
+        updateStats();
+        renderCars();
+        applyingRemote = false;
+        showToast('🔄 Updated from another device');
+      }
+    }
+  }, (err) => {
+    showToast('⚠️ Sync error: ' + err.code);
+  });
+  // dot indicator
+  const sd = document.getElementById('syncDot');
+  if(sd) { sd.style.background = 'var(--success)'; sd.title = 'Live sync on'; }
+}
+
+function stopCloudSync() {
+  if(cloudUnsub) { cloudUnsub(); cloudUnsub = null; }
+  const sd = document.getElementById('syncDot');
+  if(sd) { sd.style.background = 'var(--muted)'; sd.title = 'Live sync off'; }
+}
+
+// Debounced auto-push — called by saveCars() whenever data changes locally
+function autoPushToCloud() {
+  if(!currentUser || currentMode !== 'cloud' || applyingRemote) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(async () => {
+    try {
+      await setDoc(doc(db, 'users', currentUser.uid, 'data', 'inventory'), {
+        cars: JSON.stringify(cars), updatedAt: new Date().toISOString()
+      });
+      const sd = document.getElementById('syncDot');
+      if(sd) { sd.style.background = 'var(--success)'; }
+    } catch(e) {
+      showToast('⚠️ Auto-sync failed: ' + e.message);
+    }
+  }, 800); // wait 0.8s after last change, then push
+}
 
 window.googleLogin = async function() {
   try {
@@ -294,6 +351,7 @@ function showToast(msg) {
 function saveCars() {
   try { localStorage.setItem('pm_cars', JSON.stringify(cars)); } catch(e) { showToast('⚠️ Storage full!'); }
   updateStats();
+  autoPushToCloud(); // automatically sync to cloud — no buttons needed
 }
 
 function updateStats() {
@@ -469,7 +527,7 @@ window.checkForUpdates = async function() {
   try {
     const res = await fetch('https://majestic-elf-6ab83b.netlify.app/version.json?t=' + Date.now());
     const data = await res.json();
-    const CURRENT = '1.2.0';
+    const CURRENT = '1.3.0';
     const r = data.version.split('.').map(Number);
     const c = CURRENT.split('.').map(Number);
     let newer = false;
@@ -484,7 +542,7 @@ window.checkForUpdates = async function() {
 // ============ INIT ============
 renderCars();
 window.setMode(currentMode);
-document.getElementById('currentVersion').textContent = 'v1.2.0';
+document.getElementById('currentVersion').textContent = 'v1.3.0';
 const lc = localStorage.getItem('pm_last_checked');
 if(lc) document.getElementById('lastChecked').textContent = 'Last checked: ' + lc;
 
