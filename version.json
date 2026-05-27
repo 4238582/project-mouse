@@ -1,5 +1,5 @@
 {
-  "version": "1.9.0",
+  "version": "2.0.0",
   "releaseDate": "2026-05-27",
-  "changelog": "Moved to GitHub Pages — free forever!"
+  "changelog": "Firebase Storage — photos now sync between phone and PC automatically!"
 }

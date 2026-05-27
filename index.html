@@ -205,7 +205,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <div class="config-desc">Check for the latest version of Project Mouse.</div>
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Current Version</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v1.9.0</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v2.0.0</div>
       </div>
       <button class="btn btn-secondary" onclick="window.checkForUpdates()">🔍 Check for Updates</button>
       <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;" id="lastChecked"></div>
@@ -249,6 +249,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getStorage, ref as storageRef, uploadString, getDownloadURL, deleteObject, listAll } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
 
 const fbApp = initializeApp({
   apiKey: "AIzaSyDOChD59h6qGKNA0rf5_gO53ZMAhNmftvo",
@@ -260,10 +261,11 @@ const fbApp = initializeApp({
 });
 const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
+const storage = getStorage(fbApp);
 let currentUser = null;
-let cloudUnsub = null;       // active real-time listener
-let applyingRemote = false;  // true while we're loading from cloud (prevents loops)
-let pushTimer = null;        // debounce timer for cloud writes
+let cloudUnsub = null;
+let applyingRemote = false;
+let pushTimer = null;
 
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
@@ -464,10 +466,16 @@ function renderCars() {
 }
 
 function renderPhotos(car) {
-  return car.photos.map((p,i) => p.type === 'video'
-    ? `<div style="aspect-ratio:4/3;border-radius:7px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:22px;">▶️</div>`
-    : `<div class="photo-thumb"><img src="${p.data}" onclick="window.viewPhoto('${p.data}')"><button class="del-photo" onclick="window.deletePhoto(${car.id},${i})">✕</button>${p.angle ? `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.7);color:#fff;font-size:9px;padding:2px 4px;text-align:center;">${p.angle}</div>` : ''}</div>`
-  ).join('');
+  return car.photos.map((p,i) => {
+    const src = p.url || p.data || '';
+    if(p.type === 'video') return `<div style="aspect-ratio:4/3;border-radius:7px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:22px;">▶️</div>`;
+    if(!src) return `<div style="aspect-ratio:4/3;border-radius:7px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);">⏳</div>`;
+    return `<div class="photo-thumb">
+      <img src="${src}" onclick="window.viewPhoto('${src}')">
+      <button class="del-photo" onclick="window.deletePhoto(${car.id},${i})">✕</button>
+      ${p.angle ? `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.7);color:#fff;font-size:9px;padding:2px 4px;text-align:center;">${p.angle} ${p.uploaded ? '☁️' : '📱'}</div>` : ''}
+    </div>`;
+  }).join('');
 }
 
 // ============ WINDOW FUNCTIONS ============
@@ -586,18 +594,17 @@ window.camPrevAngle = function() {
   if(car) updateCamUI(car);
 };
 
-window.snapPhoto = function() {
+window.snapPhoto = async function() {
   const video = document.getElementById('camVideo');
   if(!video || !video.videoWidth) { showToast('⏳ Camera still loading...'); return; }
   const car = cars.find(c => c.id === camCarId);
   if(!car) return;
 
+  // Capture + compress
   const canvas = document.createElement('canvas');
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
   canvas.getContext('2d').drawImage(video, 0, 0);
-
-  // Compress — resize to max 1200px wide, JPEG 80% (~150KB per photo vs ~3MB uncompressed)
   const MAX_W = 1200;
   let w = canvas.width, h = canvas.height;
   if(w > MAX_W) { h = Math.round(h * MAX_W / w); w = MAX_W; }
@@ -607,10 +614,9 @@ window.snapPhoto = function() {
   const dataUrl = comp.toDataURL('image/jpeg', 0.80);
 
   const angle = CAM_ANGLES[Math.min(camAngleIdx, CAM_ANGLES.length - 1)];
-  car.photos.push({ data: dataUrl, type: 'image', name: angle, angle: angle });
-  camShotCount++;
-  saveCars();
+  const photoId = Date.now() + '_' + Math.random().toString(36).substr(2,6);
 
+  // Flash + thumbnail immediately (don't wait for upload)
   const flash = document.getElementById('camFlash');
   flash.classList.remove('fire'); void flash.offsetWidth; flash.classList.add('fire');
   const thumbs = document.getElementById('camThumbs');
@@ -619,7 +625,27 @@ window.snapPhoto = function() {
   thumbs.prepend(t);
   while(thumbs.children.length > 5) thumbs.removeChild(thumbs.lastChild);
 
-  // Auto-advance to next angle (but not past the end)
+  // Save locally first (instant)
+  car.photos.push({ id: photoId, data: dataUrl, url: null, type: 'image', name: angle, angle: angle, uploaded: false });
+  camShotCount++;
+  saveCars();
+
+  // Upload to Firebase Storage in background
+  if(currentUser) {
+    try {
+      const path = `users/${currentUser.uid}/cars/${car.id}/${photoId}.jpg`;
+      const ref = storageRef(storage, path);
+      await uploadString(ref, dataUrl, 'data_url');
+      const url = await getDownloadURL(ref);
+      // Update photo with cloud URL
+      const p = car.photos.find(p => p.id === photoId);
+      if(p) { p.url = url; p.uploaded = true; p.data = ''; } // clear local data once uploaded
+      saveCars();
+    } catch(e) {
+      showToast('⚠️ Upload failed — photo saved locally');
+    }
+  }
+
   if(camAngleIdx < CAM_ANGLES.length - 1) camAngleIdx++;
   updateCamUI(car);
 };
@@ -644,9 +670,17 @@ window.closeCamera = function() {
   camShotCount = 0;
 };
 
-window.deletePhoto = function(carId, idx) {
+window.deletePhoto = async function(carId, idx) {
   const car = cars.find(c => c.id === carId);
   if(!car) return;
+  const photo = car.photos[idx];
+  // Delete from Firebase Storage if uploaded
+  if(photo && photo.uploaded && photo.id && currentUser) {
+    try {
+      const path = `users/${currentUser.uid}/cars/${carId}/${photo.id}.jpg`;
+      await deleteObject(storageRef(storage, path));
+    } catch(e) {} // ignore if already deleted
+  }
   car.photos.splice(idx, 1);
   saveCars();
   document.getElementById('grid-'+carId).innerHTML = renderPhotos(car);
@@ -746,7 +780,7 @@ window.checkForUpdates = async function() {
   try {
     const res = await fetch('https://4238582.github.io/project-mouse/version.json?t=' + Date.now());
     const data = await res.json();
-    const CURRENT = '1.9.0';
+    const CURRENT = '2.0.0';
     const r = data.version.split('.').map(Number);
     const c = CURRENT.split('.').map(Number);
     let newer = false;
@@ -761,7 +795,7 @@ window.checkForUpdates = async function() {
 // ============ INIT ============
 renderCars();
 window.setMode(currentMode);
-document.getElementById('currentVersion').textContent = 'v1.9.0';
+document.getElementById('currentVersion').textContent = 'v2.0.0';
 const lc = localStorage.getItem('pm_last_checked');
 if(lc) document.getElementById('lastChecked').textContent = 'Last checked: ' + lc;
 
