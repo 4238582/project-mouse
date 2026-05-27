@@ -205,7 +205,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <div class="config-desc">Check for the latest version of Project Mouse.</div>
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Current Version</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v2.0.0</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v2.1.0</div>
       </div>
       <button class="btn btn-secondary" onclick="window.checkForUpdates()">🔍 Check for Updates</button>
       <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;" id="lastChecked"></div>
@@ -284,6 +284,8 @@ onAuthStateChanged(auth, async (user) => {
     if(cloudOut) cloudOut.style.display = 'none';
     if(cloudIn) cloudIn.style.display = 'block';
     startCloudSync();
+    // Load photo URLs from Storage after login
+    setTimeout(loadStoragePhotos, 2000);
   } else {
     loginBtn.style.display = 'flex';
     logoutBtn.style.display = 'none';
@@ -325,6 +327,8 @@ function startCloudSync() {
     renderCars();
     applyingRemote = false;
     showToast('🔄 Updated from another device');
+    // Load photo URLs from Storage for new cars
+    setTimeout(loadStoragePhotos, 1000);
   }, (err) => {
     showToast('⚠️ Sync error: ' + err.code);
   });
@@ -391,12 +395,51 @@ window.syncFromCloud = async function() {
   try {
     const snap = await getDoc(doc(db, 'users', currentUser.uid, 'data', 'inventory'));
     if(snap.exists() && snap.data().cars) {
-      cars = JSON.parse(snap.data().cars);
-      saveCars(); renderCars();
-      showToast('☁️ Cars loaded from cloud!');
-    } else { showToast('☁️ No cloud data found yet.'); }
+      const cloudCars = JSON.parse(snap.data().cars);
+      // For each car, fetch photo URLs from Storage
+      for(const car of cloudCars) {
+        if(car.photos && car.photos.length > 0) {
+          for(const photo of car.photos) {
+            if(photo.id && !photo.url) {
+              try {
+                const path = `users/${currentUser.uid}/cars/${car.id}/${photo.id}.jpg`;
+                photo.url = await getDownloadURL(storageRef(storage, path));
+                photo.uploaded = true;
+                photo.data = ''; // clear local data
+              } catch(e) {} // photo might not exist in storage yet
+            }
+          }
+        }
+      }
+      cars = cloudCars;
+      saveCars(); 
+      renderCars();
+      showToast('☁️ Cars + photos loaded from cloud!');
+    } else { 
+      showToast('☁️ No cloud data found yet.'); 
+    }
   } catch(e) { showToast('⚠️ Load failed: ' + e.message); }
 };
+
+// Load photos from Storage for all cars
+async function loadStoragePhotos() {
+  if(!currentUser) return;
+  let updated = false;
+  for(const car of cars) {
+    for(const photo of car.photos) {
+      if(photo.id && !photo.url) {
+        try {
+          const path = `users/${currentUser.uid}/cars/${car.id}/${photo.id}.jpg`;
+          photo.url = await getDownloadURL(storageRef(storage, path));
+          photo.uploaded = true;
+          photo.data = '';
+          updated = true;
+        } catch(e) {}
+      }
+    }
+  }
+  if(updated) { saveCars(); renderCars(); }
+}
 
 // ============ STATE ============
 let cars = JSON.parse(localStorage.getItem('pm_cars') || '[]');
@@ -780,7 +823,7 @@ window.checkForUpdates = async function() {
   try {
     const res = await fetch('https://4238582.github.io/project-mouse/version.json?t=' + Date.now());
     const data = await res.json();
-    const CURRENT = '2.0.0';
+    const CURRENT = '2.1.0';
     const r = data.version.split('.').map(Number);
     const c = CURRENT.split('.').map(Number);
     let newer = false;
@@ -795,7 +838,7 @@ window.checkForUpdates = async function() {
 // ============ INIT ============
 renderCars();
 window.setMode(currentMode);
-document.getElementById('currentVersion').textContent = 'v2.0.0';
+document.getElementById('currentVersion').textContent = 'v2.1.0';
 const lc = localStorage.getItem('pm_last_checked');
 if(lc) document.getElementById('lastChecked').textContent = 'Last checked: ' + lc;
 

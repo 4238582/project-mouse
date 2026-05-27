@@ -1,5 +1,5 @@
 {
-  "version": "2.0.0",
+  "version": "2.1.0",
   "releaseDate": "2026-05-27",
-  "changelog": "Firebase Storage — photos now sync between phone and PC automatically!"
+  "changelog": "Photos now load from Firebase Storage on all devices automatically!"
 }
