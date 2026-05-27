@@ -195,7 +195,8 @@ input:focus, textarea:focus { border-color: var(--accent); }
           <div style="color:var(--success);font-weight:700;">✅ Live Sync Active</div>
           <div style="font-size:11px;color:var(--muted);margin-top:3px;">Cars sync automatically between all your devices — no buttons, no refresh.</div>
         </div>
-        <button onclick="window.syncFromCloud()" class="btn btn-secondary" style="width:100%;">⬇️ Force Reload from Cloud</button>
+        <button onclick="window.syncFromCloud()" class="btn btn-secondary" style="width:100%;margin-bottom:8px;">⬇️ Force Reload from Cloud</button>
+        <button onclick="loadStoragePhotos()" class="btn btn-primary" style="width:100%;">📸 Load Photos from Cloud</button>
         <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;">Photos sync too, but a very large photo library may hit cloud limits — car info always syncs.</div>
       </div>
     </div>
@@ -205,7 +206,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <div class="config-desc">Check for the latest version of Project Mouse.</div>
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Current Version</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v2.1.0</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v2.2.0</div>
       </div>
       <button class="btn btn-secondary" onclick="window.checkForUpdates()">🔍 Check for Updates</button>
       <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;" id="lastChecked"></div>
@@ -421,24 +422,51 @@ window.syncFromCloud = async function() {
   } catch(e) { showToast('⚠️ Load failed: ' + e.message); }
 };
 
-// Load photos from Storage for all cars
+// Load ALL photos from Storage by scanning folders
 async function loadStoragePhotos() {
   if(!currentUser) return;
+  showToast('📸 Loading photos from cloud...');
   let updated = false;
-  for(const car of cars) {
-    for(const photo of car.photos) {
-      if(photo.id && !photo.url) {
-        try {
-          const path = `users/${currentUser.uid}/cars/${car.id}/${photo.id}.jpg`;
-          photo.url = await getDownloadURL(storageRef(storage, path));
-          photo.uploaded = true;
-          photo.data = '';
-          updated = true;
-        } catch(e) {}
-      }
+  try {
+    for(const car of cars) {
+      try {
+        // List all files in this car's Storage folder
+        const carFolderRef = storageRef(storage, `users/${currentUser.uid}/cars/${car.id}`);
+        const fileList = await listAll(carFolderRef);
+        
+        if(fileList.items.length === 0) continue;
+        
+        // Build a map of existing photo IDs
+        const existingIds = new Set(car.photos.map(p => p.id).filter(Boolean));
+        
+        for(const item of fileList.items) {
+          const photoId = item.name.replace('.jpg', '');
+          try {
+            const url = await getDownloadURL(item);
+            // Check if we already have this photo
+            const existing = car.photos.find(p => p.id === photoId);
+            if(existing) {
+              // Update URL if missing
+              if(!existing.url) { existing.url = url; existing.uploaded = true; existing.data = ''; updated = true; }
+            } else {
+              // New photo from another device — add it
+              car.photos.push({ id: photoId, url: url, data: '', type: 'image', name: 'Photo', angle: '', uploaded: true });
+              updated = true;
+            }
+          } catch(e) {}
+        }
+      } catch(e) {} // car folder might not exist
     }
+    if(updated) { 
+      saveCars(); 
+      renderCars(); 
+      showToast('✅ Photos loaded from cloud!');
+    } else {
+      showToast('☁️ Photos up to date!');
+    }
+  } catch(e) {
+    showToast('⚠️ Could not load photos: ' + e.message);
   }
-  if(updated) { saveCars(); renderCars(); }
 }
 
 // ============ STATE ============
@@ -823,7 +851,7 @@ window.checkForUpdates = async function() {
   try {
     const res = await fetch('https://4238582.github.io/project-mouse/version.json?t=' + Date.now());
     const data = await res.json();
-    const CURRENT = '2.1.0';
+    const CURRENT = '2.2.0';
     const r = data.version.split('.').map(Number);
     const c = CURRENT.split('.').map(Number);
     let newer = false;
@@ -838,7 +866,7 @@ window.checkForUpdates = async function() {
 // ============ INIT ============
 renderCars();
 window.setMode(currentMode);
-document.getElementById('currentVersion').textContent = 'v2.1.0';
+document.getElementById('currentVersion').textContent = 'v2.2.0';
 const lc = localStorage.getItem('pm_last_checked');
 if(lc) document.getElementById('lastChecked').textContent = 'Last checked: ' + lc;
 
