@@ -77,6 +77,26 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .empty-state p { font-size: 13px; line-height: 1.6; }
 .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--accent); color: #000; padding: 11px 22px; border-radius: 30px; font-weight: 600; font-size: 13px; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 999; white-space: nowrap; }
 .toast.show { transform: translateX(-50%) translateY(0); }
+/* ===== IN-APP CAMERA ===== */
+.cam-overlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: none; flex-direction: column; }
+.cam-overlay.open { display: flex; }
+.cam-video { flex: 1; width: 100%; object-fit: cover; background: #000; }
+.cam-top { position: absolute; top: 0; left: 0; right: 0; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(rgba(0,0,0,0.7), transparent); z-index: 2; }
+.cam-close { background: rgba(0,0,0,0.6); border: none; color: #fff; width: 38px; height: 38px; border-radius: 50%; font-size: 18px; cursor: pointer; }
+.cam-stock { color: var(--accent); font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; }
+.cam-count { background: var(--accent); color: #000; font-weight: 700; font-size: 13px; padding: 4px 12px; border-radius: 20px; }
+.cam-guide { position: absolute; top: 58px; left: 0; right: 0; text-align: center; z-index: 2; }
+.cam-guide-label { display: inline-block; background: rgba(0,0,0,0.75); color: #fff; font-size: 13px; padding: 6px 16px; border-radius: 20px; }
+.cam-guide-label .next { color: var(--accent); font-weight: 700; }
+.cam-bottom { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 16px 34px; display: flex; align-items: center; justify-content: space-between; background: linear-gradient(transparent, rgba(0,0,0,0.8)); z-index: 2; }
+.cam-shutter { width: 74px; height: 74px; border-radius: 50%; background: #fff; border: 5px solid rgba(255,255,255,0.4); cursor: pointer; flex-shrink: 0; transition: transform 0.08s; }
+.cam-shutter:active { transform: scale(0.88); }
+.cam-thumbs { display: flex; gap: 6px; overflow-x: auto; max-width: 90px; }
+.cam-thumbs img { width: 46px; height: 46px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); }
+.cam-done { background: var(--accent); color: #000; border: none; padding: 12px 20px; border-radius: 24px; font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 1px; cursor: pointer; flex-shrink: 0; }
+.cam-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 3; }
+.cam-flash.fire { animation: flashAnim 0.25s; }
+@keyframes flashAnim { 0% { opacity: 0.9; } 100% { opacity: 0; } }
 .mode-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
 .mode-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-size: 12px; cursor: pointer; text-align: center; }
 .mode-btn.active { background: rgba(232,255,0,0.1); border-color: var(--accent); color: var(--accent); }
@@ -184,7 +204,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <div class="config-desc">Check for the latest version of Project Mouse.</div>
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Current Version</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v1.3.1</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v1.5.0</div>
       </div>
       <button class="btn btn-secondary" onclick="window.checkForUpdates()">🔍 Check for Updates</button>
       <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;" id="lastChecked"></div>
@@ -197,6 +217,29 @@ input:focus, textarea:focus { border-color: var(--accent); }
     </div>
   </div>
 </main>
+
+<!-- IN-APP CAMERA -->
+<div class="cam-overlay" id="camOverlay">
+  <video class="cam-video" id="camVideo" autoplay playsinline muted></video>
+  <div class="cam-flash" id="camFlash"></div>
+  <div class="cam-top">
+    <button class="cam-close" onclick="window.closeCamera()">✕</button>
+    <div class="cam-stock" id="camStock"></div>
+    <div class="cam-count" id="camCount">0 photos</div>
+  </div>
+  <div class="cam-guide">
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;">
+      <button onclick="window.camPrevAngle()" style="background:rgba(0,0,0,0.6);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;">‹</button>
+      <div class="cam-guide-label" id="camGuide"></div>
+      <button onclick="window.camNextAngle()" style="background:rgba(0,0,0,0.6);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;">›</button>
+    </div>
+  </div>
+  <div class="cam-bottom">
+    <div class="cam-thumbs" id="camThumbs"></div>
+    <div class="cam-shutter" id="camShutter" onclick="window.snapPhoto()"></div>
+    <button class="cam-done" onclick="window.closeCamera()">DONE</button>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -385,10 +428,11 @@ function renderCars() {
         ${car.vin ? `<div style="font-size:11px;color:var(--muted);margin-bottom:10px;">VIN: ${car.vin}</div>` : ''}
         ${car.notes ? `<div style="font-size:12px;color:#888;margin-bottom:12px;padding:9px;background:var(--surface2);border-radius:8px;">${car.notes}</div>` : ''}
         <div class="photo-grid" id="grid-${car.id}">${renderPhotos(car)}</div>
+        <button class="btn btn-primary" style="margin-bottom:10px;" onclick="window.openCamera(${car.id})">📸 QUICK CAMERA</button>
         <div class="upload-area">
           <input type="file" accept="image/*,video/*" multiple capture="environment" onchange="window.handleUpload(event, ${car.id})">
-          <div class="upload-icon">📷</div>
-          <div class="upload-text">Tap to take photos or <strong>upload files</strong></div>
+          <div class="upload-icon">🖼️</div>
+          <div class="upload-text">or upload from <strong>camera roll</strong></div>
         </div>
         <div class="car-actions">
           <button class="btn-danger" onclick="window.deleteCar(${car.id})">🗑️ Delete</button>
@@ -401,7 +445,7 @@ function renderCars() {
 function renderPhotos(car) {
   return car.photos.map((p,i) => p.type === 'video'
     ? `<div style="aspect-ratio:4/3;border-radius:7px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:22px;">▶️</div>`
-    : `<div class="photo-thumb"><img src="${p.data}" onclick="window.viewPhoto('${p.data}')"><button class="del-photo" onclick="window.deletePhoto(${car.id},${i})">✕</button></div>`
+    : `<div class="photo-thumb"><img src="${p.data}" onclick="window.viewPhoto('${p.data}')"><button class="del-photo" onclick="window.deletePhoto(${car.id},${i})">✕</button>${p.angle ? `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.7);color:#fff;font-size:9px;padding:2px 4px;text-align:center;">${p.angle}</div>` : ''}</div>`
   ).join('');
 }
 
@@ -464,6 +508,111 @@ window.handleUpload = function(event, carId) {
     if(file.type.startsWith('video/')) reader.readAsArrayBuffer(file);
     else reader.readAsDataURL(file);
   });
+};
+
+// ============ IN-APP CAMERA ============
+// Angle list matches D2C Media's exact photo slots, in D2C's order
+const CAM_ANGLES = [
+  'Front Corner', 'Front', 'Back', 'Back Corner', 'Driver Side', 'Mags',
+  'Front Seats', 'Cluster Dashboard', 'Door Panel', 'Steering Wheel',
+  'Odometer', 'Shifter', 'Sunroof', 'Back Seats', 'Backup Camera', 'Trunk',
+  'Other - Exterior', 'Other - Interior'
+];
+let camStream = null;
+let camCarId = null;
+let camShotCount = 0;
+let camAngleIdx = 0;
+
+window.openCamera = async function(carId) {
+  const car = cars.find(c => c.id === carId);
+  if(!car) return;
+  camCarId = carId;
+  camShotCount = 0;
+  camAngleIdx = 0;
+  document.getElementById('camStock').textContent = car.stock;
+  document.getElementById('camThumbs').innerHTML = '';
+  updateCamUI(car);
+  document.getElementById('camOverlay').classList.add('open');
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+      audio: false
+    });
+    document.getElementById('camVideo').srcObject = camStream;
+  } catch(e) {
+    showToast('⚠️ Camera access denied. Allow camera in browser settings.');
+    window.closeCamera();
+  }
+};
+
+function updateCamUI(car) {
+  const total = car.photos.length;
+  document.getElementById('camCount').textContent = total + (total === 1 ? ' photo' : ' photos');
+  const idx = Math.min(camAngleIdx, CAM_ANGLES.length - 1);
+  document.getElementById('camGuide').innerHTML =
+    '<span class="next">' + CAM_ANGLES[idx] + '</span> &nbsp;(' + (idx+1) + '/' + CAM_ANGLES.length + ')';
+}
+
+window.camNextAngle = function() {
+  if(camAngleIdx < CAM_ANGLES.length - 1) camAngleIdx++;
+  const car = cars.find(c => c.id === camCarId);
+  if(car) updateCamUI(car);
+};
+
+window.camPrevAngle = function() {
+  if(camAngleIdx > 0) camAngleIdx--;
+  const car = cars.find(c => c.id === camCarId);
+  if(car) updateCamUI(car);
+};
+
+window.snapPhoto = function() {
+  const video = document.getElementById('camVideo');
+  if(!video || !video.videoWidth) { showToast('⏳ Camera still loading...'); return; }
+  const car = cars.find(c => c.id === camCarId);
+  if(!car) return;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+  const angle = CAM_ANGLES[Math.min(camAngleIdx, CAM_ANGLES.length - 1)];
+  car.photos.push({ data: dataUrl, type: 'image', name: angle, angle: angle });
+  camShotCount++;
+  saveCars();
+
+  const flash = document.getElementById('camFlash');
+  flash.classList.remove('fire'); void flash.offsetWidth; flash.classList.add('fire');
+  const thumbs = document.getElementById('camThumbs');
+  const t = document.createElement('img');
+  t.src = dataUrl;
+  thumbs.prepend(t);
+  while(thumbs.children.length > 5) thumbs.removeChild(thumbs.lastChild);
+
+  // Auto-advance to next angle (but not past the end)
+  if(camAngleIdx < CAM_ANGLES.length - 1) camAngleIdx++;
+  updateCamUI(car);
+};
+
+window.closeCamera = function() {
+  if(camStream) { camStream.getTracks().forEach(tr => tr.stop()); camStream = null; }
+  document.getElementById('camOverlay').classList.remove('open');
+  document.getElementById('camVideo').srcObject = null;
+  if(camShotCount > 0) {
+    renderCars();
+    setTimeout(() => {
+      const exp = document.getElementById('expand-'+camCarId);
+      if(exp && !exp.classList.contains('open')) {
+        exp.classList.add('open');
+        const ch = document.getElementById('chev-'+camCarId);
+        if(ch) ch.classList.add('open');
+      }
+    }, 100);
+    showToast('✅ ' + camShotCount + ' photo(s) added!');
+  }
+  camCarId = null;
+  camShotCount = 0;
 };
 
 window.deletePhoto = function(carId, idx) {
@@ -529,7 +678,7 @@ window.checkForUpdates = async function() {
   try {
     const res = await fetch('https://majestic-elf-6ab83b.netlify.app/version.json?t=' + Date.now());
     const data = await res.json();
-    const CURRENT = '1.3.1';
+    const CURRENT = '1.5.0';
     const r = data.version.split('.').map(Number);
     const c = CURRENT.split('.').map(Number);
     let newer = false;
@@ -544,7 +693,7 @@ window.checkForUpdates = async function() {
 // ============ INIT ============
 renderCars();
 window.setMode(currentMode);
-document.getElementById('currentVersion').textContent = 'v1.3.1';
+document.getElementById('currentVersion').textContent = 'v1.5.0';
 const lc = localStorage.getItem('pm_last_checked');
 if(lc) document.getElementById('lastChecked').textContent = 'Last checked: ' + lc;
 
