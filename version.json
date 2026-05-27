@@ -1,5 +1,5 @@
 {
-  "version": "2.2.0",
+  "version": "2.3.0",
   "releaseDate": "2026-05-27",
-  "changelog": "Fixed photo sync — PC now scans Storage folder and loads all photos."
+  "changelog": "Photos load automatically on login — no button needed!"
 }

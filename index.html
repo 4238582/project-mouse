@@ -206,7 +206,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <div class="config-desc">Check for the latest version of Project Mouse.</div>
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Current Version</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v2.2.0</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v2.3.0</div>
       </div>
       <button class="btn btn-secondary" onclick="window.checkForUpdates()">🔍 Check for Updates</button>
       <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;" id="lastChecked"></div>
@@ -285,8 +285,11 @@ onAuthStateChanged(auth, async (user) => {
     if(cloudOut) cloudOut.style.display = 'none';
     if(cloudIn) cloudIn.style.display = 'block';
     startCloudSync();
-    // Load photo URLs from Storage after login
-    setTimeout(loadStoragePhotos, 2000);
+    // First sync car list, then load photos
+    try {
+      await window.syncFromCloud();
+    } catch(e) {}
+    setTimeout(loadStoragePhotos, 1000);
   } else {
     loginBtn.style.display = 'flex';
     logoutBtn.style.display = 'none';
@@ -851,7 +854,7 @@ window.checkForUpdates = async function() {
   try {
     const res = await fetch('https://4238582.github.io/project-mouse/version.json?t=' + Date.now());
     const data = await res.json();
-    const CURRENT = '2.2.0';
+    const CURRENT = '2.3.0';
     const r = data.version.split('.').map(Number);
     const c = CURRENT.split('.').map(Number);
     let newer = false;
@@ -866,7 +869,7 @@ window.checkForUpdates = async function() {
 // ============ INIT ============
 renderCars();
 window.setMode(currentMode);
-document.getElementById('currentVersion').textContent = 'v2.2.0';
+document.getElementById('currentVersion').textContent = 'v2.3.0';
 const lc = localStorage.getItem('pm_last_checked');
 if(lc) document.getElementById('lastChecked').textContent = 'Last checked: ' + lc;
 
