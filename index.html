@@ -205,7 +205,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <div class="config-desc">Check for the latest version of Project Mouse.</div>
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Current Version</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v1.7.0</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v1.8.0</div>
       </div>
       <button class="btn btn-secondary" onclick="window.checkForUpdates()">🔍 Check for Updates</button>
       <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;" id="lastChecked"></div>
@@ -300,21 +300,29 @@ function startCloudSync() {
   const ref = doc(db, 'users', currentUser.uid, 'data', 'inventory');
   // onSnapshot fires instantly whenever the cloud data changes — on ANY device
   cloudUnsub = onSnapshot(ref, (snap) => {
-    if(snap.metadata.hasPendingWrites) return; // ignore our own just-sent change
-    // Handle ALL cases: additions, edits, AND deletions (including delete-all)
+    if(snap.metadata.hasPendingWrites) return;
+    if(applyingRemote) return; // don't overwrite while we're saving
     let cloudCars = '[]';
     if(snap.exists() && typeof snap.data().cars === 'string') {
       cloudCars = snap.data().cars;
     }
-    if(cloudCars !== JSON.stringify(cars)) {
-      applyingRemote = true;
-      cars = JSON.parse(cloudCars);
-      localStorage.setItem('pm_cars', JSON.stringify(cars));
-      updateStats();
-      renderCars();
-      applyingRemote = false;
-      showToast('🔄 Updated from another device');
-    }
+    if(cloudCars === JSON.stringify(cars.map(c => ({...c, photos: c.photos.map(p => ({...p, data: ''}))}))))  return; // no change
+    
+    // Merge: use cloud for car list/metadata, but KEEP local photos
+    const cloudList = JSON.parse(cloudCars);
+    applyingRemote = true;
+    cars = cloudList.map(cloudCar => {
+      const localCar = cars.find(c => c.id === cloudCar.id);
+      return {
+        ...cloudCar,
+        photos: localCar ? localCar.photos : [] // keep local photos
+      };
+    });
+    localStorage.setItem('pm_cars', JSON.stringify(cars));
+    updateStats();
+    renderCars();
+    applyingRemote = false;
+    showToast('🔄 Updated from another device');
   }, (err) => {
     showToast('⚠️ Sync error: ' + err.code);
   });
@@ -335,8 +343,14 @@ function autoPushToCloud() {
   clearTimeout(pushTimer);
   pushTimer = setTimeout(async () => {
     try {
+      // Strip photo base64 data before pushing to Firestore (too large)
+      // Only sync car metadata — photos stay local
+      const carsForCloud = cars.map(c => ({
+        ...c,
+        photos: c.photos.map(p => ({ ...p, data: '' })) // strip base64
+      }));
       await setDoc(doc(db, 'users', currentUser.uid, 'data', 'inventory'), {
-        cars: JSON.stringify(cars), updatedAt: new Date().toISOString()
+        cars: JSON.stringify(carsForCloud), updatedAt: new Date().toISOString()
       });
       const sd = document.getElementById('syncDot');
       if(sd) { sd.style.background = 'var(--success)'; }
@@ -395,9 +409,14 @@ function showToast(msg) {
 }
 
 function saveCars() {
-  try { localStorage.setItem('pm_cars', JSON.stringify(cars)); } catch(e) { showToast('⚠️ Storage full!'); }
+  try { 
+    localStorage.setItem('pm_cars', JSON.stringify(cars));
+  } catch(e) { 
+    showToast('⚠️ Save failed: ' + e.message);
+    return; // don't push to cloud if local save failed
+  }
   updateStats();
-  autoPushToCloud(); // automatically sync to cloud — no buttons needed
+  autoPushToCloud();
 }
 
 function updateStats() {
@@ -727,7 +746,7 @@ window.checkForUpdates = async function() {
   try {
     const res = await fetch('https://majestic-elf-6ab83b.netlify.app/version.json?t=' + Date.now());
     const data = await res.json();
-    const CURRENT = '1.7.0';
+    const CURRENT = '1.8.0';
     const r = data.version.split('.').map(Number);
     const c = CURRENT.split('.').map(Number);
     let newer = false;
@@ -742,7 +761,7 @@ window.checkForUpdates = async function() {
 // ============ INIT ============
 renderCars();
 window.setMode(currentMode);
-document.getElementById('currentVersion').textContent = 'v1.7.0';
+document.getElementById('currentVersion').textContent = 'v1.8.0';
 const lc = localStorage.getItem('pm_last_checked');
 if(lc) document.getElementById('lastChecked').textContent = 'Last checked: ' + lc;
 
