@@ -1,5 +1,5 @@
 {
-  "version": "1.8.0",
+  "version": "1.9.0",
   "releaseDate": "2026-05-27",
-  "changelog": "Fixed photo bug — photos now save properly and don't get wiped by cloud sync."
+  "changelog": "Moved to GitHub Pages — free forever!"
 }
