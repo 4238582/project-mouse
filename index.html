@@ -205,7 +205,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <div class="config-desc">Check for the latest version of Project Mouse.</div>
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Current Version</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v1.6.0</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v1.7.0</div>
       </div>
       <button class="btn btn-secondary" onclick="window.checkForUpdates()">🔍 Check for Updates</button>
       <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;" id="lastChecked"></div>
@@ -577,7 +577,15 @@ window.snapPhoto = function() {
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
   canvas.getContext('2d').drawImage(video, 0, 0);
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+  // Compress — resize to max 1200px wide, JPEG 80% (~150KB per photo vs ~3MB uncompressed)
+  const MAX_W = 1200;
+  let w = canvas.width, h = canvas.height;
+  if(w > MAX_W) { h = Math.round(h * MAX_W / w); w = MAX_W; }
+  const comp = document.createElement('canvas');
+  comp.width = w; comp.height = h;
+  comp.getContext('2d').drawImage(canvas, 0, 0, w, h);
+  const dataUrl = comp.toDataURL('image/jpeg', 0.80);
 
   const angle = CAM_ANGLES[Math.min(camAngleIdx, CAM_ANGLES.length - 1)];
   car.photos.push({ data: dataUrl, type: 'image', name: angle, angle: angle });
@@ -719,7 +727,7 @@ window.checkForUpdates = async function() {
   try {
     const res = await fetch('https://majestic-elf-6ab83b.netlify.app/version.json?t=' + Date.now());
     const data = await res.json();
-    const CURRENT = '1.6.0';
+    const CURRENT = '1.7.0';
     const r = data.version.split('.').map(Number);
     const c = CURRENT.split('.').map(Number);
     let newer = false;
@@ -734,7 +742,7 @@ window.checkForUpdates = async function() {
 // ============ INIT ============
 renderCars();
 window.setMode(currentMode);
-document.getElementById('currentVersion').textContent = 'v1.6.0';
+document.getElementById('currentVersion').textContent = 'v1.7.0';
 const lc = localStorage.getItem('pm_last_checked');
 if(lc) document.getElementById('lastChecked').textContent = 'Last checked: ' + lc;
 

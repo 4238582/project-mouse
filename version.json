@@ -1,5 +1,5 @@
 {
-  "version": "1.6.0",
+  "version": "1.7.0",
   "releaseDate": "2026-05-27",
-  "changelog": "Download all of a car's photos as one ZIP file."
+  "changelog": "Photo compression — now stores 30+ photos per car instead of 2."
 }
