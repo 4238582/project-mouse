@@ -206,7 +206,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <div class="config-desc">Check for the latest version of Project Mouse.</div>
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Current Version</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v2.9.0</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v3.0.0</div>
       </div>
       <button class="btn btn-secondary" onclick="window.checkForUpdates()">🔍 Check for Updates</button>
       <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;" id="lastChecked"></div>
@@ -791,22 +791,109 @@ window.copyCarInfo = function(id) {
   navigator.clipboard.writeText(text).then(() => showToast('📋 Info copied!')).catch(() => showToast('⚠️ Copy failed'));
 };
 
+// ── Progress bar UI ──────────────────────────────────────────────
+function showDownloadProgress(visible, current, total, fileName) {
+  let bar = document.getElementById('dl-progress-bar');
+  if (!visible) { if (bar) bar.remove(); return; }
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'dl-progress-bar';
+    bar.style.cssText = [
+      'position:fixed', 'bottom:90px', 'left:50%', 'transform:translateX(-50%)',
+      'background:#1a1a1a', 'border:2px solid #e8ff00', 'border-radius:14px',
+      'padding:14px 18px', 'width:85%', 'max-width:380px', 'z-index:9999',
+      'box-shadow:0 4px 24px rgba(0,0,0,0.6)'
+    ].join(';');
+    bar.innerHTML = `
+      <div id="dpb-label" style="font-size:13px;font-weight:700;color:#fff;margin-bottom:8px;"></div>
+      <div style="background:#333;border-radius:8px;overflow:hidden;height:16px;">
+        <div id="dpb-fill" style="height:100%;background:#e8ff00;width:0%;transition:width 0.3s;border-radius:8px;"></div>
+      </div>
+      <div id="dpb-file" style="font-size:11px;margin-top:6px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>`;
+    document.body.appendChild(bar);
+  }
+  const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+  document.getElementById('dpb-label').textContent = `📥 Saving… ${current}/${total} (${pct}%)`;
+  document.getElementById('dpb-fill').style.width = pct + '%';
+  document.getElementById('dpb-file').textContent = fileName || '';
+}
+
+// ── Base64 data-URL → Blob ────────────────────────────────────────
+function dataURLtoBlob(dataURL) {
+  const [header, b64] = dataURL.split(',');
+  const mime = header.match(/:(.*?);/)[1];
+  const bytes = atob(b64);
+  const arr = new Uint8Array(bytes.length);
+  for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+  return new Blob([arr], { type: mime });
+}
+
+// ── Main download function ────────────────────────────────────────
 window.downloadPhotos = async function(id) {
   const car = cars.find(c => c.id === id);
-  if(!car) return;
+  if (!car) return;
   const photos = car.photos.filter(p => p.type !== 'video' && (p.data || p.url));
-  if(photos.length === 0) { showToast('⚠️ No photos to download'); return; }
+  if (photos.length === 0) { showToast('⚠️ No photos to download'); return; }
 
-  showToast('📸 Opening ' + photos.length + ' photos — allow popups if asked!');
-
-  for(let i = 0; i < photos.length; i++) {
-    const p = photos[i];
-    const src = p.url || p.data;
-    if(!src) continue;
-    // Open each photo in a new tab — user can save from there
-    setTimeout(() => { window.open(src, '_blank'); }, i * 800);
+  // Chrome File System Access API check
+  if (!window.showDirectoryPicker) {
+    showToast('⚠️ Use Chrome on desktop for folder download');
+    return;
   }
-  setTimeout(() => showToast('✅ All photos opened! Right-click each to save.'), photos.length * 800);
+
+  // Folder name: "23158A 2022 Hyundai Elantra"
+  const folderName = [car.stock, car.year, car.make, car.model].filter(Boolean).join(' ');
+
+  let baseDir;
+  try {
+    baseDir = await window.showDirectoryPicker({ mode: 'readwrite' });
+  } catch (e) {
+    if (e.name !== 'AbortError') showToast('⚠️ Folder picker error: ' + e.message);
+    return;
+  }
+
+  // Create subfolder automatically
+  let carDir;
+  try {
+    carDir = await baseDir.getDirectoryHandle(folderName, { create: true });
+  } catch (e) {
+    showToast('⚠️ Could not create folder: ' + e.message);
+    return;
+  }
+
+  showDownloadProgress(true, 0, photos.length, 'Starting…');
+
+  let saved = 0;
+  for (let i = 0; i < photos.length; i++) {
+    const p = photos[i];
+    const num = String(i + 1).padStart(2, '0');
+    const fileName = `${num}_${folderName}.jpg`;
+    showDownloadProgress(true, i, photos.length, fileName);
+    try {
+      let blob;
+      if (p.url) {
+        const res = await fetch(p.url);
+        blob = await res.blob();
+      } else if (p.data) {
+        blob = dataURLtoBlob(p.data);
+      } else { continue; }
+
+      const fileHandle = await carDir.getFileHandle(fileName, { create: true });
+      const writable = await fileHandle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      saved++;
+    } catch (e) {
+      console.warn('Photo ' + (i+1) + ' failed:', e.message);
+    }
+  }
+
+  showDownloadProgress(false);
+  if (saved === photos.length) {
+    showToast(`✅ ${saved} photos saved to 📁 ${folderName}`);
+  } else {
+    showToast(`⚠️ ${saved}/${photos.length} saved — CORS fix needed for cloud photos`);
+  }
 };
 
 window.setMode = function(mode) {
@@ -833,7 +920,7 @@ window.checkForUpdates = async function() {
   try {
     const res = await fetch('https://4238582.github.io/project-mouse/version.json?t=' + Date.now());
     const data = await res.json();
-    const CURRENT = '2.9.0';
+    const CURRENT = '3.0.0';
     const r = data.version.split('.').map(Number);
     const c = CURRENT.split('.').map(Number);
     let newer = false;
@@ -848,7 +935,7 @@ window.checkForUpdates = async function() {
 // ============ INIT ============
 renderCars();
 window.setMode(currentMode);
-document.getElementById('currentVersion').textContent = 'v2.9.0';
+document.getElementById('currentVersion').textContent = 'v3.0.0';
 const lc = localStorage.getItem('pm_last_checked');
 if(lc) document.getElementById('lastChecked').textContent = 'Last checked: ' + lc;
 
