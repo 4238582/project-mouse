@@ -1,5 +1,5 @@
 {
-  "version": "2.6.0",
+  "version": "2.7.0",
   "releaseDate": "2026-05-28",
-  "changelog": "Fixed ZIP download — faster photo fetching and better error handling."
+  "changelog": "Download now saves photos individually — no more ZIP freezing!"
 }
