@@ -206,7 +206,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <div class="config-desc">Check for the latest version of Project Mouse.</div>
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Current Version</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v2.5.0</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v2.6.0</div>
       </div>
       <button class="btn btn-secondary" onclick="window.checkForUpdates()">🔍 Check for Updates</button>
       <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;" id="lastChecked"></div>
@@ -819,16 +819,30 @@ window.downloadPhotos = async function(id) {
         // Use Firebase SDK getBytes — bypasses CORS completely
         showToast('📦 Fetching photo ' + (i+1) + '/' + photos.length + '...');
         try {
-          // Get the storage path from the photo id
-          const path = `users/${currentUser.uid}/cars/${id}/${p.id}.jpg`;
-          const bytes = await getBytes(storageRef(storage, path));
-          // Convert ArrayBuffer to base64
+          let bytes;
+          if(p.id) {
+            // New photo with ID — fetch from Storage
+            const path = `users/${currentUser.uid}/cars/${id}/${p.id}.jpg`;
+            bytes = await getBytes(storageRef(storage, path));
+          } else if(p.url) {
+            // Old photo without ID — try fetch with no-cors fallback
+            const resp = await fetch(p.url, { mode: 'cors' });
+            const blob = await resp.blob();
+            const ab = await blob.arrayBuffer();
+            bytes = ab;
+          } else {
+            continue;
+          }
+          // Fast base64 conversion using chunks
           const uint8 = new Uint8Array(bytes);
+          const chunkSize = 8192;
           let binary = '';
-          for(let j = 0; j < uint8.length; j++) binary += String.fromCharCode(uint8[j]);
+          for(let j = 0; j < uint8.length; j += chunkSize) {
+            binary += String.fromCharCode(...uint8.subarray(j, j + chunkSize));
+          }
           b64 = btoa(binary);
         } catch(e) {
-          showToast('⚠️ Could not fetch photo ' + (i+1));
+          showToast('⚠️ Skipping photo ' + (i+1) + ': ' + e.message);
           continue;
         }
       } else continue;
@@ -875,7 +889,7 @@ window.checkForUpdates = async function() {
   try {
     const res = await fetch('https://4238582.github.io/project-mouse/version.json?t=' + Date.now());
     const data = await res.json();
-    const CURRENT = '2.5.0';
+    const CURRENT = '2.6.0';
     const r = data.version.split('.').map(Number);
     const c = CURRENT.split('.').map(Number);
     let newer = false;
@@ -890,7 +904,7 @@ window.checkForUpdates = async function() {
 // ============ INIT ============
 renderCars();
 window.setMode(currentMode);
-document.getElementById('currentVersion').textContent = 'v2.5.0';
+document.getElementById('currentVersion').textContent = 'v2.6.0';
 const lc = localStorage.getItem('pm_last_checked');
 if(lc) document.getElementById('lastChecked').textContent = 'Last checked: ' + lc;
 

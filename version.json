@@ -1,5 +1,5 @@
 {
-  "version": "2.5.0",
-  "releaseDate": "2026-05-27",
-  "changelog": "Fixed ZIP download — uses Firebase SDK to bypass CORS issue."
+  "version": "2.6.0",
+  "releaseDate": "2026-05-28",
+  "changelog": "Fixed ZIP download — faster photo fetching and better error handling."
 }
