@@ -1,5 +1,5 @@
 {
-  "version": "2.7.0",
+  "version": "2.8.0",
   "releaseDate": "2026-05-28",
-  "changelog": "Download now saves photos individually — no more ZIP freezing!"
+  "changelog": "Fixed download — photos save directly to Downloads folder, no more new tabs!"
 }

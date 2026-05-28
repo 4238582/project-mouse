@@ -206,7 +206,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <div class="config-desc">Check for the latest version of Project Mouse.</div>
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Current Version</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v2.7.0</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v2.8.0</div>
       </div>
       <button class="btn btn-secondary" onclick="window.checkForUpdates()">🔍 Check for Updates</button>
       <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;" id="lastChecked"></div>
@@ -250,7 +250,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-import { getStorage, ref as storageRef, uploadString, getDownloadURL, deleteObject, listAll, getBytes } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+import { getStorage, ref as storageRef, uploadString, getDownloadURL, deleteObject, listAll, getBytes, getBlob } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
 
 const fbApp = initializeApp({
   apiKey: "AIzaSyDOChD59h6qGKNA0rf5_gO53ZMAhNmftvo",
@@ -797,7 +797,7 @@ window.downloadPhotos = async function(id) {
   const photos = car.photos.filter(p => p.type !== 'video' && (p.data || p.url));
   if(photos.length === 0) { showToast('⚠️ No photos to download'); return; }
 
-  showToast('📦 Downloading ' + photos.length + ' photos...');
+  showToast('📦 Preparing ' + photos.length + ' photos...');
 
   const used = {};
   let count = 0;
@@ -811,36 +811,35 @@ window.downloadPhotos = async function(id) {
     const fname = car.stock + ' - ' + num + ' - ' + base + suffix + '.jpg';
 
     try {
-      let downloadUrl = p.url;
-      // If no URL but has local data, use that
-      if(!downloadUrl && p.data) {
-        const a = document.createElement('a');
-        a.href = p.data;
-        a.download = fname;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        count++;
-        await new Promise(r => setTimeout(r, 300));
-        continue;
-      }
-      if(!downloadUrl) continue;
-      // Open Firebase URL directly in new tab to trigger browser download
+      let blobUrl;
+      if(p.data && p.data.includes('base64,')) {
+        // Local photo — convert data URL to blob
+        const res = await fetch(p.data);
+        const blob = await res.blob();
+        blobUrl = URL.createObjectURL(blob);
+      } else if(p.id && currentUser) {
+        // Cloud photo — use Firebase getBlob
+        showToast('📦 ' + (i+1) + '/' + photos.length + ' ' + base + '...');
+        const path = `users/${currentUser.uid}/cars/${id}/${p.id}.jpg`;
+        const blob = await getBlob(storageRef(storage, path));
+        blobUrl = URL.createObjectURL(blob);
+      } else continue;
+
+      // Trigger real file download
       const a = document.createElement('a');
-      a.href = downloadUrl + '&response-content-disposition=attachment%3B%20filename%3D' + encodeURIComponent(fname);
+      a.href = blobUrl;
       a.download = fname;
-      a.target = '_blank';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
       count++;
-      // Small delay between downloads so browser doesn't block them
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 600));
     } catch(e) {
       continue;
     }
   }
-  showToast('✅ ' + count + ' photos downloading!');
+  showToast('✅ ' + count + ' photos saved to Downloads!');
 };
 
 window.setMode = function(mode) {
@@ -867,7 +866,7 @@ window.checkForUpdates = async function() {
   try {
     const res = await fetch('https://4238582.github.io/project-mouse/version.json?t=' + Date.now());
     const data = await res.json();
-    const CURRENT = '2.7.0';
+    const CURRENT = '2.8.0';
     const r = data.version.split('.').map(Number);
     const c = CURRENT.split('.').map(Number);
     let newer = false;
@@ -882,7 +881,7 @@ window.checkForUpdates = async function() {
 // ============ INIT ============
 renderCars();
 window.setMode(currentMode);
-document.getElementById('currentVersion').textContent = 'v2.7.0';
+document.getElementById('currentVersion').textContent = 'v2.8.0';
 const lc = localStorage.getItem('pm_last_checked');
 if(lc) document.getElementById('lastChecked').textContent = 'Last checked: ' + lc;
 
