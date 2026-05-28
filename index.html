@@ -206,7 +206,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <div class="config-desc">Check for the latest version of Project Mouse.</div>
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Current Version</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v2.8.0</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v2.9.0</div>
       </div>
       <button class="btn btn-secondary" onclick="window.checkForUpdates()">🔍 Check for Updates</button>
       <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;" id="lastChecked"></div>
@@ -797,49 +797,16 @@ window.downloadPhotos = async function(id) {
   const photos = car.photos.filter(p => p.type !== 'video' && (p.data || p.url));
   if(photos.length === 0) { showToast('⚠️ No photos to download'); return; }
 
-  showToast('📦 Preparing ' + photos.length + ' photos...');
-
-  const used = {};
-  let count = 0;
+  showToast('📸 Opening ' + photos.length + ' photos — allow popups if asked!');
 
   for(let i = 0; i < photos.length; i++) {
     const p = photos[i];
-    let base = (p.angle || p.name || 'photo').replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'photo';
-    used[base] = (used[base] || 0) + 1;
-    const suffix = used[base] > 1 ? ' (' + used[base] + ')' : '';
-    const num = String(i + 1).padStart(2, '0');
-    const fname = car.stock + ' - ' + num + ' - ' + base + suffix + '.jpg';
-
-    try {
-      let blobUrl;
-      if(p.data && p.data.includes('base64,')) {
-        // Local photo — convert data URL to blob
-        const res = await fetch(p.data);
-        const blob = await res.blob();
-        blobUrl = URL.createObjectURL(blob);
-      } else if(p.id && currentUser) {
-        // Cloud photo — use Firebase getBlob
-        showToast('📦 ' + (i+1) + '/' + photos.length + ' ' + base + '...');
-        const path = `users/${currentUser.uid}/cars/${id}/${p.id}.jpg`;
-        const blob = await getBlob(storageRef(storage, path));
-        blobUrl = URL.createObjectURL(blob);
-      } else continue;
-
-      // Trigger real file download
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = fname;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
-      count++;
-      await new Promise(r => setTimeout(r, 600));
-    } catch(e) {
-      continue;
-    }
+    const src = p.url || p.data;
+    if(!src) continue;
+    // Open each photo in a new tab — user can save from there
+    setTimeout(() => { window.open(src, '_blank'); }, i * 800);
   }
-  showToast('✅ ' + count + ' photos saved to Downloads!');
+  setTimeout(() => showToast('✅ All photos opened! Right-click each to save.'), photos.length * 800);
 };
 
 window.setMode = function(mode) {
@@ -866,7 +833,7 @@ window.checkForUpdates = async function() {
   try {
     const res = await fetch('https://4238582.github.io/project-mouse/version.json?t=' + Date.now());
     const data = await res.json();
-    const CURRENT = '2.8.0';
+    const CURRENT = '2.9.0';
     const r = data.version.split('.').map(Number);
     const c = CURRENT.split('.').map(Number);
     let newer = false;
@@ -881,7 +848,7 @@ window.checkForUpdates = async function() {
 // ============ INIT ============
 renderCars();
 window.setMode(currentMode);
-document.getElementById('currentVersion').textContent = 'v2.8.0';
+document.getElementById('currentVersion').textContent = 'v2.9.0';
 const lc = localStorage.getItem('pm_last_checked');
 if(lc) document.getElementById('lastChecked').textContent = 'Last checked: ' + lc;
 
