@@ -1,5 +1,5 @@
 {
-  "version": "3.0.0",
+  "version": "3.1.0",
   "releaseDate": "2026-05-28",
-  "changelog": "Download Photos now saves directly to a folder on your PC — no ZIP, no extraction. Chrome picks the folder, creates a subfolder named with the stock number and car, and downloads each photo one by one with a progress bar."
+  "changelog": "Fixed Firebase Storage CORS — Download Photos now works for cloud photos."
 }
