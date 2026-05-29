@@ -98,6 +98,10 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .cam-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 3; }
 .cam-flash.fire { animation: flashAnim 0.25s; }
 @keyframes flashAnim { 0% { opacity: 0.9; } 100% { opacity: 0; } }
+@media (orientation: landscape) {
+  .cam-bottom { top: 0; bottom: 0; left: auto; right: 0; width: 100px; flex-direction: column; justify-content: space-around; padding: 16px 12px; background: linear-gradient(to left, rgba(0,0,0,0.8), transparent); }
+  .cam-thumbs { flex-direction: column; overflow-y: auto; overflow-x: hidden; max-width: none; max-height: 120px; }
+}
 .mode-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
 .mode-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-size: 12px; cursor: pointer; text-align: center; }
 .mode-btn.active { background: rgba(232,255,0,0.1); border-color: var(--accent); color: var(--accent); }
