@@ -580,10 +580,14 @@ function renderCars(list_) {
     <div class="car-card">
       <div class="car-header" onclick="window.toggleCard(${car.id})">
         <div>
-          <div class="car-name" style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:3px;"><span class="status-dot ${car.photos.length > 0 ? 'done' : ''}"></span>${[car.year,car.make,car.model].filter(Boolean).join(' ') || 'No details'}${car.price ? ' · $'+Number(car.price).toLocaleString() : ''}</div>
+          <div style="font-size:16px;font-weight:700;color:var(--accent);margin-bottom:2px;"><span class="status-dot ${car.photos.length > 0 ? 'done' : ''}"></span>${[car.year,car.make,car.model].filter(Boolean).join(' ') || 'No details'}</div>
+          <div style="font-size:12px;color:var(--text);margin-bottom:3px;">
+            ${car.stock ? `<span style="font-weight:600;">${car.stock}</span>` : ''}
+            ${car.price ? `<span style="color:var(--muted);"> · $${Number(car.price).toLocaleString()}</span>` : ''}
+            ${car.odometer ? `<span style="color:var(--muted);"> · ${Number(car.odometer).toLocaleString()} km</span>` : ''}
+          </div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-            <span class="car-stock" style="font-size:13px;">${car.stock}</span>
-            ${car.vin ? `<span style="font-size:11px;color:var(--muted);">· VIN: ${car.vin}</span><button onclick="event.stopPropagation();navigator.clipboard.writeText('${car.vin}').then(()=>window.showToast('📋 VIN copied!'))" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-size:10px;padding:1px 6px;cursor:pointer;">Copy</button>` : ''}
+            ${car.vin ? `<span style="font-size:11px;color:var(--muted);">VIN: ${car.vin}</span><button onclick="event.stopPropagation();navigator.clipboard.writeText('${car.vin}').then(()=>window.showToast('📋 VIN copied!'))" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-size:10px;padding:1px 6px;cursor:pointer;">Copy</button>` : ''}
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:6px;">
