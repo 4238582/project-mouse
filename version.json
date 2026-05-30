@@ -1,5 +1,5 @@
 {
-  "version": "3.1.0",
-  "releaseDate": "2026-05-28",
-  "changelog": "Fixed Firebase Storage CORS — Download Photos now works for cloud photos."
+  "version": "3.2.0",
+  "releaseDate": "2026-05-30",
+  "changelog": "Added Posting Automation tab on each car card. Use Project Snake on D2C Media to auto-import car data and generate FR/EN listings."
 }

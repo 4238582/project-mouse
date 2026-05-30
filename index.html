@@ -102,6 +102,13 @@ input:focus, textarea:focus { border-color: var(--accent); }
   .cam-bottom { top: 0; bottom: 0; left: auto; right: 0; width: 100px; flex-direction: column; justify-content: space-around; padding: 16px 12px; background: linear-gradient(to left, rgba(0,0,0,0.8), transparent); }
   .cam-thumbs { flex-direction: column; overflow-y: auto; overflow-x: hidden; max-width: none; max-height: 120px; }
 }
+.card-tabs { display: flex; gap: 0; margin-bottom: 14px; border-bottom: 2px solid var(--border); }
+.card-tab { flex: 1; background: none; border: none; color: var(--muted); font-size: 13px; font-weight: 600; padding: 8px 0; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: color .15s, border-color .15s; }
+.card-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.posting-section { margin-bottom: 14px; }
+.posting-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; }
+.posting-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; color: var(--text); }
+.posting-empty { text-align: center; padding: 32px 16px; color: var(--muted); font-size: 13px; }
 .mode-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
 .mode-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-size: 12px; cursor: pointer; text-align: center; }
 .mode-btn.active { background: rgba(232,255,0,0.1); border-color: var(--accent); color: var(--accent); }
@@ -525,19 +532,28 @@ function renderCars() {
         </div>
       </div>
       <div class="car-expand" id="expand-${car.id}">
-        ${car.vin ? `<div style="font-size:11px;color:var(--muted);margin-bottom:10px;">VIN: ${car.vin}</div>` : ''}
-        ${car.notes ? `<div style="font-size:12px;color:#888;margin-bottom:12px;padding:9px;background:var(--surface2);border-radius:8px;">${car.notes}</div>` : ''}
-        <div class="photo-grid" id="grid-${car.id}">${renderPhotos(car)}</div>
-        <button class="btn btn-primary" style="margin-bottom:10px;" onclick="window.openCamera(${car.id})">📸 QUICK CAMERA</button>
-        <div class="upload-area">
-          <input type="file" accept="image/*,video/*" multiple capture="environment" onchange="window.handleUpload(event, ${car.id})">
-          <div class="upload-icon">🖼️</div>
-          <div class="upload-text">or upload from <strong>camera roll</strong></div>
+        <div class="card-tabs">
+          <button class="card-tab active" onclick="window.switchCardTab(${car.id},'photos',this)">📸 Photos</button>
+          <button class="card-tab" onclick="window.switchCardTab(${car.id},'posting',this)">🐍 Posting</button>
         </div>
-        <div class="car-actions">
-          <button class="btn-danger" onclick="window.deleteCar(${car.id})">🗑️ Delete</button>
-          ${car.photos.length > 0 ? `<button class="btn btn-secondary" style="flex:1;" onclick="window.copyCarInfo(${car.id})">📋 Copy Info</button>` : ''}
-          ${car.photos.filter(p => p.type !== 'video').length > 0 ? `<button class="btn btn-primary" style="flex:1;" onclick="window.downloadPhotos(${car.id})">⬇️ Download Photos</button>` : ''}
+        <div id="card-photos-${car.id}">
+          ${car.vin ? `<div style="font-size:11px;color:var(--muted);margin-bottom:10px;">VIN: ${car.vin}</div>` : ''}
+          ${car.notes ? `<div style="font-size:12px;color:#888;margin-bottom:12px;padding:9px;background:var(--surface2);border-radius:8px;">${car.notes}</div>` : ''}
+          <div class="photo-grid" id="grid-${car.id}">${renderPhotos(car)}</div>
+          <button class="btn btn-primary" style="margin-bottom:10px;" onclick="window.openCamera(${car.id})">📸 QUICK CAMERA</button>
+          <div class="upload-area">
+            <input type="file" accept="image/*,video/*" multiple capture="environment" onchange="window.handleUpload(event, ${car.id})">
+            <div class="upload-icon">🖼️</div>
+            <div class="upload-text">or upload from <strong>camera roll</strong></div>
+          </div>
+          <div class="car-actions">
+            <button class="btn-danger" onclick="window.deleteCar(${car.id})">🗑️ Delete</button>
+            ${car.photos.length > 0 ? `<button class="btn btn-secondary" style="flex:1;" onclick="window.copyCarInfo(${car.id})">📋 Copy Info</button>` : ''}
+            ${car.photos.filter(p => p.type !== 'video').length > 0 ? `<button class="btn btn-primary" style="flex:1;" onclick="window.downloadPhotos(${car.id})">⬇️ Download Photos</button>` : ''}
+          </div>
+        </div>
+        <div id="card-posting-${car.id}" style="display:none;">
+          ${renderPostingTab(car)}
         </div>
       </div>
     </div>`).join('');
@@ -555,6 +571,146 @@ function renderPhotos(car) {
     </div>`;
   }).join('');
 }
+
+// ============ POSTING TAB ============
+function renderPostingTab(car) {
+  const hasData = car.year || car.make || car.model || car.price || car.vin;
+  if (!hasData) {
+    return `<div class="posting-empty">
+      <div style="font-size:32px;margin-bottom:10px;">🐍</div>
+      <div style="font-weight:600;margin-bottom:6px;">No listing data yet</div>
+      <div>Use the <strong>Project Snake</strong> Chrome extension on the D2C Media page for this car, then click <strong>"Send to Project Mouse"</strong>.</div>
+    </div>`;
+  }
+
+  const name = [car.year, car.make, car.model, car.trim].filter(Boolean).join(' ');
+  const km = car.odometer ? Number(car.odometer).toLocaleString() + ' km' : '';
+  const price = car.price ? '$' + Number(car.price).toLocaleString() : '';
+  const features = (car.features || []).map(f => `• ${f}`).join('\n');
+
+  const listingEN = [
+    `🚗 ${name}`,
+    price && `💰 ${price}`,
+    km && `📍 ${km}`,
+    car.transmission && `⚙️ ${car.transmission}`,
+    car.exteriorColor && `🎨 ${car.exteriorColor}`,
+    car.fuelType && `⛽ ${car.fuelType}`,
+    car.vin && `VIN: ${car.vin}`,
+    car.description ? `\n${car.description}` : '',
+    features ? `\nFEATURES:\n${features}` : '',
+    `\n📞 Hull Hyundai — Gatineau, QC`,
+  ].filter(Boolean).join('\n');
+
+  const listingFR = [
+    `🚗 ${name}`,
+    price && `💰 ${price}`,
+    km && `📍 ${km}`,
+    car.transmission && `⚙️ ${car.transmission}`,
+    car.exteriorColor && `🎨 ${car.exteriorColor}`,
+    car.fuelType && `⛽ ${car.fuelType}`,
+    car.vin && `NIV: ${car.vin}`,
+    car.descriptionFr ? `\n${car.descriptionFr}` : (car.description ? `\n${car.description}` : ''),
+    features ? `\nCARACTÉRISTIQUES:\n${features}` : '',
+    `\n📞 Hull Hyundai — Gatineau, QC`,
+  ].filter(Boolean).join('\n');
+
+  return `
+    <div class="posting-section">
+      <div class="posting-label">🇨🇦 English Listing</div>
+      <div class="posting-box" id="listing-en-${car.id}">${listingEN}</div>
+      <button class="btn btn-secondary" style="margin-top:8px;width:100%;" onclick="window.copyListing(${car.id},'en')">📋 Copy English</button>
+    </div>
+    <div class="posting-section">
+      <div class="posting-label">🇫🇷 Annonce Français</div>
+      <div class="posting-box" id="listing-fr-${car.id}">${listingFR}</div>
+      <button class="btn btn-secondary" style="margin-top:8px;width:100%;" onclick="window.copyListing(${car.id},'fr')">📋 Copier Français</button>
+    </div>
+    <div class="car-actions" style="margin-top:4px;">
+      <button class="btn-danger" onclick="window.deleteCar(${car.id})">🗑️ Delete</button>
+    </div>`;
+}
+
+window.switchCardTab = function(carId, tab, btnEl) {
+  document.getElementById('card-photos-' + carId).style.display = tab === 'photos' ? '' : 'none';
+  document.getElementById('card-posting-' + carId).style.display = tab === 'posting' ? '' : 'none';
+  btnEl.closest('.card-tabs').querySelectorAll('.card-tab').forEach(b => b.classList.remove('active'));
+  btnEl.classList.add('active');
+};
+
+window.copyListing = function(carId, lang) {
+  const el = document.getElementById('listing-' + lang + '-' + carId);
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).then(() => showToast('📋 ' + (lang === 'fr' ? 'Annonce copiée!' : 'Listing copied!')));
+};
+
+// ============ SNAKE IMPORT LISTENER ============
+window.addEventListener('snake:importVehicle', function(e) {
+  const v = e.detail;
+  if (!v) return;
+
+  // Check if car with same stock number already exists
+  const existing = cars.find(c => c.stock && v.stockNumber && c.stock === v.stockNumber);
+  if (existing) {
+    // Update existing car with D2C data
+    Object.assign(existing, {
+      year: v.year || existing.year,
+      make: v.make || existing.make,
+      model: v.model || existing.model,
+      trim: v.trim || existing.trim,
+      vin: v.vin || existing.vin,
+      price: v.price || existing.price,
+      odometer: v.odometer || existing.odometer,
+      transmission: v.transmission || existing.transmission,
+      exteriorColor: v.exteriorColor || existing.exteriorColor,
+      interiorColor: v.interiorColor || existing.interiorColor,
+      fuelType: v.fuelType || existing.fuelType,
+      description: v.description || existing.description,
+      descriptionFr: v.descriptionFr || existing.descriptionFr,
+      features: v.features || existing.features,
+    });
+    saveCars(); renderCars();
+    showToast('🐍 Car updated from D2C Media!');
+    // Auto-expand and switch to posting tab
+    setTimeout(() => {
+      const exp = document.getElementById('expand-' + existing.id);
+      if (exp && exp.style.display === 'none') window.toggleCard(existing.id);
+      const postBtn = exp && exp.querySelector('.card-tab:last-child');
+      if (postBtn) postBtn.click();
+    }, 300);
+    return;
+  }
+
+  // Add as new car
+  const newCar = {
+    id: Date.now(),
+    stock: v.stockNumber || v.name || 'Unknown',
+    year: v.year || '',
+    make: v.make || '',
+    model: v.model || '',
+    trim: v.trim || '',
+    vin: v.vin || '',
+    price: v.price || '',
+    odometer: v.odometer || '',
+    transmission: v.transmission || '',
+    exteriorColor: v.exteriorColor || '',
+    interiorColor: v.interiorColor || '',
+    fuelType: v.fuelType || '',
+    description: v.description || '',
+    descriptionFr: v.descriptionFr || '',
+    features: v.features || [],
+    photos: [],
+    notes: '',
+  };
+  cars.unshift(newCar);
+  saveCars(); renderCars();
+  showToast('🐍 Car imported from D2C Media!');
+  setTimeout(() => {
+    const exp = document.getElementById('expand-' + newCar.id);
+    if (exp) window.toggleCard(newCar.id);
+    const postBtn = exp && exp.querySelector('.card-tab:last-child');
+    if (postBtn) setTimeout(() => postBtn.click(), 200);
+  }, 300);
+});
 
 // ============ WINDOW FUNCTIONS ============
 window.switchTab = function(name) {
@@ -939,7 +1095,7 @@ window.checkForUpdates = async function() {
 // ============ INIT ============
 renderCars();
 window.setMode(currentMode);
-document.getElementById('currentVersion').textContent = 'v3.1.0';
+document.getElementById('currentVersion').textContent = 'v3.2.0';
 const lc = localStorage.getItem('pm_last_checked');
 if(lc) document.getElementById('lastChecked').textContent = 'Last checked: ' + lc;
 
