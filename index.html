@@ -105,10 +105,20 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .card-tabs { display: flex; gap: 0; margin-bottom: 14px; border-bottom: 2px solid var(--border); }
 .card-tab { flex: 1; background: none; border: none; color: var(--muted); font-size: 13px; font-weight: 600; padding: 8px 0; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: color .15s, border-color .15s; }
 .card-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-.posting-section { margin-bottom: 14px; }
-.posting-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; }
-.posting-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; color: var(--text); }
 .posting-empty { text-align: center; padding: 32px 16px; color: var(--muted); font-size: 13px; }
+.fb-preview-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
+.fb-preview-photo { position: relative; background: #111; }
+.fb-photo-count { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); color: #fff; font-size: 11px; padding: 3px 8px; border-radius: 12px; }
+.fb-preview-body { padding: 14px; }
+.fb-preview-price { font-family: 'Bebas Neue', sans-serif; font-size: 26px; color: var(--accent); letter-spacing: 1px; }
+.fb-preview-name { font-size: 16px; font-weight: 700; margin: 2px 0 4px; }
+.fb-preview-stock { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+.fb-preview-specs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fb-spec-item { background: var(--surface); border-radius: 8px; padding: 8px 10px; }
+.fb-spec-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 2px; }
+.fb-spec-val { font-size: 13px; font-weight: 600; }
+.btn-post-now { width: 100%; padding: 15px; background: var(--accent); color: #000; border: none; border-radius: 10px; font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; cursor: pointer; transition: opacity .15s; }
+.btn-post-now:hover { opacity: 0.88; }
 .mode-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
 .mode-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-size: 12px; cursor: pointer; text-align: center; }
 .mode-btn.active { background: rgba(232,255,0,0.1); border-color: var(--accent); color: var(--accent); }
@@ -579,55 +589,53 @@ function renderPostingTab(car) {
     return `<div class="posting-empty">
       <div style="font-size:32px;margin-bottom:10px;">🐍</div>
       <div style="font-weight:600;margin-bottom:6px;">No listing data yet</div>
-      <div>Use the <strong>Project Snake</strong> Chrome extension on the D2C Media page for this car, then click <strong>"Send to Project Mouse"</strong>.</div>
+      <div style="color:var(--muted);font-size:13px;">Use the <strong>Project Snake</strong> extension on the D2C Media page, then click <strong>"Send to Project Mouse"</strong>.</div>
     </div>`;
   }
 
-  const name = [car.year, car.make, car.model, car.trim].filter(Boolean).join(' ');
-  const km = car.odometer ? Number(car.odometer).toLocaleString() + ' km' : '';
-  const price = car.price ? '$' + Number(car.price).toLocaleString() : '';
-  const features = (car.features || []).map(f => `• ${f}`).join('\n');
+  const carName = [car.year, car.make, car.model, car.trim].filter(Boolean).join(' ');
+  const price = car.price ? '$' + Number(car.price).toLocaleString() + ' CAD' : '—';
+  const km = car.odometer ? Number(car.odometer).toLocaleString() + ' km' : '—';
+  const mainPhoto = car.photos.find(p => p.type !== 'video' && (p.url || p.data));
+  const mainSrc = mainPhoto ? (mainPhoto.url || mainPhoto.data) : '';
+  const photoCount = car.photos.filter(p => p.type !== 'video').length;
 
-  const listingEN = [
-    `🚗 ${name}`,
-    price && `💰 ${price}`,
-    km && `📍 ${km}`,
-    car.transmission && `⚙️ ${car.transmission}`,
-    car.exteriorColor && `🎨 ${car.exteriorColor}`,
-    car.fuelType && `⛽ ${car.fuelType}`,
-    car.vin && `VIN: ${car.vin}`,
-    car.description ? `\n${car.description}` : '',
-    features ? `\nFEATURES:\n${features}` : '',
-    `\n📞 Hull Hyundai — Gatineau, QC`,
-  ].filter(Boolean).join('\n');
-
-  const listingFR = [
-    `🚗 ${name}`,
-    price && `💰 ${price}`,
-    km && `📍 ${km}`,
-    car.transmission && `⚙️ ${car.transmission}`,
-    car.exteriorColor && `🎨 ${car.exteriorColor}`,
-    car.fuelType && `⛽ ${car.fuelType}`,
-    car.vin && `NIV: ${car.vin}`,
-    car.descriptionFr ? `\n${car.descriptionFr}` : (car.description ? `\n${car.description}` : ''),
-    features ? `\nCARACTÉRISTIQUES:\n${features}` : '',
-    `\n📞 Hull Hyundai — Gatineau, QC`,
-  ].filter(Boolean).join('\n');
+  const specs = [
+    ['Odometer', km],
+    ['Transmission', car.transmission || '—'],
+    ['Ext. Color', car.exteriorColor || '—'],
+    ['Fuel Type', car.fuelType || '—'],
+    ['Drivetrain', car.drivetrain || '—'],
+    ['Engine', car.engine || '—'],
+    ['Condition', car.condition || 'Used'],
+    ['Body Style', car.bodyStyle || '—'],
+  ];
 
   return `
-    <div class="posting-section">
-      <div class="posting-label">🇨🇦 English Listing</div>
-      <div class="posting-box" id="listing-en-${car.id}">${listingEN}</div>
-      <button class="btn btn-secondary" style="margin-top:8px;width:100%;" onclick="window.copyListing(${car.id},'en')">📋 Copy English</button>
+    <div class="fb-preview-card">
+      <div class="fb-preview-photo">
+        ${mainSrc
+          ? `<img src="${mainSrc}" style="width:100%;height:180px;object-fit:cover;">`
+          : `<div style="height:180px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--muted);">📸 No photos yet — add photos in the Photos tab</div>`}
+        ${photoCount > 1 ? `<div class="fb-photo-count">📸 ${photoCount} photos</div>` : ''}
+      </div>
+      <div class="fb-preview-body">
+        <div class="fb-preview-price">${price}</div>
+        <div class="fb-preview-name">${carName}</div>
+        <div class="fb-preview-stock">Stock # ${car.stock || '—'} &nbsp;·&nbsp; VIN: ${car.vin || '—'}</div>
+        <div class="fb-preview-specs">
+          ${specs.map(([label, val]) => `
+            <div class="fb-spec-item">
+              <div class="fb-spec-label">${label}</div>
+              <div class="fb-spec-val">${val}</div>
+            </div>`).join('')}
+        </div>
+      </div>
     </div>
-    <div class="posting-section">
-      <div class="posting-label">🇫🇷 Annonce Français</div>
-      <div class="posting-box" id="listing-fr-${car.id}">${listingFR}</div>
-      <button class="btn btn-secondary" style="margin-top:8px;width:100%;" onclick="window.copyListing(${car.id},'fr')">📋 Copier Français</button>
-    </div>
-    <div class="car-actions" style="margin-top:4px;">
-      <button class="btn-danger" onclick="window.deleteCar(${car.id})">🗑️ Delete</button>
-    </div>`;
+    <button class="btn btn-post-now" onclick="window.postNowToFacebook(${car.id})">
+      🚀 Post Now on Facebook Marketplace
+    </button>
+    <div id="post-now-status-${car.id}" style="text-align:center;font-size:12px;color:var(--muted);margin-top:8px;"></div>`;
 }
 
 window.switchCardTab = function(carId, tab, btnEl) {
@@ -637,10 +645,34 @@ window.switchCardTab = function(carId, tab, btnEl) {
   btnEl.classList.add('active');
 };
 
-window.copyListing = function(carId, lang) {
-  const el = document.getElementById('listing-' + lang + '-' + carId);
-  if (!el) return;
-  navigator.clipboard.writeText(el.textContent).then(() => showToast('📋 ' + (lang === 'fr' ? 'Annonce copiée!' : 'Listing copied!')));
+window.postNowToFacebook = function(carId) {
+  const car = cars.find(c => c.id === carId);
+  if (!car) return;
+
+  const statusEl = document.getElementById('post-now-status-' + carId);
+  if (statusEl) statusEl.textContent = '⏳ Sending to Facebook Marketplace…';
+
+  // Build vehicle object matching what fb-autofill.js expects
+  const vehicle = {
+    name: [car.year, car.make, car.model, car.trim].filter(Boolean).join(' '),
+    year: car.year, make: car.make, model: car.model, trim: car.trim,
+    vin: car.vin, stockNumber: car.stock,
+    price: car.price, currency: 'CAD',
+    odometer: car.odometer, odometerUnit: 'km',
+    transmission: car.transmission, drivetrain: car.drivetrain,
+    exteriorColor: car.exteriorColor, interiorColor: car.interiorColor,
+    fuelType: car.fuelType, engine: car.engine, cylinders: car.cylinders,
+    condition: car.condition || 'Used',
+    bodyStyle: car.bodyStyle,
+    description: '',
+    features: car.features || [],
+    images: car.photos.filter(p => p.type !== 'video' && p.url).map(p => p.url),
+  };
+
+  // Fire event — picked up by pm-receiver.js (Snake content script)
+  window.dispatchEvent(new CustomEvent('mouse:postNow', { detail: vehicle }));
+
+  if (statusEl) setTimeout(() => { statusEl.textContent = '✅ Opening Facebook — Snake will auto-fill!'; }, 800);
 };
 
 // ============ SNAKE IMPORT LISTENER ============
