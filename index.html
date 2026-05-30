@@ -806,15 +806,16 @@ window.postNowToFacebook = function(carId) {
     images: car.photos.filter(p => p.type !== 'video' && p.url).map(p => p.url),
   };
 
-  // Fire event — picked up by pm-receiver.js (Snake content script)
-  window.dispatchEvent(new CustomEvent('mouse:postNow', { detail: vehicle }));
+  // postMessage crosses the content script isolation boundary (CustomEvent doesn't)
+  window.postMessage({ type: 'mouse:postNow', vehicle }, '*');
 
   if (statusEl) setTimeout(() => { statusEl.textContent = '✅ Opening Facebook — Snake will auto-fill!'; }, 800);
 };
 
 // ============ SNAKE IMPORT LISTENER ============
-window.addEventListener('snake:importVehicle', function(e) {
-  const v = e.detail;
+window.addEventListener('message', function(e) {
+  if (e.source !== window || !e.data || e.data.type !== 'snake:importVehicle') return;
+  const v = e.data.vehicle;
   if (!v) return;
 
   // Check if car with same stock number already exists
