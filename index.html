@@ -801,6 +801,7 @@ window.postNowToFacebook = function(carId) {
     condition: car.condition || 'Used',
     bodyStyle: car.bodyStyle,
     description: '',
+    generatedDescEn: (document.getElementById('desc-en-' + carId) || {}).textContent || '',
     features: car.features || [],
     images: car.photos.filter(p => p.type !== 'video' && p.url).map(p => p.url),
   };
