@@ -102,6 +102,14 @@ input:focus, textarea:focus { border-color: var(--accent); }
   .cam-bottom { top: 0; bottom: 0; left: auto; right: 0; width: 100px; flex-direction: column; justify-content: space-around; padding: 16px 12px; background: linear-gradient(to left, rgba(0,0,0,0.8), transparent); }
   .cam-thumbs { flex-direction: column; overflow-y: auto; overflow-x: hidden; max-width: none; max-height: 120px; }
 }
+.inv-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+.inv-tab { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; }
+.inv-tab.active { background: rgba(232,255,0,0.1); border-color: var(--accent); color: var(--accent); }
+.btn-sold { background: none; border: 1px solid #ff6b35; color: #ff6b35; border-radius: 6px; font-size: 11px; font-weight: 700; padding: 3px 8px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.btn-sold:hover { background: #ff6b35; color: #000; }
+.btn-unsold { background: none; border: 1px solid var(--muted); color: var(--muted); border-radius: 6px; font-size: 11px; font-weight: 700; padding: 3px 8px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.btn-unsold:hover { background: var(--surface2); }
+.sold-badge { font-size: 10px; font-weight: 700; color: #ff6b35; margin-left: 6px; }
 .card-tabs { display: flex; gap: 0; margin-bottom: 14px; border-bottom: 2px solid var(--border); }
 .card-tab { flex: 1; background: none; border: none; color: var(--muted); font-size: 13px; font-weight: 600; padding: 8px 0; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: color .15s, border-color .15s; }
 .card-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
@@ -164,6 +172,10 @@ input:focus, textarea:focus { border-color: var(--accent); }
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
       <div class="section-title">Your Cars</div>
       <div style="font-size:11px;color:var(--muted);"><span class="status-dot"></span>No photos &nbsp;<span class="status-dot done"></span>Ready</div>
+    </div>
+    <div class="inv-tabs">
+      <button class="inv-tab active" id="inv-tab-active" onclick="window.switchInvTab('active')">🚗 Active</button>
+      <button class="inv-tab" id="inv-tab-sold" onclick="window.switchInvTab('sold')">🏷️ Sold</button>
     </div>
     <input id="carSearch" type="text" placeholder="🔍 Search stock # or VIN…" oninput="window.filterCars(this.value)" style="width:100%;box-sizing:border-box;padding:10px 14px;margin-bottom:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none;">
     <div id="carList"></div>
@@ -523,23 +535,45 @@ function updateStats() {
   document.getElementById('doneCars').textContent = cars.filter(c => c.photos.length > 0).length;
 }
 
+let currentInvTab = 'active';
+
+window.switchInvTab = function(tab) {
+  currentInvTab = tab;
+  document.getElementById('inv-tab-active').classList.toggle('active', tab === 'active');
+  document.getElementById('inv-tab-sold').classList.toggle('active', tab === 'sold');
+  const search = document.getElementById('carSearch');
+  if(search) search.value = '';
+  renderCars();
+};
+
+window.markSold = function(id, sold) {
+  const car = cars.find(c => c.id === id);
+  if(!car) return;
+  car.sold = sold;
+  saveCars(); renderCars();
+  showToast(sold ? '🏷️ Marked as sold!' : '↩ Moved back to active');
+};
+
 window.filterCars = function(query) {
   const q = query.trim().toLowerCase();
-  const filtered = q ? cars.filter(c =>
+  const base = cars.filter(c => currentInvTab === 'sold' ? c.sold : !c.sold);
+  const filtered = q ? base.filter(c =>
     (c.stock || '').toLowerCase().includes(q) ||
     (c.vin  || '').toLowerCase().includes(q)
-  ) : cars;
+  ) : base;
   renderCars(filtered);
 };
 
 function renderCars(list_) {
   updateStats();
   const list = document.getElementById('carList');
-  const filtered = list_ || cars;
+  const filtered = list_ !== undefined ? list_ : cars.filter(c => currentInvTab === 'sold' ? c.sold : !c.sold);
   if(filtered.length === 0) {
-    list.innerHTML = list_
+    list.innerHTML = list_ !== undefined
       ? `<div class="empty-state"><div class="big-icon">🔍</div><h3>No Results</h3><p>No car matches that stock # or VIN.</p></div>`
-      : `<div class="empty-state"><div class="big-icon">🚗</div><h3>No Cars Yet</h3><p>Tap <strong style="color:var(--accent)">Add Car</strong> to add your first vehicle.</p></div>`;
+      : currentInvTab === 'sold'
+        ? `<div class="empty-state"><div class="big-icon">🏷️</div><h3>No Sold Cars</h3><p>Press <strong>SOLD</strong> on a car to move it here.</p></div>`
+        : `<div class="empty-state"><div class="big-icon">🚗</div><h3>No Cars Yet</h3><p>Tap <strong style="color:var(--accent)">Add Car</strong> to add your first vehicle.</p></div>`;
     return;
   }
   list.innerHTML = filtered.map(car => `
@@ -554,6 +588,9 @@ function renderCars(list_) {
         </div>
         <div style="display:flex;align-items:center;gap:6px;">
           <div class="photo-count ${car.photos.length > 0 ? 'has-photos' : ''}">📸 ${car.photos.length}</div>
+          ${car.sold
+            ? `<button class="btn-unsold" onclick="event.stopPropagation();window.markSold(${car.id},false)">↩ Unsold</button>`
+            : `<button class="btn-sold" onclick="event.stopPropagation();window.markSold(${car.id},true)">SOLD</button>`}
           <div class="chevron" id="chev-${car.id}">▼</div>
         </div>
       </div>
