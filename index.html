@@ -962,11 +962,22 @@ window.viewPhoto = function(src) {
   document.body.appendChild(o);
 };
 
-window.deleteCar = function(id) {
+window.deleteCar = async function(id) {
   if(!confirm('Delete this car and all its photos?')) return;
+  const car = cars.find(c => c.id === id);
   cars = cars.filter(c => c.id !== id);
   saveCars(); renderCars();
   showToast('🗑️ Car deleted');
+  // Delete all cloud photos
+  if(car && currentUser) {
+    for(const photo of car.photos) {
+      if(photo.uploaded && photo.id) {
+        try {
+          await deleteObject(storageRef(storage, `users/${currentUser.uid}/cars/${id}/${photo.id}.jpg`));
+        } catch(e) {}
+      }
+    }
+  }
 };
 
 window.copyCarInfo = function(id) {
