@@ -116,6 +116,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .card-tab { flex: 1; background: none; border: none; color: var(--muted); font-size: 13px; font-weight: 600; padding: 8px 0; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: color .15s, border-color .15s; }
 .card-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 .posting-empty { text-align: center; padding: 32px 16px; color: var(--muted); font-size: 13px; }
+.posting-box[contenteditable]:focus { border-color: var(--accent); }
 .fb-preview-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
 .fb-preview-photo { position: relative; background: #111; }
 .fb-photo-count { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); color: #fff; font-size: 11px; padding: 3px 8px; border-radius: 12px; }
@@ -704,10 +705,10 @@ function renderPostingTab(car) {
       <button class="btn btn-secondary" style="width:100%;margin-bottom:8px;" onclick="window.generateDescription(${car.id})">✨ Generate Description</button>
       <div id="desc-box-${car.id}" style="display:none;">
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px;">🇨🇦 English</div>
-        <div class="posting-box" id="desc-en-${car.id}" style="margin-bottom:6px;font-size:12px;"></div>
+        <div class="posting-box" id="desc-en-${car.id}" contenteditable="true" style="margin-bottom:6px;font-size:12px;outline:none;cursor:text;" spellcheck="true"></div>
         <button class="btn btn-secondary" style="width:100%;margin-bottom:10px;" onclick="navigator.clipboard.writeText(document.getElementById('desc-en-${car.id}').textContent).then(()=>window.showToast('📋 English copied!'))">📋 Copy English</button>
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px;">🇫🇷 Français</div>
-        <div class="posting-box" id="desc-fr-${car.id}" style="margin-bottom:6px;font-size:12px;"></div>
+        <div class="posting-box" id="desc-fr-${car.id}" contenteditable="true" style="margin-bottom:6px;font-size:12px;outline:none;cursor:text;" spellcheck="true"></div>
         <button class="btn btn-secondary" style="width:100%;margin-bottom:4px;" onclick="navigator.clipboard.writeText(document.getElementById('desc-fr-${car.id}').textContent).then(()=>window.showToast('📋 Français copié!'))">📋 Copier Français</button>
       </div>
     </div>
