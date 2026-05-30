@@ -705,11 +705,11 @@ function renderPostingTab(car) {
       <button class="btn btn-secondary" style="width:100%;margin-bottom:8px;" onclick="window.generateDescription(${car.id})">✨ Generate Description</button>
       <div id="desc-box-${car.id}" style="display:none;">
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px;">🇨🇦 English</div>
-        <div class="posting-box" id="desc-en-${car.id}" contenteditable="true" style="margin-bottom:6px;font-size:12px;outline:none;cursor:text;" spellcheck="true"></div>
-        <button class="btn btn-secondary" style="width:100%;margin-bottom:10px;" onclick="navigator.clipboard.writeText(document.getElementById('desc-en-${car.id}').textContent).then(()=>window.showToast('📋 English copied!'))">📋 Copy English</button>
+        <div class="posting-box" id="desc-en-${car.id}" contenteditable="true" style="margin-bottom:6px;font-size:12px;outline:none;cursor:text;white-space:pre-wrap;" spellcheck="true"></div>
+        <button class="btn btn-secondary" style="width:100%;margin-bottom:10px;" onclick="navigator.clipboard.writeText(document.getElementById('desc-en-${car.id}').innerText).then(()=>window.showToast('📋 English copied!'))">📋 Copy English</button>
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px;">🇫🇷 Français</div>
-        <div class="posting-box" id="desc-fr-${car.id}" contenteditable="true" style="margin-bottom:6px;font-size:12px;outline:none;cursor:text;" spellcheck="true"></div>
-        <button class="btn btn-secondary" style="width:100%;margin-bottom:4px;" onclick="navigator.clipboard.writeText(document.getElementById('desc-fr-${car.id}').textContent).then(()=>window.showToast('📋 Français copié!'))">📋 Copier Français</button>
+        <div class="posting-box" id="desc-fr-${car.id}" contenteditable="true" style="margin-bottom:6px;font-size:12px;outline:none;cursor:text;white-space:pre-wrap;" spellcheck="true"></div>
+        <button class="btn btn-secondary" style="width:100%;margin-bottom:4px;" onclick="navigator.clipboard.writeText(document.getElementById('desc-fr-${car.id}').innerText).then(()=>window.showToast('📋 Français copié!'))">📋 Copier Français</button>
       </div>
     </div>
     <button class="btn btn-post-now" onclick="window.postNowToFacebook(${car.id})">
@@ -734,17 +734,22 @@ window.generateDescription = function(carId) {
   const fuelEN  = car.fuelType || '';
   const driveEN = car.drivetrain || '';
 
-  let en = `${name} — ${condEN.charAt(0).toUpperCase() + condEN.slice(1)} for sale at Hull Hyundai, Gatineau, QC!\n\n`;
-  if (km)      en += `📍 ${km} km\n`;
-  if (price)   en += `💰 ${price} CAD\n`;
-  if (transEN) en += `⚙️ ${transEN} transmission\n`;
-  if (colorEN) en += `🎨 ${colorEN} exterior\n`;
-  if (fuelEN)  en += `⛽ ${fuelEN}\n`;
-  if (driveEN) en += `🚗 ${driveEN}\n`;
-  if (feats.length) en += `\nFeatures include: ${feats.join(', ')}.\n`;
-  en += `\nVIN: ${car.vin || 'N/A'} — Stock #${car.stock || 'N/A'}\n`;
-  en += `\n📍 Located at Hull Hyundai — 341 Bd St-Joseph, Gatineau, QC J8Y 3Y2\n`;
-  en += `\n💬 Message me for more information!`;
+  const specLines = [];
+  if (km)      specLines.push(`📍 ${km} km`);
+  if (price)   specLines.push(`💰 ${price} CAD`);
+  if (transEN) specLines.push(`⚙️ ${transEN}`);
+  if (colorEN) specLines.push(`🎨 ${colorEN} exterior`);
+  if (fuelEN)  specLines.push(`⛽ ${fuelEN}`);
+  if (driveEN) specLines.push(`🛞 ${driveEN}`);
+
+  let en = `🚗 ${name} — ${condEN.charAt(0).toUpperCase() + condEN.slice(1)}\n`;
+  en += `\n` + specLines.join('\n');
+  if (feats.length) {
+    en += `\n\n` + feats.map(f => `✅ ${f}`).join('\n');
+  }
+  en += `\n\n📌 Hull Hyundai — 341 Bd St-Joseph, Gatineau, QC J8Y 3Y2`;
+  en += `\n🔑 Stock #${car.stock || 'N/A'} · VIN: ${car.vin || 'N/A'}`;
+  en += `\n\n💬 Message me for more information!`;
 
   // ── French ───────────────────────────────────────────────────────────────
   const condFR  = (car.condition || 'used').toLowerCase() === 'new' ? 'neuf' : 'd\'occasion';
@@ -756,20 +761,25 @@ window.generateDescription = function(carId) {
                 : fuelEN.toLowerCase().includes('electric') ? 'Électrique'
                 : fuelEN;
 
-  let fr = `${name} — Véhicule ${condFR} à vendre chez Hull Hyundai, Gatineau, QC!\n\n`;
-  if (km)      fr += `📍 ${km} km\n`;
-  if (price)   fr += `💰 ${price} CAD\n`;
-  if (transFR) fr += `⚙️ Transmission ${transFR}\n`;
-  if (colorEN) fr += `🎨 Extérieur ${colorEN}\n`;
-  if (fuelFR)  fr += `⛽ ${fuelFR}\n`;
-  if (driveEN) fr += `🚗 ${driveEN}\n`;
-  if (feats.length) fr += `\nInclut: ${feats.join(', ')}.\n`;
-  fr += `\nNIV: ${car.vin || 'N/A'} — Stock #${car.stock || 'N/A'}\n`;
-  fr += `\n📍 Situé chez Hull Hyundai — 341 Bd St-Joseph, Gatineau, QC J8Y 3Y2\n`;
-  fr += `\n💬 Écrivez-moi pour plus d'informations!`;
+  const specLinesFR = [];
+  if (km)      specLinesFR.push(`📍 ${km} km`);
+  if (price)   specLinesFR.push(`💰 ${price} CAD`);
+  if (transFR) specLinesFR.push(`⚙️ ${transFR}`);
+  if (colorEN) specLinesFR.push(`🎨 Extérieur ${colorEN}`);
+  if (fuelFR)  specLinesFR.push(`⛽ ${fuelFR}`);
+  if (driveEN) specLinesFR.push(`🛞 ${driveEN}`);
 
-  document.getElementById('desc-en-' + carId).textContent = en;
-  document.getElementById('desc-fr-' + carId).textContent = fr;
+  let fr = `🚗 ${name} — Véhicule ${condFR}\n`;
+  fr += `\n` + specLinesFR.join('\n');
+  if (feats.length) {
+    fr += `\n\n` + feats.map(f => `✅ ${f}`).join('\n');
+  }
+  fr += `\n\n📌 Hull Hyundai — 341 Bd St-Joseph, Gatineau, QC J8Y 3Y2`;
+  fr += `\n🔑 Stock #${car.stock || 'N/A'} · NIV: ${car.vin || 'N/A'}`;
+  fr += `\n\n💬 Écrivez-moi pour plus d'informations!`;
+
+  document.getElementById('desc-en-' + carId).innerText = en;
+  document.getElementById('desc-fr-' + carId).innerText = fr;
   document.getElementById('desc-box-' + carId).style.display = '';
   showToast('✨ Description generated!');
 };
