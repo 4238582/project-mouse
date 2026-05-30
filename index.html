@@ -165,6 +165,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <div class="section-title">Your Cars</div>
       <div style="font-size:11px;color:var(--muted);"><span class="status-dot"></span>No photos &nbsp;<span class="status-dot done"></span>Ready</div>
     </div>
+    <input id="carSearch" type="text" placeholder="🔍 Search stock # or VIN…" oninput="window.filterCars(this.value)" style="width:100%;box-sizing:border-box;padding:10px 14px;margin-bottom:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none;">
     <div id="carList"></div>
   </div>
 
@@ -522,19 +523,34 @@ function updateStats() {
   document.getElementById('doneCars').textContent = cars.filter(c => c.photos.length > 0).length;
 }
 
-function renderCars() {
+window.filterCars = function(query) {
+  const q = query.trim().toLowerCase();
+  const filtered = q ? cars.filter(c =>
+    (c.stock || '').toLowerCase().includes(q) ||
+    (c.vin  || '').toLowerCase().includes(q)
+  ) : cars;
+  renderCars(filtered);
+};
+
+function renderCars(list_) {
   updateStats();
   const list = document.getElementById('carList');
-  if(cars.length === 0) {
-    list.innerHTML = `<div class="empty-state"><div class="big-icon">🚗</div><h3>No Cars Yet</h3><p>Tap <strong style="color:var(--accent)">Add Car</strong> to add your first vehicle.</p></div>`;
+  const filtered = list_ || cars;
+  if(filtered.length === 0) {
+    list.innerHTML = list_
+      ? `<div class="empty-state"><div class="big-icon">🔍</div><h3>No Results</h3><p>No car matches that stock # or VIN.</p></div>`
+      : `<div class="empty-state"><div class="big-icon">🚗</div><h3>No Cars Yet</h3><p>Tap <strong style="color:var(--accent)">Add Car</strong> to add your first vehicle.</p></div>`;
     return;
   }
-  list.innerHTML = cars.map(car => `
+  list.innerHTML = filtered.map(car => `
     <div class="car-card">
       <div class="car-header" onclick="window.toggleCard(${car.id})">
         <div>
-          <div class="car-stock">${car.stock}</div>
-          <div class="car-name"><span class="status-dot ${car.photos.length > 0 ? 'done' : ''}"></span>${[car.year,car.make,car.model].filter(Boolean).join(' ') || 'No details'}${car.price ? ' · $'+Number(car.price).toLocaleString() : ''}</div>
+          <div class="car-name" style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:3px;"><span class="status-dot ${car.photos.length > 0 ? 'done' : ''}"></span>${[car.year,car.make,car.model].filter(Boolean).join(' ') || 'No details'}${car.price ? ' · $'+Number(car.price).toLocaleString() : ''}</div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span class="car-stock" style="font-size:13px;">${car.stock}</span>
+            ${car.vin ? `<span style="font-size:11px;color:var(--muted);">· VIN: ${car.vin}</span><button onclick="event.stopPropagation();navigator.clipboard.writeText('${car.vin}').then(()=>window.showToast('📋 VIN copied!'))" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-size:10px;padding:1px 6px;cursor:pointer;">Copy</button>` : ''}
+          </div>
         </div>
         <div style="display:flex;align-items:center;gap:6px;">
           <div class="photo-count ${car.photos.length > 0 ? 'has-photos' : ''}">📸 ${car.photos.length}</div>
