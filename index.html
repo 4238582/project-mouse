@@ -700,11 +700,78 @@ function renderPostingTab(car) {
         </div>
       </div>
     </div>
+    <div style="margin-bottom:12px;">
+      <button class="btn btn-secondary" style="width:100%;margin-bottom:8px;" onclick="window.generateDescription(${car.id})">✨ Generate Description</button>
+      <div id="desc-box-${car.id}" style="display:none;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px;">🇨🇦 English</div>
+        <div class="posting-box" id="desc-en-${car.id}" style="margin-bottom:6px;font-size:12px;"></div>
+        <button class="btn btn-secondary" style="width:100%;margin-bottom:10px;" onclick="navigator.clipboard.writeText(document.getElementById('desc-en-${car.id}').textContent).then(()=>window.showToast('📋 English copied!'))">📋 Copy English</button>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px;">🇫🇷 Français</div>
+        <div class="posting-box" id="desc-fr-${car.id}" style="margin-bottom:6px;font-size:12px;"></div>
+        <button class="btn btn-secondary" style="width:100%;margin-bottom:4px;" onclick="navigator.clipboard.writeText(document.getElementById('desc-fr-${car.id}').textContent).then(()=>window.showToast('📋 Français copié!'))">📋 Copier Français</button>
+      </div>
+    </div>
     <button class="btn btn-post-now" onclick="window.postNowToFacebook(${car.id})">
       🚀 Post Now on Facebook Marketplace
     </button>
     <div id="post-now-status-${car.id}" style="text-align:center;font-size:12px;color:var(--muted);margin-top:8px;"></div>`;
 }
+
+window.generateDescription = function(carId) {
+  const car = cars.find(c => c.id === carId);
+  if (!car) return;
+
+  const name    = [car.year, car.make, car.model, car.trim].filter(Boolean).join(' ');
+  const km      = car.odometer ? Number(car.odometer).toLocaleString() : null;
+  const price   = car.price ? '$' + Number(car.price).toLocaleString() : null;
+  const feats   = (car.features || []).slice(0, 8);
+
+  // ── English ──────────────────────────────────────────────────────────────
+  const condEN  = (car.condition || 'used').toLowerCase() === 'new' ? 'brand new' : 'pre-owned';
+  const transEN = car.transmission || 'automatic';
+  const colorEN = car.exteriorColor || '';
+  const fuelEN  = car.fuelType || '';
+  const driveEN = car.drivetrain || '';
+
+  let en = `${name} — ${condEN.charAt(0).toUpperCase() + condEN.slice(1)} for sale at Hull Hyundai, Gatineau, QC!\n\n`;
+  if (km)      en += `📍 ${km} km\n`;
+  if (price)   en += `💰 ${price} CAD\n`;
+  if (transEN) en += `⚙️ ${transEN} transmission\n`;
+  if (colorEN) en += `🎨 ${colorEN} exterior\n`;
+  if (fuelEN)  en += `⛽ ${fuelEN}\n`;
+  if (driveEN) en += `🚗 ${driveEN}\n`;
+  if (feats.length) en += `\nFeatures include: ${feats.join(', ')}.\n`;
+  en += `\nVIN: ${car.vin || 'N/A'} — Stock #${car.stock || 'N/A'}\n`;
+  en += `\n📍 Located at Hull Hyundai — 341 Bd St-Joseph, Gatineau, QC J8Y 3Y2\n`;
+  en += `\n💬 Message me for more information!`;
+
+  // ── French ───────────────────────────────────────────────────────────────
+  const condFR  = (car.condition || 'used').toLowerCase() === 'new' ? 'neuf' : 'd\'occasion';
+  const transFR = transEN.toLowerCase().includes('auto') ? 'automatique' : transEN.toLowerCase().includes('manual') ? 'manuelle' : transEN;
+  const fuelFR  = fuelEN.toLowerCase().includes('gas') || fuelEN.toLowerCase().includes('essence') ? 'Essence'
+                : fuelEN.toLowerCase().includes('diesel') ? 'Diesel'
+                : fuelEN.toLowerCase().includes('electric') && fuelEN.toLowerCase().includes('hybrid') ? 'Hybride rechargeable'
+                : fuelEN.toLowerCase().includes('hybrid') ? 'Hybride'
+                : fuelEN.toLowerCase().includes('electric') ? 'Électrique'
+                : fuelEN;
+
+  let fr = `${name} — Véhicule ${condFR} à vendre chez Hull Hyundai, Gatineau, QC!\n\n`;
+  if (km)      fr += `📍 ${km} km\n`;
+  if (price)   fr += `💰 ${price} CAD\n`;
+  if (transFR) fr += `⚙️ Transmission ${transFR}\n`;
+  if (colorEN) fr += `🎨 Extérieur ${colorEN}\n`;
+  if (fuelFR)  fr += `⛽ ${fuelFR}\n`;
+  if (driveEN) fr += `🚗 ${driveEN}\n`;
+  if (feats.length) fr += `\nInclut: ${feats.join(', ')}.\n`;
+  fr += `\nNIV: ${car.vin || 'N/A'} — Stock #${car.stock || 'N/A'}\n`;
+  fr += `\n📍 Situé chez Hull Hyundai — 341 Bd St-Joseph, Gatineau, QC J8Y 3Y2\n`;
+  fr += `\n💬 Écrivez-moi pour plus d'informations!`;
+
+  document.getElementById('desc-en-' + carId).textContent = en;
+  document.getElementById('desc-fr-' + carId).textContent = fr;
+  document.getElementById('desc-box-' + carId).style.display = '';
+  showToast('✨ Description generated!');
+};
 
 window.switchCardTab = function(carId, tab, btnEl) {
   document.getElementById('card-photos-' + carId).style.display = tab === 'photos' ? '' : 'none';
@@ -1206,7 +1273,7 @@ window.checkForUpdates = async function() {
 // ============ INIT ============
 renderCars();
 window.setMode(currentMode);
-document.getElementById('currentVersion').textContent = 'v3.2.0';
+document.getElementById('currentVersion').textContent = 'v3.3.0';
 const lc = localStorage.getItem('pm_last_checked');
 if(lc) document.getElementById('lastChecked').textContent = 'Last checked: ' + lc;
 
