@@ -98,6 +98,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .cam-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 3; }
 .cam-flash.fire { animation: flashAnim 0.25s; }
 @keyframes flashAnim { 0% { opacity: 0.9; } 100% { opacity: 0; } }
+@keyframes pulse { 0%,100% { box-shadow: 0 4px 16px rgba(0,200,150,.4); } 50% { box-shadow: 0 4px 28px rgba(0,200,150,.9); } }
 @media (orientation: landscape) {
   .cam-bottom { top: 0; bottom: 0; left: auto; right: 0; width: 100px; flex-direction: column; justify-content: space-around; padding: 16px 12px; background: linear-gradient(to left, rgba(0,0,0,0.8), transparent); }
   .cam-thumbs { flex-direction: column; overflow-y: auto; overflow-x: hidden; max-width: none; max-height: 120px; }
@@ -282,6 +283,13 @@ input:focus, textarea:focus { border-color: var(--accent); }
 </div>
 
 <div class="toast" id="toast"></div>
+<div id="update-banner" style="display:none;position:fixed;bottom:70px;left:50%;transform:translateX(-50%);
+  background:#00c896;color:#000;font-weight:700;font-size:13px;padding:10px 20px;
+  border-radius:10px;z-index:99999;box-shadow:0 4px 16px rgba(0,200,150,.4);
+  text-align:center;cursor:pointer;animation:pulse 2s infinite;"
+  onclick="window.location.reload()">
+  🆕 New version available! Click here or press Ctrl+Shift+R to update
+</div>
 
 <script type="module">
 // ============ FIREBASE ============
@@ -1280,22 +1288,37 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-window.checkForUpdates = async function() {
-  showToast('🔍 Checking for updates...');
+const CURRENT_VERSION = '3.3.0';
+
+async function autoCheckVersion(silent = true) {
   try {
     const res = await fetch('https://4238582.github.io/project-mouse/version.json?t=' + Date.now());
     const data = await res.json();
-    const CURRENT = '3.1.0';
     const r = data.version.split('.').map(Number);
-    const c = CURRENT.split('.').map(Number);
+    const c = CURRENT_VERSION.split('.').map(Number);
     let newer = false;
-    for(let i=0;i<3;i++) { if(r[i]>c[i]){newer=true;break;} if(r[i]<c[i]){break;} }
-    if(newer) showToast('🐭 Update available! v' + data.version);
-    else showToast('✅ You have the latest version!');
+    for (let i = 0; i < 3; i++) { if (r[i] > c[i]) { newer = true; break; } if (r[i] < c[i]) break; }
+    if (newer) {
+      document.getElementById('update-banner').style.display = 'block';
+    } else if (!silent) {
+      showToast('✅ You have the latest version! (v' + CURRENT_VERSION + ')');
+    }
+    const el = document.getElementById('lastChecked');
+    if (el) el.textContent = 'Last checked: ' + new Date().toLocaleTimeString();
     localStorage.setItem('pm_last_checked', new Date().toLocaleString());
-    document.getElementById('lastChecked').textContent = 'Last checked: ' + new Date().toLocaleTimeString();
-  } catch(e) { showToast('⚠️ Could not check for updates.'); }
+  } catch(e) {
+    if (!silent) showToast('⚠️ Could not check for updates.');
+  }
+}
+
+window.checkForUpdates = async function() {
+  showToast('🔍 Checking for updates…');
+  await autoCheckVersion(false);
 };
+
+// Auto-check on load, then every 2 minutes
+autoCheckVersion(true);
+setInterval(() => autoCheckVersion(true), 2 * 60 * 1000);
 
 // ============ INIT ============
 renderCars();
