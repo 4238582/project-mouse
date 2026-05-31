@@ -468,8 +468,17 @@ window.syncFromCloud = async function() {
           }
         }
       }
-      cars = cloudCars;
-      saveCars(); 
+      // Merge: keep local-only cars (e.g. just imported from Snake, not yet pushed)
+      const cloudIds = new Set(cloudCars.map(c => c.id));
+      const localOnly = cars.filter(c => !cloudIds.has(c.id));
+      cars = [
+        ...localOnly,
+        ...cloudCars.map(cloudCar => {
+          const localCar = cars.find(c => c.id === cloudCar.id);
+          return { ...cloudCar, photos: localCar?.photos?.length ? localCar.photos : cloudCar.photos };
+        })
+      ];
+      saveCars();
       renderCars();
       showToast('☁️ Cars + photos loaded from cloud!');
     } else { 
@@ -1321,7 +1330,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.3.3';
+const CURRENT_VERSION = '3.3.4';
 
 async function autoCheckVersion(silent = true) {
   try {
