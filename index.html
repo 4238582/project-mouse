@@ -1356,7 +1356,7 @@ setInterval(() => autoCheckVersion(true), 2 * 60 * 1000);
 // ============ INIT ============
 renderCars();
 window.setMode(currentMode);
-document.getElementById('currentVersion').textContent = 'v3.3.0';
+document.getElementById('currentVersion').textContent = 'v' + CURRENT_VERSION;
 const lc = localStorage.getItem('pm_last_checked');
 if(lc) document.getElementById('lastChecked').textContent = 'Last checked: ' + lc;
 
