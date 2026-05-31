@@ -515,11 +515,11 @@ let cars = JSON.parse(localStorage.getItem('pm_cars') || '[]');
 let currentMode = localStorage.getItem('pm_mode') || 'local';
 
 // ============ CORE FUNCTIONS ============
-function showToast(msg) {
+function showToast(msg, duration = 2500) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
   clearTimeout(window._tt);
-  window._tt = setTimeout(() => t.classList.remove('show'), 2500);
+  window._tt = setTimeout(() => t.classList.remove('show'), duration);
 }
 
 function saveCars() {
@@ -821,6 +821,12 @@ window.postNowToFacebook = function(carId) {
 
   if (statusEl) setTimeout(() => { statusEl.textContent = '✅ Opening Facebook — Snake will auto-fill!'; }, 800);
 };
+
+// ============ SNAKE ERROR LISTENER ============
+window.addEventListener('message', function(e) {
+  if (e.source !== window || !e.data || e.data.type !== 'snake:error') return;
+  showToast('⚠️ ' + e.data.message, 4000);
+});
 
 // ============ SNAKE IMPORT LISTENER ============
 window.addEventListener('message', function(e) {
