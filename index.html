@@ -316,6 +316,11 @@ let pushTimer = null;
 
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
+  // If Snake imported a car before auth was ready, push it now
+  if (user && window._pendingSnakePush) {
+    window._pendingSnakePush = false;
+    setTimeout(autoPushToCloud, 500);
+  }
   const loginBtn = document.getElementById('loginBtn');
   const logoutBtn = document.getElementById('logoutBtn');
   const userNameEl = document.getElementById('userNameEl');
@@ -927,8 +932,12 @@ window.addEventListener('message', function(e) {
   };
   cars.unshift(newCar);
   saveCars(); renderCars();
-  // Force cloud push regardless of mode so car survives reload
-  if (currentUser) autoPushToCloud();
+  // Push to cloud — if auth not ready yet, flag it for when auth fires
+  if (currentUser) {
+    autoPushToCloud();
+  } else {
+    window._pendingSnakePush = true; // auth will pick this up and push
+  }
   showToast('🐍 Car imported from D2C Media!');
   setTimeout(() => {
     const exp = document.getElementById('expand-' + newCar.id);
@@ -1312,7 +1321,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.3.2';
+const CURRENT_VERSION = '3.3.3';
 
 async function autoCheckVersion(silent = true) {
   try {
