@@ -363,15 +363,17 @@ function startCloudSync() {
     if(cloudCars === JSON.stringify(cars.map(c => ({...c, photos: c.photos.map(p => ({...p, data: ''}))}))))  return; // no change
     
     // Merge: use cloud for car list/metadata, but KEEP local photos
+    // Also keep any local-only cars not yet pushed to cloud (e.g. just imported from Snake)
     const cloudList = JSON.parse(cloudCars);
     applyingRemote = true;
-    cars = cloudList.map(cloudCar => {
+    const merged = cloudList.map(cloudCar => {
       const localCar = cars.find(c => c.id === cloudCar.id);
-      return {
-        ...cloudCar,
-        photos: localCar ? localCar.photos : [] // keep local photos
-      };
+      return { ...cloudCar, photos: localCar ? localCar.photos : [] };
     });
+    // Add local cars that aren't in cloud yet (pending push)
+    const cloudIds = new Set(cloudList.map(c => c.id));
+    const localOnly = cars.filter(c => !cloudIds.has(c.id));
+    cars = [...localOnly, ...merged];
     localStorage.setItem('pm_cars', JSON.stringify(cars));
     updateStats();
     renderCars();
@@ -925,6 +927,8 @@ window.addEventListener('message', function(e) {
   };
   cars.unshift(newCar);
   saveCars(); renderCars();
+  // Force cloud push regardless of mode so car survives reload
+  if (currentUser) autoPushToCloud();
   showToast('🐍 Car imported from D2C Media!');
   setTimeout(() => {
     const exp = document.getElementById('expand-' + newCar.id);
@@ -1308,7 +1312,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.3.1';
+const CURRENT_VERSION = '3.3.2';
 
 async function autoCheckVersion(silent = true) {
   try {

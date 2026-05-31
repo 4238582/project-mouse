@@ -1,5 +1,5 @@
 {
-  "version": "3.3.1",
+  "version": "3.3.2",
   "releaseDate": "2026-05-30",
   "changelog": "Fixed description formatting — each emoji on its own line, proper spacing between sections, now copies correctly. Auto version-check on load with update banner. Post Now now shows real confirmation from Snake or a clear error if extension needs refresh."
 }
