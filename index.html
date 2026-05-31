@@ -827,13 +827,33 @@ window.postNowToFacebook = function(carId) {
   // postMessage crosses the content script isolation boundary (CustomEvent doesn't)
   window.postMessage({ type: 'mouse:postNow', vehicle }, '*');
 
-  if (statusEl) setTimeout(() => { statusEl.textContent = '✅ Opening Facebook — Snake will auto-fill!'; }, 800);
+  // Wait up to 3 seconds for Snake to confirm it received the message
+  if (statusEl) {
+    const timeout = setTimeout(() => {
+      statusEl.innerHTML = '❌ Snake extension didn\'t respond.<br><strong>Refresh this page (F5) then try again.</strong>';
+      statusEl.style.color = '#ff6b6b';
+    }, 3000);
+    window._snakeAckTimeout = timeout;
+  }
 };
 
 // ============ SNAKE ERROR LISTENER ============
 window.addEventListener('message', function(e) {
   if (e.source !== window || !e.data || e.data.type !== 'snake:error') return;
   showToast('⚠️ ' + e.data.message, 4000);
+});
+
+// ============ SNAKE ACK LISTENER ============
+window.addEventListener('message', function(e) {
+  if (e.source !== window || !e.data || e.data.type !== 'snake:ack') return;
+  clearTimeout(window._snakeAckTimeout);
+  // Find the status element for any car and update it
+  document.querySelectorAll('[id^="post-now-status-"]').forEach(el => {
+    if (el.textContent.includes('Sending')) {
+      el.textContent = '✅ Opening Facebook — Snake will auto-fill!';
+      el.style.color = '';
+    }
+  });
 });
 
 // ============ SNAKE IMPORT LISTENER ============
