@@ -1,5 +1,5 @@
 {
-  "version": "3.4.1",
+  "version": "3.4.2",
   "releaseDate": "2026-05-31",
-  "changelog": "Photos taken on your phone now show up on desktop automatically (and vice-versa). The cloud doc carries a tiny photo signature (id + uploaded flag) so the other device knows when new photos exist and pulls them from Storage — while staying small enough to avoid the 1MB limit. Sorted signature prevents sync loops."
+  "changelog": "New: 🏷️ Post Now on Kijiji button in the posting tab. Sends the car to Snake, which opens Kijiji's posting page and shows a panel with all the vehicle fields ready to copy into the form. Full Kijiji form autofill coming next (being mapped). Includes two-way photo sync from the previous update."
 }

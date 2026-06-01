@@ -795,7 +795,11 @@ function renderPostingTab(car) {
     <button class="btn btn-post-now" onclick="window.postNowToFacebook(${car.id})">
       🚀 Post Now on Facebook Marketplace
     </button>
-    <div id="post-now-status-${car.id}" style="text-align:center;font-size:12px;color:var(--muted);margin-top:8px;"></div>`;
+    <div id="post-now-status-${car.id}" style="text-align:center;font-size:12px;color:var(--muted);margin-top:8px;"></div>
+    <button class="btn btn-post-now" style="margin-top:10px;background:#7B2FF7;" onclick="window.postNowToKijiji(${car.id})">
+      🏷️ Post Now on Kijiji
+    </button>
+    <div id="post-kijiji-status-${car.id}" style="text-align:center;font-size:12px;color:var(--muted);margin-top:8px;"></div>`;
 }
 
 window.generateDescription = function(carId) {
@@ -947,6 +951,58 @@ window.postNowToFacebook = async function(carId) {
   }
 };
 
+// Build the vehicle object sent to Snake (shared by Facebook + Kijiji).
+function buildVehiclePayload(car, carId) {
+  return {
+    name: [car.year, car.make, car.model, car.trim].filter(Boolean).join(' '),
+    year: car.year, make: car.make, model: car.model, trim: car.trim,
+    vin: car.vin, stockNumber: car.stock,
+    price: car.price, currency: 'CAD',
+    odometer: car.odometer, odometerUnit: 'km',
+    transmission: car.transmission, drivetrain: car.drivetrain,
+    exteriorColor: car.exteriorColor, interiorColor: car.interiorColor,
+    fuelType: car.fuelType, engine: car.engine, cylinders: car.cylinders,
+    condition: car.condition || 'Used',
+    bodyStyle: car.bodyStyle,
+    description: '',
+    generatedDescEn: (document.getElementById('desc-en-' + carId) || {}).innerText || car.generatedDescEn || '',
+    generatedDescFr: (document.getElementById('desc-fr-' + carId) || {}).innerText || car.generatedDescFr || '',
+    features: car.features || [],
+    images: car.photos.filter(p => p.type !== 'video' && p.url).map(p => p.url),
+  };
+}
+
+window.postNowToKijiji = async function(carId) {
+  const car = cars.find(c => c.id === carId);
+  if (!car) return;
+
+  // Download photos first if not on disk (so the folder is ready to attach on Kijiji).
+  const photoCount = car.photos.filter(p => p.type !== 'video' && (p.data || p.url)).length;
+  if (photoCount > 0 && !(await carPhotosOnDisk(car))) {
+    showToast('⬇️ Downloading photos first…');
+    await window.downloadPhotos(carId);
+  }
+
+  // Auto-generate the AI description if needed.
+  const descEl = document.getElementById('desc-en-' + carId);
+  const hasDesc = (descEl && descEl.innerText.trim()) || (car.generatedDescEn || '').trim();
+  if (!hasDesc) window.generateDescription(carId);
+
+  const statusEl = document.getElementById('post-kijiji-status-' + carId);
+  if (statusEl) statusEl.textContent = '⏳ Sending to Kijiji…';
+
+  const vehicle = buildVehiclePayload(car, carId);
+  window.postMessage({ type: 'mouse:postKijiji', vehicle }, '*');
+
+  if (statusEl) {
+    const timeout = setTimeout(() => {
+      statusEl.innerHTML = '❌ Snake extension didn\'t respond.<br><strong>Refresh this page (F5) then try again.</strong>';
+      statusEl.style.color = '#ff6b6b';
+    }, 3000);
+    window._snakeAckTimeout = timeout;
+  }
+};
+
 // ============ SNAKE ERROR LISTENER ============
 window.addEventListener('message', function(e) {
   if (e.source !== window || !e.data || e.data.type !== 'snake:error') return;
@@ -957,10 +1013,16 @@ window.addEventListener('message', function(e) {
 window.addEventListener('message', function(e) {
   if (e.source !== window || !e.data || e.data.type !== 'snake:ack') return;
   clearTimeout(window._snakeAckTimeout);
-  // Find the status element for any car and update it
+  // Find whichever post status is mid-send and confirm it
   document.querySelectorAll('[id^="post-now-status-"]').forEach(el => {
     if (el.textContent.includes('Sending')) {
       el.textContent = '✅ Opening Facebook — Snake will auto-fill!';
+      el.style.color = '';
+    }
+  });
+  document.querySelectorAll('[id^="post-kijiji-status-"]').forEach(el => {
+    if (el.textContent.includes('Sending')) {
+      el.textContent = '✅ Opening Kijiji — copy fields from the Snake panel!';
       el.style.color = '';
     }
   });
@@ -1497,7 +1559,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.4.1';
+const CURRENT_VERSION = '3.4.2';
 
 async function autoCheckVersion(silent = true) {
   try {
