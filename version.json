@@ -1,5 +1,5 @@
 {
-  "version": "3.3.7",
+  "version": "3.3.8",
   "releaseDate": "2026-05-31",
-  "changelog": "Fixed sync bug where cars on one device (e.g. Snake imports with no photos) could be stranded and never appear on your phone. After a cloud sync, any local-only cars are now automatically re-pushed so they propagate to all devices. Plus: photo download folder picker in Setup and auto-download photos on Post to Marketplace."
+  "changelog": "Cars imported from Project Snake (D2C) now push to the cloud INSTANTLY so they appear on your phone within seconds — grab your phone and start taking photos right away. Confirmation toast tells you it synced. Includes the earlier stranded-cars sync fix."
 }

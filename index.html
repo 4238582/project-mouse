@@ -416,11 +416,12 @@ function stopCloudSync() {
   if(sd) { sd.style.background = 'var(--muted)'; sd.title = 'Live sync off'; }
 }
 
-// Debounced auto-push — called by saveCars() whenever data changes locally
-function autoPushToCloud() {
+// Debounced auto-push — called by saveCars() whenever data changes locally.
+// Pass immediate=true to skip the debounce (e.g. a Snake import you want on your phone NOW).
+function autoPushToCloud(immediate) {
   if(!currentUser || currentMode !== 'cloud' || applyingRemote) return;
   clearTimeout(pushTimer);
-  pushTimer = setTimeout(async () => {
+  const run = async () => {
     try {
       // Strip photo base64 data before pushing to Firestore (too large)
       // Only sync car metadata — photos stay local
@@ -436,7 +437,9 @@ function autoPushToCloud() {
     } catch(e) {
       showToast('⚠️ Auto-sync failed: ' + e.message);
     }
-  }, 800); // wait 0.8s after last change, then push
+  };
+  if (immediate) run();
+  else pushTimer = setTimeout(run, 800); // wait 0.8s after last change, then push
 }
 
 window.googleLogin = async function() {
@@ -957,7 +960,8 @@ window.addEventListener('message', function(e) {
       features: v.features || existing.features,
     });
     saveCars(); renderCars();
-    showToast('🐍 Car updated from D2C Media!');
+    if (currentUser) autoPushToCloud(true); // push update immediately so phone matches
+    showToast('🐍 Car updated & synced from D2C Media!');
     // Auto-expand and switch to posting tab
     setTimeout(() => {
       const exp = document.getElementById('expand-' + existing.id);
@@ -995,13 +999,14 @@ window.addEventListener('message', function(e) {
   };
   cars.unshift(newCar);
   saveCars(); renderCars();
-  // Push to cloud — if auth not ready yet, flag it for when auth fires
+  // Push to cloud IMMEDIATELY so it shows on the phone right away (for taking photos).
   if (currentUser) {
-    autoPushToCloud();
+    autoPushToCloud(true);
+    showToast('🐍 Imported & synced — open it on your phone to add photos!');
   } else {
     window._pendingSnakePush = true; // auth will pick this up and push
+    showToast('🐍 Car imported from D2C Media!');
   }
-  showToast('🐍 Car imported from D2C Media!');
   setTimeout(() => {
     const exp = document.getElementById('expand-' + newCar.id);
     if (exp) window.toggleCard(newCar.id);
@@ -1455,7 +1460,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.3.7';
+const CURRENT_VERSION = '3.3.8';
 
 async function autoCheckVersion(silent = true) {
   try {
