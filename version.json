@@ -1,5 +1,5 @@
 {
   "version": "3.3.6",
   "releaseDate": "2026-05-31",
-  "changelog": "Setup now has a 'Photo Download Folder' picker — choose your CARS folder once and it's remembered. The Download Photos button saves straight into it (subfolder per car named by stock # + car name) without asking every time. Previous: Post Now auto-generates the AI description and fills it on Facebook."
+  "changelog": "Post to Marketplace now auto-downloads the car's photos first if they're not already saved in your folder, then generates the post. Plus: Setup has a 'Photo Download Folder' picker — choose your CARS folder once and it's remembered; Download Photos saves straight into a per-car subfolder (stock # + car name) without asking every time."
 }

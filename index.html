@@ -830,9 +830,31 @@ window.switchCardTab = function(carId, tab, btnEl) {
   btnEl.classList.add('active');
 };
 
-window.postNowToFacebook = function(carId) {
+// Returns true if this car's photos already exist on disk in the chosen folder.
+async function carPhotosOnDisk(car) {
+  if (!window._downloadDir) return false;
+  try {
+    if (!(await ensureDirPermission(window._downloadDir))) return false;
+    const folderName = [car.stock, car.year, car.make, car.model].filter(Boolean).join(' ');
+    const carDir = await window._downloadDir.getDirectoryHandle(folderName); // throws if missing
+    let count = 0;
+    for await (const [, handle] of carDir.entries()) { if (handle.kind === 'file') count++; }
+    return count > 0;
+  } catch (e) {
+    return false; // folder missing / no permission → treat as not downloaded
+  }
+}
+
+window.postNowToFacebook = async function(carId) {
   const car = cars.find(c => c.id === carId);
   if (!car) return;
+
+  // Download photos first if they're not already on disk (so the folder is ready to drag into FB).
+  const photoCount = car.photos.filter(p => p.type !== 'video' && (p.data || p.url)).length;
+  if (photoCount > 0 && !(await carPhotosOnDisk(car))) {
+    showToast('⬇️ Downloading photos first…');
+    await window.downloadPhotos(carId);
+  }
 
   // Auto-generate the AI description if it hasn't been made yet — one click does everything.
   const descEl = document.getElementById('desc-en-' + carId);
