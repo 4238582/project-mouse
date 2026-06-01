@@ -237,7 +237,8 @@ input:focus, textarea:focus { border-color: var(--accent); }
         <button onclick="window.forcePushToCloud()" class="btn btn-secondary" style="width:100%;margin-bottom:8px;">⬆️ Force Push to Cloud (fix phone sync)</button>
         <button onclick="window.syncFromCloud()" class="btn btn-secondary" style="width:100%;margin-bottom:8px;">⬇️ Force Reload from Cloud</button>
         <button onclick="loadStoragePhotos()" class="btn btn-primary" style="width:100%;">📸 Load Photos from Cloud</button>
-        <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;">Photos sync too, but a very large photo library may hit cloud limits — car info always syncs.</div>
+        <div id="syncStatus" style="font-size:11px;font-family:monospace;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:10px;color:var(--muted);white-space:pre-wrap;word-break:break-word;">Sync status: waiting for first push…</div>
+        <div id="cloudAccount" style="font-size:10px;color:var(--muted);text-align:center;margin-top:6px;"></div>
       </div>
     </div>
 
@@ -382,19 +383,27 @@ function startCloudSync() {
     // Merge: use cloud for car list/metadata, but KEEP local photos
     // Also keep any local-only cars not yet pushed to cloud (e.g. just imported from Snake)
     const cloudList = JSON.parse(cloudCars);
+    let localOnly = [];
+    // CRITICAL: wrap in try/FINALLY so applyingRemote is ALWAYS reset. If an exception (e.g. a
+    // localStorage quota error from base64 photos) left it stuck `true`, autoPushToCloud's guard
+    // silently blocked EVERY future push → cloud froze → new cars never synced to the phone.
     applyingRemote = true;
-    const merged = cloudList.map(cloudCar => {
-      const localCar = cars.find(c => c.id === cloudCar.id);
-      return { ...cloudCar, photos: localCar ? localCar.photos : [] };
-    });
-    // Add local cars that aren't in cloud yet (pending push)
-    const cloudIds = new Set(cloudList.map(c => c.id));
-    const localOnly = cars.filter(c => !cloudIds.has(c.id));
-    cars = [...localOnly, ...merged];
-    localStorage.setItem('pm_cars', JSON.stringify(cars));
-    updateStats();
-    renderCars();
-    applyingRemote = false;
+    try {
+      const merged = cloudList.map(cloudCar => {
+        const localCar = cars.find(c => c.id === cloudCar.id);
+        return { ...cloudCar, photos: localCar ? localCar.photos : [] };
+      });
+      // Add local cars that aren't in cloud yet (pending push)
+      const cloudIds = new Set(cloudList.map(c => c.id));
+      localOnly = cars.filter(c => !cloudIds.has(c.id));
+      cars = [...localOnly, ...merged];
+      try { localStorage.setItem('pm_cars', JSON.stringify(cars)); }
+      catch (quotaErr) { console.warn('localStorage full, skipping local cache:', quotaErr.message); }
+      updateStats();
+      renderCars();
+    } finally {
+      applyingRemote = false; // ALWAYS clear, even if the merge threw
+    }
     // If this device is holding cars the cloud doesn't have (e.g. Snake imports that the
     // other device overwrote), re-push them so they propagate instead of staying stranded.
     if (localOnly.length > 0) {
@@ -422,7 +431,16 @@ function stopCloudSync() {
 // this single Firestore doc bloated it past the 1MB limit, causing pushes to fail silently and
 // freezing the whole cloud (new cars never synced). Stripping photos keeps the doc tiny.
 function cloudCarsString() {
-  return JSON.stringify(cars.map(c => ({ ...c, photos: [] })));
+  return JSON.stringify(cars.map(c => ({
+    ...c,
+    // Keep a TINY photo signature (just id + uploaded flag) instead of full metadata. This keeps
+    // the doc small (avoids the 1MB limit) BUT still CHANGES when a photo is added or finishes
+    // uploading — so the other device's sync fires and runs loadStoragePhotos to pull the new
+    // photos from Storage. Sorted by id so the order can't differ between devices (no push loop).
+    photos: (c.photos || [])
+      .map(p => ({ id: p.id, u: p.uploaded ? 1 : 0 }))
+      .sort((a, b) => String(a.id).localeCompare(String(b.id)))
+  })));
 }
 
 // Debounced auto-push — called by saveCars() whenever data changes locally.
@@ -584,11 +602,12 @@ function showToast(msg, duration = 2500) {
 }
 
 function saveCars() {
-  try { 
+  try {
     localStorage.setItem('pm_cars', JSON.stringify(cars));
-  } catch(e) { 
-    showToast('⚠️ Save failed: ' + e.message);
-    return; // don't push to cloud if local save failed
+  } catch(e) {
+    // localStorage full (usually base64 photos). DON'T block cloud sync — the cloud is the
+    // source of truth. Just warn and still push so the phone gets the latest.
+    console.warn('localStorage full, skipping local cache:', e.message);
   }
   updateStats();
   autoPushToCloud();
@@ -1478,7 +1497,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.3.9';
+const CURRENT_VERSION = '3.4.1';
 
 async function autoCheckVersion(silent = true) {
   try {
