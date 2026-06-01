@@ -251,6 +251,17 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;" id="lastChecked"></div>
     </div>
 
+    <div class="card" style="margin-top:12px;border-color:#3a2a4a;">
+      <div class="config-title" style="color:#c8a2ff;">📁 Photo Download Folder</div>
+      <div class="config-desc">Pick the folder where car photos download (e.g. your CARS folder). Each car saves into its own subfolder named by stock # + car name. Set it once.</div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Current Folder</div>
+        <div style="font-size:14px;color:var(--accent);font-weight:700;" id="downloadFolderName">Not set — downloads will ask each time</div>
+      </div>
+      <button class="btn btn-secondary" style="width:100%;" onclick="window.chooseDownloadFolder()">📁 Choose Download Folder</button>
+      <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;">Chrome desktop only. The folder is remembered between visits.</div>
+    </div>
+
     <div class="card" style="margin-top:12px;">
       <div class="config-title" style="color:var(--danger);">Danger Zone</div>
       <div class="config-desc">Clear all local data. Cannot be undone.</div>
@@ -1259,6 +1270,66 @@ function dataURLtoBlob(dataURL) {
   return new Blob([arr], { type: mime });
 }
 
+// ── Persistent download-folder handle (File System Access API) ──────
+// FileSystemDirectoryHandle survives in IndexedDB across visits.
+function idbHandles(mode, fn) {
+  return new Promise((resolve, reject) => {
+    const open = indexedDB.open('pm-fs', 1);
+    open.onupgradeneeded = () => open.result.createObjectStore('handles');
+    open.onerror = () => reject(open.error);
+    open.onsuccess = () => {
+      const tx = open.result.transaction('handles', mode);
+      const store = tx.objectStore('handles');
+      fn(store, resolve, reject);
+    };
+  });
+}
+function idbGetHandle(key) {
+  return idbHandles('readonly', (store, resolve, reject) => {
+    const r = store.get(key); r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error);
+  });
+}
+function idbSetHandle(key, val) {
+  return idbHandles('readwrite', (store, resolve, reject) => {
+    store.put(val, key);
+    store.transaction.oncomplete = () => resolve();
+    store.transaction.onerror = () => reject(store.transaction.error);
+  });
+}
+async function ensureDirPermission(dir) {
+  const opts = { mode: 'readwrite' };
+  if ((await dir.queryPermission(opts)) === 'granted') return true;
+  if ((await dir.requestPermission(opts)) === 'granted') return true;
+  return false;
+}
+
+// Let the user pick (and remember) the download folder from Setup
+window.chooseDownloadFolder = async function() {
+  if (!window.showDirectoryPicker) { showToast('⚠️ Use Chrome on desktop for folder download'); return; }
+  try {
+    const dir = await window.showDirectoryPicker({ mode: 'readwrite' });
+    window._downloadDir = dir;
+    await idbSetHandle('downloadDir', dir);
+    const el = document.getElementById('downloadFolderName');
+    if (el) el.textContent = '📁 ' + dir.name;
+    showToast('✅ Download folder set: ' + dir.name);
+  } catch (e) {
+    if (e.name !== 'AbortError') showToast('⚠️ Folder picker error: ' + e.message);
+  }
+};
+
+// On startup, restore the saved folder handle and show its name (no permission prompt here)
+window.loadDownloadFolder = async function() {
+  try {
+    const dir = await idbGetHandle('downloadDir');
+    if (dir) {
+      window._downloadDir = dir;
+      const el = document.getElementById('downloadFolderName');
+      if (el) el.textContent = '📁 ' + dir.name;
+    }
+  } catch (e) { /* ignore */ }
+};
+
 // ── Main download function ────────────────────────────────────────
 window.downloadPhotos = async function(id) {
   const car = cars.find(c => c.id === id);
@@ -1275,12 +1346,23 @@ window.downloadPhotos = async function(id) {
   // Folder name: "23158A 2022 Hyundai Elantra"
   const folderName = [car.stock, car.year, car.make, car.model].filter(Boolean).join(' ');
 
-  let baseDir;
-  try {
-    baseDir = await window.showDirectoryPicker({ mode: 'readwrite' });
-  } catch (e) {
-    if (e.name !== 'AbortError') showToast('⚠️ Folder picker error: ' + e.message);
-    return;
+  // Use the folder chosen in Setup if available; otherwise prompt and remember it.
+  let baseDir = window._downloadDir || null;
+  if (baseDir) {
+    const ok = await ensureDirPermission(baseDir);
+    if (!ok) baseDir = null; // permission revoked → fall back to picker
+  }
+  if (!baseDir) {
+    try {
+      baseDir = await window.showDirectoryPicker({ mode: 'readwrite' });
+      window._downloadDir = baseDir;
+      await idbSetHandle('downloadDir', baseDir);
+      const el = document.getElementById('downloadFolderName');
+      if (el) el.textContent = '📁 ' + baseDir.name;
+    } catch (e) {
+      if (e.name !== 'AbortError') showToast('⚠️ Folder picker error: ' + e.message);
+      return;
+    }
   }
 
   // Create subfolder automatically
@@ -1346,7 +1428,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.3.5';
+const CURRENT_VERSION = '3.3.6';
 
 async function autoCheckVersion(silent = true) {
   try {
@@ -1381,6 +1463,7 @@ setInterval(() => autoCheckVersion(true), 2 * 60 * 1000);
 // ============ INIT ============
 renderCars();
 window.setMode(currentMode);
+window.loadDownloadFolder();   // restore the saved photo-download folder
 document.getElementById('currentVersion').textContent = 'v' + CURRENT_VERSION;
 const lc = localStorage.getItem('pm_last_checked');
 if(lc) document.getElementById('lastChecked').textContent = 'Last checked: ' + lc;

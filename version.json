@@ -1,5 +1,5 @@
 {
-  "version": "3.3.5",
+  "version": "3.3.6",
   "releaseDate": "2026-05-31",
-  "changelog": "Post Now is now fully one-click: it auto-generates the AI description if you haven't already, then sends the full EN/FR text to Facebook. Generated text is saved to the car object (was only in the DOM and got wiped by cloud re-renders, so Facebook only received the footer). Reads via innerText to preserve line breaks."
+  "changelog": "Setup now has a 'Photo Download Folder' picker — choose your CARS folder once and it's remembered. The Download Photos button saves straight into it (subfolder per car named by stock # + car name) without asking every time. Previous: Post Now auto-generates the AI description and fills it on Facebook."
 }
