@@ -805,6 +805,10 @@ window.generateDescription = function(carId) {
   document.getElementById('desc-en-' + carId).innerText = en;
   document.getElementById('desc-fr-' + carId).innerText = fr;
   document.getElementById('desc-box-' + carId).style.display = '';
+  // Persist to the car object so Post Now reads it reliably even after a re-render
+  // (the contenteditable DOM gets wiped by syncFromCloud/onSnapshot merges).
+  car.generatedDescEn = en;
+  car.generatedDescFr = fr;
   showToast('✨ Description generated!');
 };
 
@@ -818,6 +822,13 @@ window.switchCardTab = function(carId, tab, btnEl) {
 window.postNowToFacebook = function(carId) {
   const car = cars.find(c => c.id === carId);
   if (!car) return;
+
+  // Auto-generate the AI description if it hasn't been made yet — one click does everything.
+  const descEl = document.getElementById('desc-en-' + carId);
+  const hasDesc = (descEl && descEl.innerText.trim()) || (car.generatedDescEn || '').trim();
+  if (!hasDesc) {
+    window.generateDescription(carId);
+  }
 
   const statusEl = document.getElementById('post-now-status-' + carId);
   if (statusEl) statusEl.textContent = '⏳ Sending to Facebook Marketplace…';
@@ -835,7 +846,12 @@ window.postNowToFacebook = function(carId) {
     condition: car.condition || 'Used',
     bodyStyle: car.bodyStyle,
     description: '',
-    generatedDescEn: (document.getElementById('desc-en-' + carId) || {}).textContent || '',
+    // Prefer the live contenteditable (lets the user hand-edit before posting), then
+    // the persisted car value, then empty. Use innerText so newlines are preserved.
+    generatedDescEn: (document.getElementById('desc-en-' + carId) || {}).innerText
+                     || car.generatedDescEn || '',
+    generatedDescFr: (document.getElementById('desc-fr-' + carId) || {}).innerText
+                     || car.generatedDescFr || '',
     features: car.features || [],
     images: car.photos.filter(p => p.type !== 'video' && p.url).map(p => p.url),
   };
@@ -1330,7 +1346,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.3.4';
+const CURRENT_VERSION = '3.3.5';
 
 async function autoCheckVersion(silent = true) {
   try {

@@ -1,5 +1,5 @@
 {
-  "version": "3.3.4",
-  "releaseDate": "2026-05-30",
-  "changelog": "Fixed description formatting — each emoji on its own line, proper spacing between sections, now copies correctly. Auto version-check on load with update banner. Post Now now shows real confirmation from Snake or a clear error if extension needs refresh."
+  "version": "3.3.5",
+  "releaseDate": "2026-05-31",
+  "changelog": "Post Now is now fully one-click: it auto-generates the AI description if you haven't already, then sends the full EN/FR text to Facebook. Generated text is saved to the car object (was only in the DOM and got wiped by cloud re-renders, so Facebook only received the footer). Reads via innerText to preserve line breaks."
 }
