@@ -234,6 +234,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
           <div style="color:var(--success);font-weight:700;">✅ Live Sync Active</div>
           <div style="font-size:11px;color:var(--muted);margin-top:3px;">Cars sync automatically between all your devices — no buttons, no refresh.</div>
         </div>
+        <button onclick="window.forcePushToCloud()" class="btn btn-secondary" style="width:100%;margin-bottom:8px;">⬆️ Force Push to Cloud (fix phone sync)</button>
         <button onclick="window.syncFromCloud()" class="btn btn-secondary" style="width:100%;margin-bottom:8px;">⬇️ Force Reload from Cloud</button>
         <button onclick="loadStoragePhotos()" class="btn btn-primary" style="width:100%;">📸 Load Photos from Cloud</button>
         <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;">Photos sync too, but a very large photo library may hit cloud limits — car info always syncs.</div>
@@ -376,7 +377,7 @@ function startCloudSync() {
     if(snap.exists() && typeof snap.data().cars === 'string') {
       cloudCars = snap.data().cars;
     }
-    if(cloudCars === JSON.stringify(cars.map(c => ({...c, photos: c.photos.map(p => ({...p, data: ''}))}))))  return; // no change
+    if(cloudCars === cloudCarsString()) return; // no change (compare with photos stripped, same as push)
     
     // Merge: use cloud for car list/metadata, but KEEP local photos
     // Also keep any local-only cars not yet pushed to cloud (e.g. just imported from Snake)
@@ -416,6 +417,14 @@ function stopCloudSync() {
   if(sd) { sd.style.background = 'var(--muted)'; sd.title = 'Live sync off'; }
 }
 
+// Serialize cars for the cloud. Photos are STRIPPED ENTIRELY — they're recovered on every
+// device by loadStoragePhotos() listing each car's Storage folder. Keeping photo metadata in
+// this single Firestore doc bloated it past the 1MB limit, causing pushes to fail silently and
+// freezing the whole cloud (new cars never synced). Stripping photos keeps the doc tiny.
+function cloudCarsString() {
+  return JSON.stringify(cars.map(c => ({ ...c, photos: [] })));
+}
+
 // Debounced auto-push — called by saveCars() whenever data changes locally.
 // Pass immediate=true to skip the debounce (e.g. a Snake import you want on your phone NOW).
 function autoPushToCloud(immediate) {
@@ -423,14 +432,8 @@ function autoPushToCloud(immediate) {
   clearTimeout(pushTimer);
   const run = async () => {
     try {
-      // Strip photo base64 data before pushing to Firestore (too large)
-      // Only sync car metadata — photos stay local
-      const carsForCloud = cars.map(c => ({
-        ...c,
-        photos: c.photos.map(p => ({ ...p, data: '' })) // strip base64
-      }));
       await setDoc(doc(db, 'users', currentUser.uid, 'data', 'inventory'), {
-        cars: JSON.stringify(carsForCloud), updatedAt: new Date().toISOString()
+        cars: cloudCarsString(), updatedAt: new Date().toISOString()
       });
       const sd = document.getElementById('syncDot');
       if(sd) { sd.style.background = 'var(--success)'; }
@@ -454,6 +457,21 @@ window.googleLogout = async function() {
   await signOut(auth);
   showToast('👋 Signed out!');
   window.setMode('local');
+};
+
+// Manual full push with visible result — use this to force a frozen cloud to update.
+window.forcePushToCloud = async function() {
+  if(!currentUser) { showToast('⚠️ Please sign in first!'); return; }
+  try {
+    const payload = cloudCarsString();
+    const kb = (payload.length / 1024).toFixed(0);
+    await setDoc(doc(db, 'users', currentUser.uid, 'data', 'inventory'), {
+      cars: payload, updatedAt: new Date().toISOString()
+    });
+    showToast(`✅ Pushed ${cars.length} cars to cloud (${kb} KB) — refresh your phone!`);
+  } catch(e) {
+    showToast('❌ Push failed: ' + e.message);
+  }
 };
 
 window.syncToCloud = async function() {
@@ -1460,7 +1478,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.3.8';
+const CURRENT_VERSION = '3.3.9';
 
 async function autoCheckVersion(silent = true) {
   try {

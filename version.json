@@ -1,5 +1,5 @@
 {
-  "version": "3.3.8",
+  "version": "3.3.9",
   "releaseDate": "2026-05-31",
-  "changelog": "Cars imported from Project Snake (D2C) now push to the cloud INSTANTLY so they appear on your phone within seconds — grab your phone and start taking photos right away. Confirmation toast tells you it synced. Includes the earlier stranded-cars sync fix."
+  "changelog": "MAJOR sync fix: the cloud document was bloated with photo metadata and likely hit Firestore's 1MB limit, silently failing every push so new cars (like Snake imports) never reached your phone. Photos are now stripped from the cloud doc entirely (each device reloads them from Storage), keeping it tiny. Added a 'Force Push to Cloud' button in Setup that shows the payload size and any error."
 }
