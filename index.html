@@ -106,8 +106,8 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .inv-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
 .inv-tab { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; }
 .inv-tab.active { background: rgba(232,255,0,0.1); border-color: var(--accent); color: var(--accent); }
-.btn-sold { background: none; border: 1px solid #ff6b35; color: #ff6b35; border-radius: 6px; font-size: 11px; font-weight: 700; padding: 3px 8px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
-.btn-sold:hover { background: #ff6b35; color: #000; }
+.btn-sold { background: none; border: 1px solid #ff3b30; color: #ff3b30; border-radius: 6px; font-size: 11px; font-weight: 700; padding: 3px 8px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.btn-sold:hover { background: #ff3b30; color: #fff; }
 .btn-unsold { background: none; border: 1px solid var(--muted); color: var(--muted); border-radius: 6px; font-size: 11px; font-weight: 700; padding: 3px 8px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
 .btn-unsold:hover { background: var(--surface2); }
 .btn-delivered { background: none; border: 1px solid #00c896; color: #00c896; border-radius: 6px; font-size: 11px; font-weight: 700; padding: 3px 8px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
@@ -1563,7 +1563,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.4.5';
+const CURRENT_VERSION = '3.4.6';
 
 async function autoCheckVersion(silent = true) {
   try {

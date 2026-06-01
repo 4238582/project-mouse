@@ -1,5 +1,5 @@
 {
-  "version": "3.4.5",
-  "releaseDate": "2026-05-31",
-  "changelog": "Facebook Marketplace button is now Facebook blue with white text. Kijiji button purple. Short & cute bilingual descriptions with junk features filtered out."
+  "version": "3.4.6",
+  "releaseDate": "2026-06-01",
+  "changelog": "SOLD button is now red (was orange). Facebook button blue, Kijiji purple. Short & cute bilingual descriptions."
 }
