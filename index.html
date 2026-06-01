@@ -792,7 +792,7 @@ function renderPostingTab(car) {
         <button class="btn btn-secondary" style="width:100%;margin-bottom:4px;" onclick="navigator.clipboard.writeText(document.getElementById('desc-fr-${car.id}').innerText).then(()=>window.showToast('📋 Français copié!'))">📋 Copier Français</button>
       </div>
     </div>
-    <button class="btn btn-post-now" onclick="window.postNowToFacebook(${car.id})">
+    <button class="btn btn-post-now" style="background:#1877F2;color:#fff;" onclick="window.postNowToFacebook(${car.id})">
       🚀 Post Now on Facebook Marketplace
     </button>
     <div id="post-now-status-${car.id}" style="text-align:center;font-size:12px;color:var(--muted);margin-top:8px;"></div>
@@ -802,6 +802,29 @@ function renderPostingTab(car) {
     <div id="post-kijiji-status-${car.id}" style="text-align:center;font-size:12px;color:var(--muted);margin-top:8px;"></div>`;
 }
 
+// Filter out D2C listing-config checkboxes & junk that got scraped as "features",
+// plus trivial/low-value items. Tidy + dedupe what's left.
+const FEATURE_JUNK = [
+  /sold\s*as\s*is/i, /\bas\s*is\b/i, /bullet\s*point/i, /\bpublish\b/i,
+  /exclude/i, /accident/i, /carfax/i, /carproof/i, /odometer/i, /unlimited/i,
+  /^french$/i, /^english$/i, /^anglais$/i, /^fran[çc]ais$/i, /real\s*odometer/i,
+  /^ca$/i, /certified\s*pre/i, /no\s*reported/i
+];
+const FEATURE_TRIVIAL = [
+  /heated\s*mirror/i, /electric\s*mirror/i, /power\s*mirror/i, /adjustable\s*steering/i,
+  /tachometer/i, /cup\s*holder/i, /intermittent\s*wiper/i, /day\s*time\s*running/i,
+  /vanity\s*mirror/i, /\bclock\b/i, /trip\s*computer/i, /tilt\s*steering/i
+];
+function cleanFeatures(arr, dropTrivial) {
+  const seen = new Set();
+  return (arr || [])
+    .map(f => String(f).replace(/\s+/g, ' ').trim())
+    .filter(f => f.length > 1)
+    .filter(f => !FEATURE_JUNK.some(re => re.test(f)))
+    .filter(f => !(dropTrivial && FEATURE_TRIVIAL.some(re => re.test(f))))
+    .filter(f => { const k = f.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; });
+}
+
 window.generateDescription = function(carId) {
   const car = cars.find(c => c.id === carId);
   if (!car) return;
@@ -809,58 +832,39 @@ window.generateDescription = function(carId) {
   const name    = [car.year, car.make, car.model, car.trim].filter(Boolean).join(' ');
   const km      = car.odometer ? Number(car.odometer).toLocaleString() : null;
   const price   = car.price ? '$' + Number(car.price).toLocaleString() : null;
-  const feats   = (car.features || []).slice(0, 8);
+  const isNew   = (car.condition || 'used').toLowerCase() === 'new';
+  // Prefer notable features (drop trivial); if that leaves too few, allow trivial back in.
+  let feats = cleanFeatures(car.features, true).slice(0, 12);
+  if (feats.length < 3) feats = cleanFeatures(car.features, false).slice(0, 12);
 
-  // ── English ──────────────────────────────────────────────────────────────
-  const condEN  = (car.condition || 'used').toLowerCase() === 'new' ? 'brand new' : 'pre-owned';
-  const transEN = car.transmission || 'automatic';
+  const transEN = car.transmission || 'Automatic';
   const colorEN = car.exteriorColor || '';
   const fuelEN  = car.fuelType || '';
   const driveEN = car.drivetrain || '';
 
-  const specLines = [];
-  if (km)      specLines.push(`📍 ${km} km`);
-  if (price)   specLines.push(`💰 ${price} CAD`);
-  if (transEN) specLines.push(`⚙️ ${transEN}`);
-  if (colorEN) specLines.push(`🎨 ${colorEN} exterior`);
-  if (fuelEN)  specLines.push(`⛽ ${fuelEN}`);
-  if (driveEN) specLines.push(`🛞 ${driveEN}`);
+  // Short, cute one-line spec strip (only the bits we have)
+  const quickEN = [km && `${km} km`, transEN, driveEN, colorEN].filter(Boolean).join(' · ');
 
-  let en = `🚗 ${name} — ${condEN.charAt(0).toUpperCase() + condEN.slice(1)}\n`;
-  en += `\n` + specLines.join('\n');
-  if (feats.length) {
-    en += `\n\n` + feats.map(f => `✅ ${f}`).join('\n');
-  }
-  en += `\n\n📌 Hull Hyundai — 341 Bd St-Joseph, Gatineau, QC J8Y 3Y2`;
+  // ── English (short & sweet) ────────────────────────────────────────────────
+  let en = `✨ ${name} ✨\n`;
+  if (quickEN) en += `🚙 ${quickEN}\n`;
+  if (price)   en += `💰 ${price} CAD\n`;
+  en += `\n${isNew ? 'Brand new and ready for its first adventure!' : 'A great little ride, inspected and ready to go!'} 🚗💨\n`;
+  en += `\n📍 Hull Hyundai — Gatineau, QC`;
   en += `\n🔑 Stock #${car.stock || 'N/A'} · VIN: ${car.vin || 'N/A'}`;
-  en += `\n\n💬 Message me for more information!`;
+  en += `\n\n💬 Message me — let's get you driving! 😊`;
 
-  // ── French ───────────────────────────────────────────────────────────────
-  const condFR  = (car.condition || 'used').toLowerCase() === 'new' ? 'neuf' : 'd\'occasion';
-  const transFR = transEN.toLowerCase().includes('auto') ? 'automatique' : transEN.toLowerCase().includes('manual') ? 'manuelle' : transEN;
-  const fuelFR  = fuelEN.toLowerCase().includes('gas') || fuelEN.toLowerCase().includes('essence') ? 'Essence'
-                : fuelEN.toLowerCase().includes('diesel') ? 'Diesel'
-                : fuelEN.toLowerCase().includes('electric') && fuelEN.toLowerCase().includes('hybrid') ? 'Hybride rechargeable'
-                : fuelEN.toLowerCase().includes('hybrid') ? 'Hybride'
-                : fuelEN.toLowerCase().includes('electric') ? 'Électrique'
-                : fuelEN;
+  // ── French (court & mignon) ────────────────────────────────────────────────
+  const transFR = /manual|manuel/i.test(transEN) ? 'Manuelle' : 'Automatique';
+  const quickFR = [km && `${km} km`, transFR, driveEN, colorEN].filter(Boolean).join(' · ');
 
-  const specLinesFR = [];
-  if (km)      specLinesFR.push(`📍 ${km} km`);
-  if (price)   specLinesFR.push(`💰 ${price} CAD`);
-  if (transFR) specLinesFR.push(`⚙️ ${transFR}`);
-  if (colorEN) specLinesFR.push(`🎨 Extérieur ${colorEN}`);
-  if (fuelFR)  specLinesFR.push(`⛽ ${fuelFR}`);
-  if (driveEN) specLinesFR.push(`🛞 ${driveEN}`);
-
-  let fr = `🚗 ${name} — Véhicule ${condFR}\n`;
-  fr += `\n` + specLinesFR.join('\n');
-  if (feats.length) {
-    fr += `\n\n` + feats.map(f => `✅ ${f}`).join('\n');
-  }
-  fr += `\n\n📌 Hull Hyundai — 341 Bd St-Joseph, Gatineau, QC J8Y 3Y2`;
+  let fr = `✨ ${name} ✨\n`;
+  if (quickFR) fr += `🚙 ${quickFR}\n`;
+  if (price)   fr += `💰 ${price} CAD\n`;
+  fr += `\n${isNew ? 'Flambant neuf et prêt pour sa première aventure!' : 'Un beau véhicule, inspecté et prêt à rouler!'} 🚗💨\n`;
+  fr += `\n📍 Hull Hyundai — Gatineau, QC`;
   fr += `\n🔑 Stock #${car.stock || 'N/A'} · NIV: ${car.vin || 'N/A'}`;
-  fr += `\n\n💬 Écrivez-moi pour plus d'informations!`;
+  fr += `\n\n💬 Écrivez-moi — on vous trouve votre prochaine voiture! 😊`;
 
   document.getElementById('desc-en-' + carId).innerText = en;
   document.getElementById('desc-fr-' + carId).innerText = fr;
@@ -1559,7 +1563,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.4.2';
+const CURRENT_VERSION = '3.4.5';
 
 async function autoCheckVersion(silent = true) {
   try {

@@ -1,5 +1,5 @@
 {
-  "version": "3.4.2",
+  "version": "3.4.5",
   "releaseDate": "2026-05-31",
-  "changelog": "New: 🏷️ Post Now on Kijiji button in the posting tab. Sends the car to Snake, which opens Kijiji's posting page and shows a panel with all the vehicle fields ready to copy into the form. Full Kijiji form autofill coming next (being mapped). Includes two-way photo sync from the previous update."
+  "changelog": "Facebook Marketplace button is now Facebook blue with white text. Kijiji button purple. Short & cute bilingual descriptions with junk features filtered out."
 }
