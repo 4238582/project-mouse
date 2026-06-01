@@ -394,6 +394,11 @@ function startCloudSync() {
     updateStats();
     renderCars();
     applyingRemote = false;
+    // If this device is holding cars the cloud doesn't have (e.g. Snake imports that the
+    // other device overwrote), re-push them so they propagate instead of staying stranded.
+    if (localOnly.length > 0) {
+      setTimeout(autoPushToCloud, 600);
+    }
     showToast('🔄 Updated from another device');
     // Load photo URLs from Storage for new cars
     setTimeout(loadStoragePhotos, 1000);
@@ -1450,7 +1455,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.3.6';
+const CURRENT_VERSION = '3.3.7';
 
 async function autoCheckVersion(silent = true) {
   try {

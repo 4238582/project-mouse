@@ -1,5 +1,5 @@
 {
-  "version": "3.3.6",
+  "version": "3.3.7",
   "releaseDate": "2026-05-31",
-  "changelog": "Post to Marketplace now auto-downloads the car's photos first if they're not already saved in your folder, then generates the post. Plus: Setup has a 'Photo Download Folder' picker — choose your CARS folder once and it's remembered; Download Photos saves straight into a per-car subfolder (stock # + car name) without asking every time."
+  "changelog": "Fixed sync bug where cars on one device (e.g. Snake imports with no photos) could be stranded and never appear on your phone. After a cloud sync, any local-only cars are now automatically re-pushed so they propagate to all devices. Plus: photo download folder picker in Setup and auto-download photos on Post to Marketplace."
 }
