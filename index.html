@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<!-- Tell the browser the page is already dark so Chrome's "Auto Dark Mode" doesn't re-invert
+     the colors (that's what made them look weird on desktop but fine on phone). -->
+<meta name="color-scheme" content="dark">
 <title>Project Mouse</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
@@ -15,6 +18,7 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
 :root {
+  color-scheme: dark; /* opt out of Chrome auto-dark re-inversion */
   --bg: #0a0a0a; --surface: #141414; --surface2: #1e1e1e;
   --border: #2a2a2a; --accent: #e8ff00; --text: #f0f0f0;
   --muted: #666; --danger: #ff3b3b; --success: #00e676;
@@ -1563,7 +1567,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.4.6';
+const CURRENT_VERSION = '3.4.7';
 
 async function autoCheckVersion(silent = true) {
   try {

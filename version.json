@@ -1,5 +1,5 @@
 {
-  "version": "3.4.6",
+  "version": "3.4.7",
   "releaseDate": "2026-06-01",
-  "changelog": "SOLD button is now red (was orange). Facebook button blue, Kijiji purple. Short & cute bilingual descriptions."
+  "changelog": "Fixed weird colors on desktop — added color-scheme: dark so Chrome's Auto Dark Mode stops re-inverting the already-dark theme (phone was always fine). SOLD button red, FB button blue, Kijiji purple."
 }
