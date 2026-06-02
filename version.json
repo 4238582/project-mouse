@@ -1,5 +1,5 @@
 {
-  "version": "3.4.7",
+  "version": "3.4.8",
   "releaseDate": "2026-06-01",
-  "changelog": "Fixed weird colors on desktop — added color-scheme: dark so Chrome's Auto Dark Mode stops re-inverting the already-dark theme (phone was always fine). SOLD button red, FB button blue, Kijiji purple."
+  "changelog": "Manually added cars now push to the cloud immediately (like Snake imports) so they show on your other devices right away. The toast tells you if it synced or if you need to sign in. Plus color-scheme fix and red SOLD button."
 }
