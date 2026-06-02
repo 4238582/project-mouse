@@ -605,9 +605,9 @@ function autoPullPhotos() {
 }
 window.addEventListener('focus', autoPullPhotos);
 document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') autoPullPhotos(); });
-// Safety-net poll: while the tab is visible & syncing, check for new photos every 12s
-// so they never take longer than ~12s even if no focus event fires.
-setInterval(() => { if(document.visibilityState === 'visible') autoPullPhotos(); }, 12000);
+// Safety-net poll (backup only — focus pull + realtime onSnapshot are the fast paths and are
+// free). Kept at 30s to minimise Storage "list" operations against the $5 cap.
+setInterval(() => { if(document.visibilityState === 'visible') autoPullPhotos(); }, 30000);
 
 // ============ STATE ============
 let cars = JSON.parse(localStorage.getItem('pm_cars') || '[]');
@@ -1296,7 +1296,9 @@ window.snapPhoto = async function() {
     try {
       const path = `users/${currentUser.uid}/cars/${car.id}/${photoId}.jpg`;
       const ref = storageRef(storage, path);
-      await uploadString(ref, dataUrl, 'data_url');
+      // cacheControl lets the browser keep the image for a year → reopening the app uses the
+      // cached copy instead of re-downloading (saves Firebase bandwidth).
+      await uploadString(ref, dataUrl, 'data_url', { cacheControl: 'public, max-age=31536000' });
       const url = await getDownloadURL(ref);
       // Update photo with cloud URL
       const p = car.photos.find(p => p.id === photoId);
@@ -1584,7 +1586,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.5.0';
+const CURRENT_VERSION = '3.5.2';
 
 async function autoCheckVersion(silent = true) {
   try {

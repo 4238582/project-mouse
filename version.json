@@ -1,5 +1,5 @@
 {
-  "version": "3.5.0",
+  "version": "3.5.2",
   "releaseDate": "2026-06-01",
-  "changelog": "Much faster photo sync between phone and PC. loadStoragePhotos now scans all cars and downloads photo URLs in parallel (was one-at-a-time, ~30s). Snapshot-triggered pull sped up (1s to 0.3s) and a 12s safety-net poll added, so phone photos appear on PC in a few seconds instead of ~30."
+  "changelog": "Photos now upload with a 1-year browser cache header, so reopening the app uses cached images instead of re-downloading them — saves Firebase bandwidth. Combined with the parallel/cheap photo sync from 3.5.x."
 }
