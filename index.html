@@ -547,9 +547,9 @@ window.syncFromCloud = async function() {
 };
 
 // Load ALL photos from Storage by scanning folders
-async function loadStoragePhotos() {
+async function loadStoragePhotos(silent) {
   if(!currentUser) return;
-  showToast('📸 Loading photos from cloud...');
+  if(!silent) showToast('📸 Loading photos from cloud...');
   let updated = false;
   try {
     for(const car of cars) {
@@ -581,17 +581,30 @@ async function loadStoragePhotos() {
         }
       } catch(e) {} // car folder might not exist
     }
-    if(updated) { 
-      saveCars(); 
-      renderCars(); 
-      showToast('✅ Photos loaded from cloud!');
-    } else {
+    if(updated) {
+      saveCars();
+      renderCars();
+      if(!silent) showToast('✅ Photos loaded from cloud!');
+    } else if(!silent) {
       showToast('☁️ Photos up to date!');
     }
   } catch(e) {
-    showToast('⚠️ Could not load photos: ' + e.message);
+    if(!silent) showToast('⚠️ Could not load photos: ' + e.message);
   }
 }
+
+// Auto-pull photos from Storage when you return to this device (covers phone→PC sync,
+// since mobile may suspend the background tab before its photo signal goes out). Throttled.
+let _lastPhotoPull = 0;
+function autoPullPhotos() {
+  if(!currentUser || currentMode !== 'cloud') return;
+  const now = Date.now();
+  if(now - _lastPhotoPull < 8000) return; // throttle to once / 8s
+  _lastPhotoPull = now;
+  loadStoragePhotos(true); // silent
+}
+window.addEventListener('focus', autoPullPhotos);
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') autoPullPhotos(); });
 
 // ============ STATE ============
 let cars = JSON.parse(localStorage.getItem('pm_cars') || '[]');
@@ -1568,7 +1581,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.4.8';
+const CURRENT_VERSION = '3.4.9';
 
 async function autoCheckVersion(silent = true) {
   try {

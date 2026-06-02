@@ -1,5 +1,5 @@
 {
-  "version": "3.4.8",
+  "version": "3.4.9",
   "releaseDate": "2026-06-01",
-  "changelog": "Manually added cars now push to the cloud immediately (like Snake imports) so they show on your other devices right away. The toast tells you if it synced or if you need to sign in. Plus color-scheme fix and red SOLD button."
+  "changelog": "Photos taken on your phone now reliably appear on your PC. When you switch back to a device (window focus), it silently auto-pulls the latest photos from the cloud — no need to wait for the phone or press a button. Fixes the case where mobile suspends the tab before its sync signal goes out."
 }
