@@ -1,6 +1,6 @@
 {
-  "name": "Project Mouse",
-  "short_name": "Mouse",
+  "name": "Snake's Hustle",
+  "short_name": "Snake",
   "description": "Car Photo Manager - Hull Hyundai",
   "start_url": "./index.html",
   "display": "standalone",

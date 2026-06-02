@@ -6,12 +6,12 @@
 <!-- Tell the browser the page is already dark so Chrome's "Auto Dark Mode" doesn't re-invert
      the colors (that's what made them look weird on desktop but fine on phone). -->
 <meta name="color-scheme" content="dark">
-<title>Project Mouse</title>
+<title>Snake's Hustle</title>
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Project Mouse">
+<meta name="apple-mobile-web-app-title" content="Snake's Hustle">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="theme-color" content="#e8ff00">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -147,9 +147,9 @@ input:focus, textarea:focus { border-color: var(--accent); }
 
 <header>
   <div class="logo">
-    <div class="logo-icon"><img src="icon-192.png" alt="🐭"></div>
+    <div class="logo-icon"><img src="icon-192.png" alt="🐍"></div>
     <div>
-      <div class="logo-text">Project Mouse</div>
+      <div class="logo-text">Snake's Hustle</div>
       <div class="logo-sub">Car Photo Manager</div>
     </div>
   </div>
@@ -248,7 +248,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
 
     <div class="card" style="margin-top:12px;border-color:#2a2a4a;">
       <div class="config-title" style="color:#88aaff;">🔄 App Updates</div>
-      <div class="config-desc">Check for the latest version of Project Mouse.</div>
+      <div class="config-desc">Check for the latest version of Snake's Hustle.</div>
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Current Version</div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent);" id="currentVersion">v3.0.0</div>
@@ -1605,7 +1605,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.5.3';
+const CURRENT_VERSION = '3.6.0';
 
 async function autoCheckVersion(silent = true) {
   try {
@@ -1652,7 +1652,7 @@ window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault(); deferredPrompt = e;
   const b = document.createElement('div');
   b.style.cssText = 'position:fixed;top:0;left:0;right:0;background:var(--accent);color:#000;padding:11px 18px;display:flex;justify-content:space-between;align-items:center;z-index:200;font-weight:600;font-size:13px;';
-  b.innerHTML = '📲 Install Project Mouse! <button onclick="window.installApp()" style="background:#000;color:var(--accent);border:none;padding:5px 14px;border-radius:20px;font-weight:700;cursor:pointer;">INSTALL</button>';
+  b.innerHTML = '📲 Install Snake\'s Hustle! <button onclick="window.installApp()" style="background:#000;color:var(--accent);border:none;padding:5px 14px;border-radius:20px;font-weight:700;cursor:pointer;">INSTALL</button>';
   document.body.prepend(b);
   window._ib = b;
 });

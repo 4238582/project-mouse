@@ -1,5 +1,5 @@
 {
-  "version": "3.5.3",
-  "releaseDate": "2026-06-01",
-  "changelog": "Fixed cars coming back after you delete them. Deletions were being resurrected by the other device's stranded-car heal. Now uses tombstones (deletedIds) synced in the cloud so a deleted car stays deleted on every device, and the deletion pushes immediately. Both devices must be on 3.5.3."
+  "version": "3.6.0",
+  "releaseDate": "2026-06-02",
+  "changelog": "Rebranded the app to Snake's Hustle 🐍 — new name, new snake logo/icon (header, browser tab, installed app). The web address stays the same so nothing breaks, and the Project Snake extension is unchanged."
 }
