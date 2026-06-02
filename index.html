@@ -388,18 +388,26 @@ function startCloudSync() {
     // Also keep any local-only cars not yet pushed to cloud (e.g. just imported from Snake)
     const cloudList = JSON.parse(cloudCars);
     let localOnly = [];
+    // Merge tombstones from the cloud so deletions propagate (and don't get resurrected).
+    try {
+      const cloudDeleted = JSON.parse(snap.data().deletedIds || '[]');
+      for(const did of cloudDeleted) if(!deletedIds.includes(did)) deletedIds.push(did);
+      if(deletedIds.length > 500) deletedIds = deletedIds.slice(-500);
+      localStorage.setItem('pm_deleted', JSON.stringify(deletedIds));
+    } catch(e) {}
+    const tomb = new Set(deletedIds);
     // CRITICAL: wrap in try/FINALLY so applyingRemote is ALWAYS reset. If an exception (e.g. a
     // localStorage quota error from base64 photos) left it stuck `true`, autoPushToCloud's guard
     // silently blocked EVERY future push → cloud froze → new cars never synced to the phone.
     applyingRemote = true;
     try {
-      const merged = cloudList.map(cloudCar => {
+      const merged = cloudList.filter(c => !tomb.has(c.id)).map(cloudCar => {
         const localCar = cars.find(c => c.id === cloudCar.id);
         return { ...cloudCar, photos: localCar ? localCar.photos : [] };
       });
-      // Add local cars that aren't in cloud yet (pending push)
+      // Add local cars that aren't in cloud yet (pending push) — but never resurrect deleted ones
       const cloudIds = new Set(cloudList.map(c => c.id));
-      localOnly = cars.filter(c => !cloudIds.has(c.id));
+      localOnly = cars.filter(c => !cloudIds.has(c.id) && !tomb.has(c.id));
       cars = [...localOnly, ...merged];
       try { localStorage.setItem('pm_cars', JSON.stringify(cars)); }
       catch (quotaErr) { console.warn('localStorage full, skipping local cache:', quotaErr.message); }
@@ -455,7 +463,7 @@ function autoPushToCloud(immediate) {
   const run = async () => {
     try {
       await setDoc(doc(db, 'users', currentUser.uid, 'data', 'inventory'), {
-        cars: cloudCarsString(), updatedAt: new Date().toISOString()
+        cars: cloudCarsString(), deletedIds: JSON.stringify(deletedIds), updatedAt: new Date().toISOString()
       });
       const sd = document.getElementById('syncDot');
       if(sd) { sd.style.background = 'var(--success)'; }
@@ -488,7 +496,7 @@ window.forcePushToCloud = async function() {
     const payload = cloudCarsString();
     const kb = (payload.length / 1024).toFixed(0);
     await setDoc(doc(db, 'users', currentUser.uid, 'data', 'inventory'), {
-      cars: payload, updatedAt: new Date().toISOString()
+      cars: payload, deletedIds: JSON.stringify(deletedIds), updatedAt: new Date().toISOString()
     });
     showToast(`✅ Pushed ${cars.length} cars to cloud (${kb} KB) — refresh your phone!`);
   } catch(e) {
@@ -612,6 +620,14 @@ setInterval(() => { if(document.visibilityState === 'visible') autoPullPhotos();
 // ============ STATE ============
 let cars = JSON.parse(localStorage.getItem('pm_cars') || '[]');
 let currentMode = localStorage.getItem('pm_mode') || 'local';
+// Tombstones: ids of intentionally-deleted cars, so other devices don't resurrect them
+// via the stranded-car heal. Synced in the cloud doc; capped to the most recent 500.
+let deletedIds = JSON.parse(localStorage.getItem('pm_deleted') || '[]');
+function markDeleted(id) {
+  if(!deletedIds.includes(id)) deletedIds.push(id);
+  if(deletedIds.length > 500) deletedIds = deletedIds.slice(-500);
+  localStorage.setItem('pm_deleted', JSON.stringify(deletedIds));
+}
 
 // ============ CORE FUNCTIONS ============
 function showToast(msg, duration = 2500) {
@@ -1362,8 +1378,11 @@ window.viewPhoto = function(src) {
 window.deleteCar = async function(id) {
   if(!confirm('Delete this car and all its photos?')) return;
   const car = cars.find(c => c.id === id);
+  markDeleted(id);                 // tombstone so other devices don't resurrect it
   cars = cars.filter(c => c.id !== id);
-  saveCars(); renderCars();
+  saveCars();
+  if(currentUser) autoPushToCloud(true); // push the deletion immediately
+  renderCars();
   showToast('🗑️ Car deleted');
   // Delete all cloud photos
   if(car && currentUser) {
@@ -1586,7 +1605,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.5.2';
+const CURRENT_VERSION = '3.5.3';
 
 async function autoCheckVersion(silent = true) {
   try {

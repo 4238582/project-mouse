@@ -1,5 +1,5 @@
 {
-  "version": "3.5.2",
+  "version": "3.5.3",
   "releaseDate": "2026-06-01",
-  "changelog": "Photos now upload with a 1-year browser cache header, so reopening the app uses cached images instead of re-downloading them — saves Firebase bandwidth. Combined with the parallel/cheap photo sync from 3.5.x."
+  "changelog": "Fixed cars coming back after you delete them. Deletions were being resurrected by the other device's stranded-car heal. Now uses tombstones (deletedIds) synced in the cloud so a deleted car stays deleted on every device, and the deletion pushes immediately. Both devices must be on 3.5.3."
 }
