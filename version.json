@@ -1,5 +1,5 @@
 {
-  "version": "3.4.9",
+  "version": "3.5.0",
   "releaseDate": "2026-06-01",
-  "changelog": "Photos taken on your phone now reliably appear on your PC. When you switch back to a device (window focus), it silently auto-pulls the latest photos from the cloud — no need to wait for the phone or press a button. Fixes the case where mobile suspends the tab before its sync signal goes out."
+  "changelog": "Much faster photo sync between phone and PC. loadStoragePhotos now scans all cars and downloads photo URLs in parallel (was one-at-a-time, ~30s). Snapshot-triggered pull sped up (1s to 0.3s) and a 12s safety-net poll added, so phone photos appear on PC in a few seconds instead of ~30."
 }

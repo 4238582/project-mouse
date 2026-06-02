@@ -414,8 +414,8 @@ function startCloudSync() {
       setTimeout(autoPushToCloud, 600);
     }
     showToast('🔄 Updated from another device');
-    // Load photo URLs from Storage for new cars
-    setTimeout(loadStoragePhotos, 1000);
+    // Load photo URLs from Storage for new cars (silent, fast)
+    setTimeout(() => loadStoragePhotos(true), 300);
   }, (err) => {
     showToast('⚠️ Sync error: ' + err.code);
   });
@@ -546,41 +546,41 @@ window.syncFromCloud = async function() {
   } catch(e) { showToast('⚠️ Load failed: ' + e.message); }
 };
 
-// Load ALL photos from Storage by scanning folders
+// Load ALL photos from Storage by scanning folders — runs cars + downloads IN PARALLEL
+// (was sequential await-after-await, which took ~30s with many cars/photos).
 async function loadStoragePhotos(silent) {
   if(!currentUser) return;
   if(!silent) showToast('📸 Loading photos from cloud...');
   let updated = false;
   try {
-    for(const car of cars) {
+    // Scan every car's folder in parallel
+    await Promise.all(cars.map(async (car) => {
+      let fileList;
       try {
-        // List all files in this car's Storage folder
-        const carFolderRef = storageRef(storage, `users/${currentUser.uid}/cars/${car.id}`);
-        const fileList = await listAll(carFolderRef);
-        
-        if(fileList.items.length === 0) continue;
-        
-        // Build a map of existing photo IDs
-        const existingIds = new Set(car.photos.map(p => p.id).filter(Boolean));
-        
-        for(const item of fileList.items) {
-          const photoId = item.name.replace('.jpg', '');
-          try {
-            const url = await getDownloadURL(item);
-            // Check if we already have this photo
-            const existing = car.photos.find(p => p.id === photoId);
-            if(existing) {
-              // Update URL if missing
-              if(!existing.url) { existing.url = url; existing.uploaded = true; existing.data = ''; updated = true; }
-            } else {
-              // New photo from another device — add it
-              car.photos.push({ id: photoId, url: url, data: '', type: 'image', name: 'Photo', angle: '', uploaded: true });
-              updated = true;
-            }
-          } catch(e) {}
-        }
-      } catch(e) {} // car folder might not exist
-    }
+        fileList = await listAll(storageRef(storage, `users/${currentUser.uid}/cars/${car.id}`));
+      } catch(e) { return; } // folder might not exist
+      if(!fileList.items.length) return;
+
+      // Only fetch URLs for photos we DON'T already have (skip known ones)
+      const haveUrl = new Set(car.photos.filter(p => p.url).map(p => p.id));
+      const newItems = fileList.items.filter(it => !haveUrl.has(it.name.replace('.jpg','')));
+      if(!newItems.length) return;
+
+      // Download all the new URLs in parallel
+      const results = await Promise.all(newItems.map(async (item) => {
+        const photoId = item.name.replace('.jpg','');
+        try { return { photoId, url: await getDownloadURL(item) }; }
+        catch(e) { return null; }
+      }));
+
+      for(const r of results) {
+        if(!r) continue;
+        const existing = car.photos.find(p => p.id === r.photoId);
+        if(existing) { if(!existing.url) { existing.url = r.url; existing.uploaded = true; existing.data = ''; updated = true; } }
+        else { car.photos.push({ id: r.photoId, url: r.url, data: '', type: 'image', name: 'Photo', angle: '', uploaded: true }); updated = true; }
+      }
+    }));
+
     if(updated) {
       saveCars();
       renderCars();
@@ -605,6 +605,9 @@ function autoPullPhotos() {
 }
 window.addEventListener('focus', autoPullPhotos);
 document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') autoPullPhotos(); });
+// Safety-net poll: while the tab is visible & syncing, check for new photos every 12s
+// so they never take longer than ~12s even if no focus event fires.
+setInterval(() => { if(document.visibilityState === 'visible') autoPullPhotos(); }, 12000);
 
 // ============ STATE ============
 let cars = JSON.parse(localStorage.getItem('pm_cars') || '[]');
@@ -1581,7 +1584,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.4.9';
+const CURRENT_VERSION = '3.5.0';
 
 async function autoCheckVersion(silent = true) {
   try {
