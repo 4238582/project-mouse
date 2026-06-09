@@ -1,5 +1,5 @@
 {
-  "version": "3.7.2",
+  "version": "3.7.3",
   "releaseDate": "2026-06-09",
-  "changelog": "The Add Contact form now has an 'Add to:' group picker, so you can manually add a phone number straight into any group without changing the top filter. Plus named groups (create/rename/delete) and name+phone+email manual add from 3.7.1."
+  "changelog": "Leads that you've texted dim to show they're done — now there's an ↺ undo button to mark a lead as not-texted again (un-grey it). Note: the Text button opens your phone's Messages app, so it only does something on a phone, not desktop."
 }
