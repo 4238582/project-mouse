@@ -1,5 +1,5 @@
 {
-  "version": "3.7.3",
+  "version": "3.8.0",
   "releaseDate": "2026-06-09",
-  "changelog": "Leads that you've texted dim to show they're done — now there's an ↺ undo button to mark a lead as not-texted again (un-grey it). Note: the Text button opens your phone's Messages app, so it only does something on a phone, not desktop."
+  "changelog": "Real automatic texting is LIVE via Twilio! New '📨 Send to Everyone in this Group' button blasts your message through Twilio (no Messages app needed), and each lead has a 📨 Send button. The 💬 button still opens your phone's Messages app as a manual option. On the Twilio trial, only verified numbers will go through."
 }

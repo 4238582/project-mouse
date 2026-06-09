@@ -324,6 +324,12 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <textarea id="leadTemplate" rows="4" oninput="window.saveLeadTemplate()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;white-space:pre-wrap;"></textarea>
     </div>
 
+    <div class="card" style="border-color:#00c896;">
+      <button class="btn btn-primary" style="width:100%;background:#00c896;color:#0a1a14;" onclick="window.sendGroupViaTwilio()">📨 Send to Everyone in this Group (Twilio)</button>
+      <div id="leadSendStatus" style="font-size:12px;color:var(--muted);text-align:center;margin-top:8px;"></div>
+      <div class="config-desc" style="margin:6px 0 0;text-align:center;">Sends automatically through Twilio — no Messages app needed. On trial, only Twilio-verified numbers will go through.</div>
+    </div>
+
     <div style="display:flex;align-items:center;justify-content:space-between;margin:14px 2px 8px;">
       <div class="section-title" style="margin:0;">Your Leads (<span id="leadCount">0</span>)</div>
       <button class="btn-danger" style="font-size:11px;padding:4px 10px;" onclick="window.clearTextedLeads()">Clear ✓ Texted</button>
@@ -370,6 +376,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { getStorage, ref as storageRef, uploadString, getDownloadURL, deleteObject, listAll, getBytes, getBlob } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
 
 const fbApp = initializeApp({
   apiKey: "AIzaSyDOChD59h6qGKNA0rf5_gO53ZMAhNmftvo",
@@ -382,6 +389,8 @@ const fbApp = initializeApp({
 const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
 const storage = getStorage(fbApp);
+const functions = getFunctions(fbApp, 'us-central1');
+const sendSmsFn = httpsCallable(functions, 'sendSms');
 let currentUser = null;
 let cloudUnsub = null;
 let applyingRemote = false;
@@ -1663,7 +1672,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.7.3';
+const CURRENT_VERSION = '3.8.0';
 
 async function autoCheckVersion(silent = true) {
   try {
@@ -1879,6 +1888,46 @@ window.emailLead = function(id) {
 };
 window.resetLead = function(id) { const l = leads.find(x => x.id === id); if (l) { l.status = 'new'; saveLeads(); renderLeads(); } };
 window.deleteLead = function(id) { leads = leads.filter(x => x.id !== id); saveLeads(); renderLeads(); };
+
+function leadSendStatus(t) { const e = document.getElementById('leadSendStatus'); if (e) e.textContent = t || ''; }
+
+// Send ONE text through Twilio (the deployed Cloud Function)
+window.sendViaTwilio = async function(id) {
+  const l = leads.find(x => x.id === id); if (!l || !l.phone) return;
+  const body = (document.getElementById('leadTemplate').value || '').trim();
+  if (!body) { showToast('Write a message first'); return; }
+  leadSendStatus('📨 Sending…');
+  try {
+    await sendSmsFn({ to: l.phone, body });
+    l.status = 'texted'; saveLeads(); renderLeads();
+    leadSendStatus(''); showToast('✅ Text sent!');
+  } catch (e) {
+    leadSendStatus('⚠️ ' + (e?.message || 'Send failed'));
+    showToast('⚠️ ' + (e?.message || 'Send failed'), 4000);
+  }
+};
+
+// Send to EVERYONE in the current view (group) who has a phone and isn't texted yet
+window.sendGroupViaTwilio = async function() {
+  const body = (document.getElementById('leadTemplate').value || '').trim();
+  if (!body) { showToast('Write a message first'); return; }
+  const view = (currentGroup === 'All') ? leads : leads.filter(l => (l.group||'General') === currentGroup);
+  const targets = view.filter(l => l.phone && l.status !== 'texted');
+  if (!targets.length) { showToast('No un-texted phone numbers in this view'); return; }
+  if (!confirm(`Send this message to ${targets.length} number(s) via Twilio?\n\nGroup: ${currentGroup}`)) return;
+  let ok = 0, fail = 0;
+  for (let i = 0; i < targets.length; i++) {
+    const l = targets[i];
+    leadSendStatus(`📨 Sending ${i+1} of ${targets.length}…`);
+    try { await sendSmsFn({ to: l.phone, body }); l.status = 'texted'; ok++; }
+    catch (e) { fail++; l.lastError = e?.message || 'failed'; }
+    saveLeads();
+    await new Promise(r => setTimeout(r, 1100)); // pace sends to stay within limits
+  }
+  renderLeads();
+  leadSendStatus('');
+  showToast(`✅ Sent ${ok}${fail ? ` · ⚠️ ${fail} failed (check trial-verified numbers)` : ''}`, 5000);
+};
 window.clearTextedLeads = function() {
   if(!confirm('Remove all leads marked as texted?')) return;
   leads = leads.filter(l => l.status !== 'texted'); saveLeads(); renderLeads();
@@ -1899,8 +1948,9 @@ function renderLeads() {
         <div style="font-size:11px;color:var(--muted);">🗂️ ${l.group||'General'} · ${l.status==='texted'?'✓ Texted':'New'} · ${l.addedAt||''}</div>
       </div>
       ${l.status==='texted'?`<button class="btn btn-secondary" style="padding:8px 10px;" title="Mark as not texted" onclick="window.resetLead('${l.id}')">↺</button>`:''}
-      ${l.phone?`<button class="btn btn-primary" style="padding:8px 12px;white-space:nowrap;" onclick="window.textLead('${l.id}')">💬 Text</button>`:''}
-      ${l.email?`<button class="btn btn-secondary" style="padding:8px 12px;" onclick="window.emailLead('${l.id}')">📧</button>`:''}
+      ${l.phone?`<button class="btn btn-primary" style="padding:8px 12px;white-space:nowrap;background:#00c896;color:#0a1a14;" title="Send via Twilio" onclick="window.sendViaTwilio('${l.id}')">📨 Send</button>`:''}
+      ${l.phone?`<button class="btn btn-secondary" style="padding:8px 10px;" title="Open in your phone's Messages app" onclick="window.textLead('${l.id}')">💬</button>`:''}
+      ${l.email?`<button class="btn btn-secondary" style="padding:8px 10px;" onclick="window.emailLead('${l.id}')">📧</button>`:''}
       <button class="btn-danger" style="padding:8px 10px;" onclick="window.deleteLead('${l.id}')">✕</button>
     </div>`).join('');
 }
