@@ -279,16 +279,39 @@ input:focus, textarea:focus { border-color: var(--accent); }
 
   <!-- LEADS -->
   <div id="tab-leads" style="display:none;">
-    <div class="section-title">📋 Leads — Scan & Mass Text</div>
+    <div class="section-title">📋 Leads — Groups & Mass Text</div>
 
     <div class="card">
-      <div class="config-title">📷 Scan a printed list</div>
-      <div class="config-desc">Take a photo of the phone/email list. We'll read it and pull out the numbers and emails. Works best on a flat, well-lit, printed sheet.</div>
+      <div class="config-title">🗂️ Group</div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <select id="leadGroupSelect" onchange="window.selectLeadGroup()" style="flex:1;min-width:130px;padding:9px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;"></select>
+        <button class="btn btn-secondary" style="padding:9px 11px;" onclick="window.newLeadGroup()">＋ New</button>
+        <button class="btn btn-secondary" style="padding:9px 11px;" onclick="window.renameLeadGroup()" title="Rename this group">✏️</button>
+        <button class="btn-danger" style="padding:9px 11px;" onclick="window.deleteLeadGroup()" title="Delete this group">🗑️</button>
+      </div>
+      <div class="config-desc" style="margin:8px 0 0;">New scans &amp; contacts go into the selected group. Pick "All" to see everyone.</div>
+    </div>
+
+    <div class="card">
+      <div class="config-title">➕ Add contacts</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="font-size:12px;color:var(--muted);white-space:nowrap;">Add to:</span>
+        <select id="leadAddGroup" style="flex:1;padding:9px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;"></select>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+        <input id="leadAddName" placeholder="Name (optional)" style="flex:1 1 100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;">
+        <input id="leadAddPhone" placeholder="Phone number" inputmode="tel" style="flex:1 1 48%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;">
+        <input id="leadAddEmail" placeholder="Email (optional)" inputmode="email" style="flex:1 1 48%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;">
+      </div>
+      <button class="btn btn-primary" style="width:100%;" onclick="window.addOneLead()">＋ Add contact</button>
+
+      <div style="border-top:1px solid var(--border);margin:14px 0 10px;"></div>
+
       <input type="file" id="leadScanInput" accept="image/*" capture="environment" style="display:none;" onchange="window.scanLeadList(event)">
-      <button class="btn btn-primary" style="width:100%;" onclick="document.getElementById('leadScanInput').click()">📷 Scan / Upload Photo</button>
+      <button class="btn btn-secondary" style="width:100%;" onclick="document.getElementById('leadScanInput').click()">📷 Scan a printed list (photo)</button>
       <div id="leadScanStatus" style="font-size:12px;color:var(--muted);text-align:center;margin-top:8px;"></div>
-      <div style="margin-top:12px;display:flex;gap:6px;">
-        <input id="leadManualInput" placeholder="…or paste/type numbers & emails" style="flex:1;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;">
+      <div style="margin-top:10px;display:flex;gap:6px;">
+        <input id="leadManualInput" placeholder="…or paste a list of numbers/emails" style="flex:1;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;">
         <button class="btn btn-secondary" style="white-space:nowrap;" onclick="window.addLeadsManual()">＋ Add</button>
       </div>
     </div>
@@ -1640,7 +1663,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.7.0';
+const CURRENT_VERSION = '3.7.1';
 
 async function autoCheckVersion(silent = true) {
   try {
@@ -1674,10 +1697,87 @@ setInterval(() => autoCheckVersion(true), 2 * 60 * 1000);
 
 // ============ LEADS (scan a printed list → mass one-tap text) ============
 let leads = JSON.parse(localStorage.getItem('pm_leads') || '[]');
+let leadGroups = JSON.parse(localStorage.getItem('pm_lead_groups') || '["General"]');
+let currentGroup = localStorage.getItem('pm_lead_group') || 'All';
 let leadSeq = 0;
 const DEFAULT_LEAD_TEMPLATE = "Hi! It's Jean-Philippe from Hull Hyundai 🚗 We have some great deals right now — would you be interested in upgrading your vehicle? Reply STOP to unsubscribe.";
 
 function saveLeads() { try { localStorage.setItem('pm_leads', JSON.stringify(leads)); } catch(e){} }
+function saveLeadGroups() { localStorage.setItem('pm_lead_groups', JSON.stringify(leadGroups)); localStorage.setItem('pm_lead_group', currentGroup); }
+
+// The group new contacts are added to (when viewing "All", default to General)
+function targetGroup() {
+  if (currentGroup && currentGroup !== 'All') return currentGroup;
+  if (!leadGroups.includes('General')) { leadGroups.unshift('General'); saveLeadGroups(); }
+  return 'General';
+}
+
+function renderGroupSelect() {
+  const sel = document.getElementById('leadGroupSelect');
+  if (sel) {
+    const opts = ['All', ...leadGroups];
+    if (!opts.includes(currentGroup)) currentGroup = 'All';
+    sel.innerHTML = opts.map(g => {
+      const n = g === 'All' ? leads.length : leads.filter(l => (l.group||'General') === g).length;
+      return `<option value="${g.replace(/"/g,'&quot;')}" ${g===currentGroup?'selected':''}>${g} (${n})</option>`;
+    }).join('');
+  }
+  // The "Add to:" picker in the add form — only real groups (no "All"), defaults to current group
+  const addSel = document.getElementById('leadAddGroup');
+  if (addSel) {
+    const prev = addSel.value;
+    const def = (currentGroup !== 'All') ? currentGroup : (leadGroups[0] || 'General');
+    addSel.innerHTML = leadGroups.map(g => `<option value="${g.replace(/"/g,'&quot;')}">${g}</option>`).join('');
+    addSel.value = leadGroups.includes(prev) ? prev : def;
+  }
+}
+
+window.selectLeadGroup = function() {
+  currentGroup = document.getElementById('leadGroupSelect').value;
+  saveLeadGroups(); renderLeads();
+};
+window.newLeadGroup = function() {
+  const name = (prompt('New group name:') || '').trim();
+  if (!name) return;
+  if (leadGroups.includes(name)) { showToast('That group already exists'); }
+  else { leadGroups.push(name); }
+  currentGroup = name; saveLeadGroups(); renderLeads();
+};
+window.renameLeadGroup = function() {
+  if (currentGroup === 'All') { showToast('Pick a group to rename'); return; }
+  const name = (prompt('Rename group to:', currentGroup) || '').trim();
+  if (!name || name === currentGroup) return;
+  leads.forEach(l => { if ((l.group||'General') === currentGroup) l.group = name; });
+  leadGroups = leadGroups.map(g => g === currentGroup ? name : g);
+  currentGroup = name; saveLeads(); saveLeadGroups(); renderLeads();
+};
+window.deleteLeadGroup = function() {
+  if (currentGroup === 'All') { showToast('Pick a group to delete'); return; }
+  const n = leads.filter(l => (l.group||'General') === currentGroup).length;
+  if (!confirm(`Delete group "${currentGroup}"? Its ${n} contact(s) move to General (not deleted).`)) return;
+  leads.forEach(l => { if ((l.group||'General') === currentGroup) l.group = 'General'; });
+  leadGroups = leadGroups.filter(g => g !== currentGroup);
+  if (!leadGroups.length) leadGroups = ['General'];
+  currentGroup = 'All'; saveLeads(); saveLeadGroups(); renderLeads();
+};
+
+window.addOneLead = function() {
+  const name = (document.getElementById('leadAddName').value || '').trim();
+  const phoneRaw = document.getElementById('leadAddPhone').value || '';
+  const email = (document.getElementById('leadAddEmail').value || '').trim().toLowerCase();
+  let phone = phoneRaw.replace(/[^0-9]/g, '');
+  if (phone.length === 11 && phone[0] === '1') phone = phone.slice(1);
+  if (phone && phone.length !== 10) { showToast('Phone must be 10 digits'); return; }
+  if (!phone && !email) { showToast('Enter a phone or email'); return; }
+  const addSel = document.getElementById('leadAddGroup');
+  const g = (addSel && addSel.value) ? addSel.value : targetGroup();
+  if (!leadGroups.includes(g)) { leadGroups.push(g); saveLeadGroups(); }
+  leads.unshift({ id: `${Date.now()}_${leadSeq++}`, name, phone, email, group: g, status:'new', addedAt:new Date().toLocaleDateString() });
+  saveLeads();
+  ['leadAddName','leadAddPhone','leadAddEmail'].forEach(id => document.getElementById(id).value = '');
+  renderLeads();
+  showToast(`✅ Added to ${g}`);
+};
 
 window.saveLeadTemplate = function() {
   const t = document.getElementById('leadTemplate');
@@ -1752,16 +1852,17 @@ function showLeadReview(found) {
 
 window.confirmLeads = function() {
   let added = 0;
+  const g = targetGroup();
   document.querySelectorAll('#leadReviewItems input[type=checkbox]:checked').forEach(c => {
     const l = _pendingLeads[+c.dataset.idx]; if (!l) return;
-    leads.unshift({ id: `${Date.now()}_${leadSeq++}`, name:'', phone: l.type==='phone'?l.value:'', email: l.type==='email'?l.value:'', status:'new', addedAt:new Date().toLocaleDateString() });
+    leads.unshift({ id: `${Date.now()}_${leadSeq++}`, name:'', phone: l.type==='phone'?l.value:'', email: l.type==='email'?l.value:'', group: g, status:'new', addedAt:new Date().toLocaleDateString() });
     added++;
   });
   saveLeads();
   document.getElementById('leadReview').style.display='none';
   document.getElementById('leadScanStatus').textContent = '';
   renderLeads();
-  showToast(`✅ Added ${added} lead(s)`);
+  showToast(`✅ Added ${added} to ${g}`);
 };
 
 window.textLead = function(id) {
@@ -1783,16 +1884,18 @@ window.clearTextedLeads = function() {
 };
 
 function renderLeads() {
+  renderGroupSelect();
   const list = document.getElementById('leadsList');
   const count = document.getElementById('leadCount');
-  if (count) count.textContent = leads.length;
+  const shown = (currentGroup === 'All') ? leads : leads.filter(l => (l.group||'General') === currentGroup);
+  if (count) count.textContent = shown.length;
   if (!list) return;
-  if (!leads.length) { list.innerHTML = `<div class="empty-state"><div class="big-icon">📋</div><h3>No leads yet</h3><p>Scan a printed list or paste numbers above.</p></div>`; return; }
-  list.innerHTML = leads.map(l => `
+  if (!shown.length) { list.innerHTML = `<div class="empty-state"><div class="big-icon">📋</div><h3>No leads ${currentGroup==='All'?'yet':'in '+currentGroup}</h3><p>Add a contact, scan a list, or paste numbers above.</p></div>`; return; }
+  list.innerHTML = shown.map(l => `
     <div class="card" style="display:flex;align-items:center;gap:8px;padding:12px;${l.status==='texted'?'opacity:.5;':''}">
       <div style="flex:1;min-width:0;overflow:hidden;">
-        <div style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${l.phone?formatPhone(l.phone):''}${l.phone&&l.email?' · ':''}${l.email||''}</div>
-        <div style="font-size:11px;color:var(--muted);">${l.status==='texted'?'✓ Texted':'New'} · ${l.addedAt||''}</div>
+        <div style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${l.name?l.name+' · ':''}${l.phone?formatPhone(l.phone):''}${l.phone&&l.email?' · ':''}${l.email||''}</div>
+        <div style="font-size:11px;color:var(--muted);">🗂️ ${l.group||'General'} · ${l.status==='texted'?'✓ Texted':'New'} · ${l.addedAt||''}</div>
       </div>
       ${l.phone?`<button class="btn btn-primary" style="padding:8px 12px;white-space:nowrap;" onclick="window.textLead('${l.id}')">💬 Text</button>`:''}
       ${l.email?`<button class="btn btn-secondary" style="padding:8px 12px;" onclick="window.emailLead('${l.id}')">📧</button>`:''}

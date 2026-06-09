@@ -1,5 +1,5 @@
 {
-  "version": "3.7.0",
-  "releaseDate": "2026-06-02",
-  "changelog": "New 📋 Leads tab! Snap a photo of a printed phone/email list and it reads the numbers and emails (OCR), lets you confirm them, then one-tap opens your texting app with your message pre-filled (with a Reply STOP line for compliance). Also a 📧 email button. Best used on your phone."
+  "version": "3.7.1",
+  "releaseDate": "2026-06-09",
+  "changelog": "Leads upgrade: organize contacts into named groups (create, rename, delete), and a proper manual-add form (name + phone + email). New scans and contacts go into the selected group; pick 'All' to see everyone. Each lead shows its group. Sets the stage for sending to a whole group at once."
 }
