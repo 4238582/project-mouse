@@ -25,7 +25,9 @@ exports.sendSms = onCall(
     // Must be signed in (your Google login) to use this
     if (!request.auth) throw new HttpsError("unauthenticated", "Please sign in first.");
 
+    console.log("sendSms called with data:", JSON.stringify(request.data || {}));
     const to = toE164(request.data && request.data.to);
+    console.log("normalized to:", to);
     const body = String((request.data && request.data.body) || "").slice(0, 1500).trim();
     if (!to)   throw new HttpsError("invalid-argument", "Invalid phone number.");
     if (!body) throw new HttpsError("invalid-argument", "Message body is empty.");
@@ -33,10 +35,12 @@ exports.sendSms = onCall(
     const client = twilio(TWILIO_ACCOUNT_SID.value(), TWILIO_AUTH_TOKEN.value());
     try {
       const msg = await client.messages.create({ to, from: TWILIO_FROM.value(), body });
+      console.log("Twilio sent OK:", msg.sid, "to", to);
       return { ok: true, sid: msg.sid, to };
     } catch (e) {
-      // Surface Twilio's reason (e.g. "number not verified" on trial) to the app
-      throw new HttpsError("failed-precondition", e.message || "Twilio send failed");
+      // Log Twilio's full reason so we can see it, and surface it to the app
+      console.error("TWILIO_ERROR code=", e && e.code, "status=", e && e.status, "msg=", e && e.message, "moreInfo=", e && e.moreInfo, "to=", to, "from=", TWILIO_FROM.value());
+      throw new HttpsError("failed-precondition", `[${e && e.code}] ${e && e.message}`);
     }
   }
 );
