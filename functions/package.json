@@ -1,0 +1,12 @@
+{
+  "name": "functions",
+  "description": "Snake's Hustle — secure Twilio SMS backend",
+  "main": "index.js",
+  "engines": { "node": "20" },
+  "dependencies": {
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^5.1.1",
+    "twilio": "^5.3.0"
+  },
+  "private": true
+}
