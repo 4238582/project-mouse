@@ -1,5 +1,5 @@
 {
-  "version": "3.6.0",
+  "version": "3.7.0",
   "releaseDate": "2026-06-02",
-  "changelog": "Rebranded the app to Snake's Hustle 🐍 — new name, new snake logo/icon (header, browser tab, installed app). The web address stays the same so nothing breaks, and the Project Snake extension is unchanged."
+  "changelog": "New 📋 Leads tab! Snap a photo of a printed phone/email list and it reads the numbers and emails (OCR), lets you confirm them, then one-tap opens your texting app with your message pre-filled (with a Reply STOP line for compliance). Also a 📧 email button. Best used on your phone."
 }
