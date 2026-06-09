@@ -15,6 +15,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="theme-color" content="#e8ff00">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
 :root {
@@ -171,6 +172,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
 <div class="tabs">
   <div class="tab active" onclick="window.switchTab('inventory')">📦 Inventory</div>
   <div class="tab" onclick="window.switchTab('add')">➕ Add Car</div>
+  <div class="tab" onclick="window.switchTab('leads')">📋 Leads</div>
   <div class="tab" onclick="window.switchTab('setup')">⚙️ Setup</div>
 </div>
 
@@ -273,6 +275,37 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <div class="config-desc">Clear all local data. Cannot be undone.</div>
       <button class="btn-danger" onclick="window.clearAllData()">🗑️ Clear All Data</button>
     </div>
+  </div>
+
+  <!-- LEADS -->
+  <div id="tab-leads" style="display:none;">
+    <div class="section-title">📋 Leads — Scan & Mass Text</div>
+
+    <div class="card">
+      <div class="config-title">📷 Scan a printed list</div>
+      <div class="config-desc">Take a photo of the phone/email list. We'll read it and pull out the numbers and emails. Works best on a flat, well-lit, printed sheet.</div>
+      <input type="file" id="leadScanInput" accept="image/*" capture="environment" style="display:none;" onchange="window.scanLeadList(event)">
+      <button class="btn btn-primary" style="width:100%;" onclick="document.getElementById('leadScanInput').click()">📷 Scan / Upload Photo</button>
+      <div id="leadScanStatus" style="font-size:12px;color:var(--muted);text-align:center;margin-top:8px;"></div>
+      <div style="margin-top:12px;display:flex;gap:6px;">
+        <input id="leadManualInput" placeholder="…or paste/type numbers & emails" style="flex:1;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;">
+        <button class="btn btn-secondary" style="white-space:nowrap;" onclick="window.addLeadsManual()">＋ Add</button>
+      </div>
+    </div>
+
+    <div id="leadReview" class="card" style="display:none;"></div>
+
+    <div class="card">
+      <div class="config-title">✍️ Message template</div>
+      <div class="config-desc">Tap a lead below to open your texting app with this message ready to send. Keep your name + "Reply STOP" in it (required by law for business texts).</div>
+      <textarea id="leadTemplate" rows="4" oninput="window.saveLeadTemplate()" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;white-space:pre-wrap;"></textarea>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:14px 2px 8px;">
+      <div class="section-title" style="margin:0;">Your Leads (<span id="leadCount">0</span>)</div>
+      <button class="btn-danger" style="font-size:11px;padding:4px 10px;" onclick="window.clearTextedLeads()">Clear ✓ Texted</button>
+    </div>
+    <div id="leadsList"></div>
   </div>
 </main>
 
@@ -1156,11 +1189,13 @@ window.addEventListener('message', function(e) {
 
 // ============ WINDOW FUNCTIONS ============
 window.switchTab = function(name) {
-  ['inventory','add','setup'].forEach(t => {
+  const tabs = ['inventory','add','leads','setup'];
+  tabs.forEach((t, i) => {
     document.getElementById('tab-'+t).style.display = t===name ? 'block' : 'none';
-    document.querySelectorAll('.tab')[['inventory','add','setup'].indexOf(t)].classList.toggle('active', t===name);
+    document.querySelectorAll('.tab')[i].classList.toggle('active', t===name);
   });
   if(name==='inventory') renderCars();
+  if(name==='leads') renderLeads();
 };
 
 window.addCar = function() {
@@ -1605,7 +1640,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.6.0';
+const CURRENT_VERSION = '3.7.0';
 
 async function autoCheckVersion(silent = true) {
   try {
@@ -1637,9 +1672,139 @@ window.checkForUpdates = async function() {
 autoCheckVersion(true);
 setInterval(() => autoCheckVersion(true), 2 * 60 * 1000);
 
+// ============ LEADS (scan a printed list → mass one-tap text) ============
+let leads = JSON.parse(localStorage.getItem('pm_leads') || '[]');
+let leadSeq = 0;
+const DEFAULT_LEAD_TEMPLATE = "Hi! It's Jean-Philippe from Hull Hyundai 🚗 We have some great deals right now — would you be interested in upgrading your vehicle? Reply STOP to unsubscribe.";
+
+function saveLeads() { try { localStorage.setItem('pm_leads', JSON.stringify(leads)); } catch(e){} }
+
+window.saveLeadTemplate = function() {
+  const t = document.getElementById('leadTemplate');
+  if (t) localStorage.setItem('pm_lead_template', t.value);
+};
+function loadLeadTemplate() {
+  const t = document.getElementById('leadTemplate');
+  if (t) t.value = localStorage.getItem('pm_lead_template') || DEFAULT_LEAD_TEMPLATE;
+}
+
+// Pull phone numbers + emails out of raw OCR/pasted text
+function extractContacts(text) {
+  const phones = new Set(), emails = new Set();
+  (text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) || []).forEach(e => emails.add(e.toLowerCase()));
+  (text.match(/(?:\+?1[\s.\-]?)?\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4}/g) || []).forEach(p => {
+    let d = p.replace(/[^0-9]/g, '');
+    if (d.length === 11 && d[0] === '1') d = d.slice(1);
+    if (d.length === 10) phones.add(d);
+  });
+  return { phones: [...phones], emails: [...emails] };
+}
+function formatPhone(v) {
+  if (/@/.test(v)) return v;
+  return v.length === 10 ? `(${v.slice(0,3)}) ${v.slice(3,6)}-${v.slice(6)}` : v;
+}
+
+window.scanLeadList = async function(event) {
+  const file = event.target.files[0]; event.target.value = '';
+  if (!file) return;
+  const status = document.getElementById('leadScanStatus');
+  if (typeof Tesseract === 'undefined') { status.textContent = '⚠️ OCR not loaded — check your connection and retry.'; return; }
+  status.textContent = '🔍 Reading the photo… (can take 10–20s)';
+  try {
+    const { data } = await Tesseract.recognize(file, 'eng', {
+      logger: m => { if (m.status === 'recognizing text') status.textContent = `🔍 Reading… ${Math.round(m.progress*100)}%`; }
+    });
+    const found = extractContacts(data.text || '');
+    status.textContent = `✅ Found ${found.phones.length} phone(s), ${found.emails.length} email(s).`;
+    showLeadReview(found);
+  } catch(e) { status.textContent = '⚠️ Could not read the photo: ' + e.message; }
+};
+
+window.addLeadsManual = function() {
+  const inp = document.getElementById('leadManualInput');
+  const found = extractContacts(inp.value || '');
+  if (!found.phones.length && !found.emails.length) { showToast('No phone/email found in that text'); return; }
+  showLeadReview(found); inp.value = '';
+};
+
+let _pendingLeads = [];
+function showLeadReview(found) {
+  const ep = new Set(leads.map(l => l.phone).filter(Boolean));
+  const ee = new Set(leads.map(l => l.email).filter(Boolean));
+  _pendingLeads = [];
+  found.phones.forEach(p => { if (!ep.has(p)) _pendingLeads.push({ type:'phone', value:p }); });
+  found.emails.forEach(e => { if (!ee.has(e)) _pendingLeads.push({ type:'email', value:e }); });
+  const box = document.getElementById('leadReview');
+  if (!_pendingLeads.length) { box.style.display='none'; showToast('No new contacts (all already saved)'); return; }
+  box.style.display = 'block';
+  box.innerHTML =
+    `<div class="config-title">✔️ Confirm contacts (${_pendingLeads.length})</div>
+     <div class="config-desc">Untick anything the scan got wrong, then save.</div>
+     <div id="leadReviewItems" style="max-height:260px;overflow-y:auto;margin:8px 0;">
+       ${_pendingLeads.map((l,i) => `
+         <label style="display:flex;align-items:center;gap:8px;padding:6px;border-bottom:1px solid var(--border);font-size:13px;">
+           <input type="checkbox" checked data-idx="${i}" style="width:18px;height:18px;flex-shrink:0;">
+           <span>${l.type==='phone'?'📞':'📧'}</span><span>${formatPhone(l.value)}</span>
+         </label>`).join('')}
+     </div>
+     <button class="btn btn-primary" style="width:100%;" onclick="window.confirmLeads()">💾 Save selected</button>`;
+}
+
+window.confirmLeads = function() {
+  let added = 0;
+  document.querySelectorAll('#leadReviewItems input[type=checkbox]:checked').forEach(c => {
+    const l = _pendingLeads[+c.dataset.idx]; if (!l) return;
+    leads.unshift({ id: `${Date.now()}_${leadSeq++}`, name:'', phone: l.type==='phone'?l.value:'', email: l.type==='email'?l.value:'', status:'new', addedAt:new Date().toLocaleDateString() });
+    added++;
+  });
+  saveLeads();
+  document.getElementById('leadReview').style.display='none';
+  document.getElementById('leadScanStatus').textContent = '';
+  renderLeads();
+  showToast(`✅ Added ${added} lead(s)`);
+};
+
+window.textLead = function(id) {
+  const l = leads.find(x => x.id === id); if (!l || !l.phone) return;
+  const body = (document.getElementById('leadTemplate').value || '');
+  window.location.href = `sms:${l.phone}?body=${encodeURIComponent(body)}`;
+  l.status = 'texted'; saveLeads(); setTimeout(renderLeads, 300);
+};
+window.emailLead = function(id) {
+  const l = leads.find(x => x.id === id); if (!l || !l.email) return;
+  const body = (document.getElementById('leadTemplate').value || '');
+  window.location.href = `mailto:${l.email}?subject=${encodeURIComponent('Hull Hyundai')}&body=${encodeURIComponent(body)}`;
+  l.status = 'texted'; saveLeads(); setTimeout(renderLeads, 300);
+};
+window.deleteLead = function(id) { leads = leads.filter(x => x.id !== id); saveLeads(); renderLeads(); };
+window.clearTextedLeads = function() {
+  if(!confirm('Remove all leads marked as texted?')) return;
+  leads = leads.filter(l => l.status !== 'texted'); saveLeads(); renderLeads();
+};
+
+function renderLeads() {
+  const list = document.getElementById('leadsList');
+  const count = document.getElementById('leadCount');
+  if (count) count.textContent = leads.length;
+  if (!list) return;
+  if (!leads.length) { list.innerHTML = `<div class="empty-state"><div class="big-icon">📋</div><h3>No leads yet</h3><p>Scan a printed list or paste numbers above.</p></div>`; return; }
+  list.innerHTML = leads.map(l => `
+    <div class="card" style="display:flex;align-items:center;gap:8px;padding:12px;${l.status==='texted'?'opacity:.5;':''}">
+      <div style="flex:1;min-width:0;overflow:hidden;">
+        <div style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${l.phone?formatPhone(l.phone):''}${l.phone&&l.email?' · ':''}${l.email||''}</div>
+        <div style="font-size:11px;color:var(--muted);">${l.status==='texted'?'✓ Texted':'New'} · ${l.addedAt||''}</div>
+      </div>
+      ${l.phone?`<button class="btn btn-primary" style="padding:8px 12px;white-space:nowrap;" onclick="window.textLead('${l.id}')">💬 Text</button>`:''}
+      ${l.email?`<button class="btn btn-secondary" style="padding:8px 12px;" onclick="window.emailLead('${l.id}')">📧</button>`:''}
+      <button class="btn-danger" style="padding:8px 10px;" onclick="window.deleteLead('${l.id}')">✕</button>
+    </div>`).join('');
+}
+
 // ============ INIT ============
 renderCars();
 window.setMode(currentMode);
+loadLeadTemplate();
+renderLeads();
 window.loadDownloadFolder();   // restore the saved photo-download folder
 document.getElementById('currentVersion').textContent = 'v' + CURRENT_VERSION;
 const lc = localStorage.getItem('pm_last_checked');
