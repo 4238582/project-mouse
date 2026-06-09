@@ -1,5 +1,5 @@
 {
-  "version": "3.7.1",
+  "version": "3.7.2",
   "releaseDate": "2026-06-09",
-  "changelog": "Leads upgrade: organize contacts into named groups (create, rename, delete), and a proper manual-add form (name + phone + email). New scans and contacts go into the selected group; pick 'All' to see everyone. Each lead shows its group. Sets the stage for sending to a whole group at once."
+  "changelog": "The Add Contact form now has an 'Add to:' group picker, so you can manually add a phone number straight into any group without changing the top filter. Plus named groups (create/rename/delete) and name+phone+email manual add from 3.7.1."
 }
