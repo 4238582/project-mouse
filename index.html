@@ -854,6 +854,7 @@ function renderPostingTab(car) {
     ['Odometer', km],
     ['Transmission', car.transmission || '—'],
     ['Ext. Color', car.exteriorColor || '—'],
+    ['Int. Color', car.interiorColor || 'Black'],
     ['Fuel Type', car.fuelType || '—'],
     ['Drivetrain', car.drivetrain || '—'],
     ['Engine', car.engine || '—'],
@@ -1672,7 +1673,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.8.0';
+const CURRENT_VERSION = '3.8.1';
 
 async function autoCheckVersion(silent = true) {
   try {
