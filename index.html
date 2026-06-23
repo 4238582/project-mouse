@@ -188,6 +188,11 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <button class="inv-tab" id="inv-tab-sold" onclick="window.switchInvTab('sold')">🏷️ Sold</button>
       <button class="inv-tab" id="inv-tab-delivered" onclick="window.switchInvTab('delivered')">✅ Delivered</button>
     </div>
+    <div class="inv-tabs" id="posted-filters">
+      <button class="inv-tab active" id="pf-all" onclick="window.setPostedFilter('all')">All</button>
+      <button class="inv-tab" id="pf-unposted" onclick="window.setPostedFilter('unposted')">🆕 To Post</button>
+      <button class="inv-tab" id="pf-posted" onclick="window.setPostedFilter('posted')">✅ Posted</button>
+    </div>
     <input id="carSearch" type="text" placeholder="🔍 Search stock # or VIN…" oninput="window.filterCars(this.value)" style="width:100%;box-sizing:border-box;padding:10px 14px;margin-bottom:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none;">
     <div id="carList"></div>
   </div>
@@ -721,6 +726,36 @@ function updateStats() {
 }
 
 let currentInvTab = 'active';
+let currentPostedFilter = 'all';
+
+window.setPostedFilter = function(f) {
+  currentPostedFilter = f;
+  ['all','unposted','posted'].forEach(t => {
+    const el = document.getElementById('pf-' + t);
+    if(el) el.classList.toggle('active', t === f);
+  });
+  const search = document.getElementById('carSearch');
+  if(search) search.value = '';
+  renderCars();
+};
+
+// Lifecycle (active/sold/delivered) + posted filter, all in one place.
+function baseCars() {
+  let base = cars.filter(c => currentInvTab === 'sold' ? (c.sold && !c.delivered) : currentInvTab === 'delivered' ? c.delivered : (!c.sold && !c.delivered));
+  if (currentInvTab === 'active' && currentPostedFilter !== 'all') {
+    base = base.filter(c => currentPostedFilter === 'posted' ? !!c.posted : !c.posted);
+  }
+  return base;
+}
+
+window.togglePosted = function(id) {
+  const car = cars.find(c => c.id === id);
+  if(!car) return;
+  car.posted = !car.posted;
+  car.postedAt = car.posted ? Date.now() : null;
+  saveCars(); renderCars();
+  showToast(car.posted ? '✅ Marked as posted!' : '↩ Moved back to To Post');
+};
 
 window.switchInvTab = function(tab) {
   currentInvTab = tab;
@@ -728,6 +763,9 @@ window.switchInvTab = function(tab) {
     const el = document.getElementById('inv-tab-' + t);
     if(el) el.classList.toggle('active', t === tab);
   });
+  // The posted filter only applies to active inventory.
+  const pf = document.getElementById('posted-filters');
+  if(pf) pf.style.display = tab === 'active' ? 'flex' : 'none';
   const search = document.getElementById('carSearch');
   if(search) search.value = '';
   renderCars();
@@ -745,7 +783,7 @@ window.markSold = function(id, status) {
 
 window.filterCars = function(query) {
   const q = query.trim().toLowerCase();
-  const base = cars.filter(c => currentInvTab === 'sold' ? (c.sold && !c.delivered) : currentInvTab === 'delivered' ? c.delivered : (!c.sold && !c.delivered));
+  const base = baseCars();
   const filtered = q ? base.filter(c =>
     (c.stock || '').toLowerCase().includes(q) ||
     (c.vin  || '').toLowerCase().includes(q)
@@ -756,7 +794,7 @@ window.filterCars = function(query) {
 function renderCars(list_) {
   updateStats();
   const list = document.getElementById('carList');
-  const filtered = list_ !== undefined ? list_ : cars.filter(c => currentInvTab === 'sold' ? (c.sold && !c.delivered) : currentInvTab === 'delivered' ? c.delivered : (!c.sold && !c.delivered));
+  const filtered = list_ !== undefined ? list_ : baseCars();
   if(filtered.length === 0) {
     list.innerHTML = list_ !== undefined
       ? `<div class="empty-state"><div class="big-icon">🔍</div><h3>No Results</h3><p>No car matches that stock # or VIN.</p></div>`
@@ -764,6 +802,10 @@ function renderCars(list_) {
         ? `<div class="empty-state"><div class="big-icon">🏷️</div><h3>No Sold Cars</h3><p>Press <strong>SOLD</strong> on an active car to move it here.</p></div>`
         : currentInvTab === 'delivered'
         ? `<div class="empty-state"><div class="big-icon">✅</div><h3>No Delivered Cars</h3><p>Press <strong>Delivered</strong> on a sold car to move it here.</p></div>`
+        : currentPostedFilter === 'unposted'
+        ? `<div class="empty-state"><div class="big-icon">🎉</div><h3>All Posted!</h3><p>Every active car is posted. Nice work.</p></div>`
+        : currentPostedFilter === 'posted'
+        ? `<div class="empty-state"><div class="big-icon">📣</div><h3>Nothing Posted Yet</h3><p>Hit <strong>Post Now</strong> on a car (or <strong>📣 Mark posted</strong>) and it shows up here.</p></div>`
         : `<div class="empty-state"><div class="big-icon">🚗</div><h3>No Cars Yet</h3><p>Tap <strong style="color:var(--accent)">Add Car</strong> to add your first vehicle.</p></div>`;
     return;
   }
@@ -776,6 +818,7 @@ function renderCars(list_) {
             ${car.stock ? `<span style="font-weight:600;">${car.stock}</span>` : ''}
             ${car.price ? `<span style="color:var(--muted);"> · $${Number(car.price).toLocaleString()}</span>` : ''}
             ${car.odometer ? `<span style="color:var(--muted);"> · ${Number(car.odometer).toLocaleString()} km</span>` : ''}
+            ${(!car.sold && !car.delivered) ? (car.posted ? `<span style="color:#22c55e;font-weight:700;"> · ✅ Posted</span>` : `<span style="color:var(--accent);font-weight:700;"> · 🆕 To post</span>`) : ''}
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
             ${car.vin ? `<span style="font-size:11px;color:var(--muted);">VIN: ${car.vin}</span><button onclick="event.stopPropagation();navigator.clipboard.writeText('${car.vin}').then(()=>window.showToast('📋 VIN copied!'))" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-size:10px;padding:1px 6px;cursor:pointer;">Copy</button>` : ''}
@@ -901,7 +944,10 @@ function renderPostingTab(car) {
     <button class="btn btn-post-now" style="margin-top:10px;background:#7B2FF7;" onclick="window.postNowToKijiji(${car.id})">
       🏷️ Post Now on Kijiji
     </button>
-    <div id="post-kijiji-status-${car.id}" style="text-align:center;font-size:12px;color:var(--muted);margin-top:8px;"></div>`;
+    <div id="post-kijiji-status-${car.id}" style="text-align:center;font-size:12px;color:var(--muted);margin-top:8px;"></div>
+    <button class="btn btn-secondary" style="width:100%;margin-top:12px;" onclick="window.togglePosted(${car.id})">
+      ${car.posted ? '↩ Mark as NOT posted' : '📣 Mark as posted (without sending)'}
+    </button>`;
 }
 
 // Filter out D2C listing-config checkboxes & junk that got scraped as "features",
@@ -1046,6 +1092,13 @@ window.postNowToFacebook = async function(carId) {
 
   // postMessage crosses the content script isolation boundary (CustomEvent doesn't)
   window.postMessage({ type: 'mouse:postNow', vehicle }, '*');
+
+  // Auto-mark this car as posted so it moves to the "✅ Posted" section.
+  // (No re-render here — it would collapse this open card and wipe the status below.
+  //  saveCars persists + syncs; the badge/filter update on the next render.)
+  car.posted = true;
+  car.postedAt = Date.now();
+  saveCars();
 
   // Wait up to 3 seconds for Snake to confirm it received the message
   if (statusEl) {
