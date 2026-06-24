@@ -188,6 +188,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <button class="inv-tab" id="inv-tab-sold" onclick="window.switchInvTab('sold')">🏷️ Sold</button>
       <button class="inv-tab" id="inv-tab-delivered" onclick="window.switchInvTab('delivered')">✅ Delivered</button>
     </div>
+    <button class="btn btn-secondary" style="width:100%;margin-bottom:10px;" onclick="window.scoutFacebook()">🔍 Scout Facebook — find what's not posted</button>
     <div class="inv-tabs" id="posted-filters">
       <button class="inv-tab active" id="pf-all" onclick="window.setPostedFilter('all')">All</button>
       <button class="inv-tab" id="pf-unposted" onclick="window.setPostedFilter('unposted')">🆕 To Post</button>
@@ -756,6 +757,31 @@ window.togglePosted = function(id) {
   saveCars(); renderCars();
   showToast(car.posted ? '✅ Marked as posted!' : '↩ Moved back to To Post');
 };
+
+// Scout Facebook: hand the extension every active car's stock # to check on FB.
+window.scoutFacebook = function() {
+  const stocks = cars.filter(c => !c.sold && !c.delivered && c.stock).map(c => c.stock);
+  if (!stocks.length) { showToast('No active cars with a stock # to scout.'); return; }
+  window.postMessage({ type: 'mouse:scoutFacebook', stocks }, '*');
+  showToast(`🔍 Opening Facebook to scout ${stocks.length} cars… (keep that tab open)`);
+};
+
+// Scout results come back from the Snake extension → mark each car posted/not.
+window.addEventListener('message', function(e) {
+  if (e.source !== window || !e.data || e.data.type !== 'snake:scoutResults') return;
+  const results = e.data.results || {};
+  let posted = 0, toPost = 0;
+  Object.keys(results).forEach(stock => {
+    const car = cars.find(c => c.stock && String(c.stock).toLowerCase() === String(stock).toLowerCase());
+    if (!car) return;
+    const isPosted = results[stock] === 'posted';
+    car.posted = isPosted;
+    car.postedAt = isPosted ? Date.now() : null;
+    isPosted ? posted++ : toPost++;
+  });
+  saveCars(); renderCars();
+  showToast(`🔍 Scout done — ✅ ${posted} posted, 🆕 ${toPost} to post`);
+});
 
 window.switchInvTab = function(tab) {
   currentInvTab = tab;
