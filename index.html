@@ -188,7 +188,8 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <button class="inv-tab" id="inv-tab-sold" onclick="window.switchInvTab('sold')">🏷️ Sold</button>
       <button class="inv-tab" id="inv-tab-delivered" onclick="window.switchInvTab('delivered')">✅ Delivered</button>
     </div>
-    <button class="btn btn-secondary" style="width:100%;margin-bottom:10px;" onclick="window.scoutFacebook()">🔍 Scout Facebook — find what's not posted</button>
+    <button class="btn btn-secondary" style="width:100%;margin-bottom:8px;" onclick="window.scoutFacebook()">🔍 Scout Facebook — find what's not posted</button>
+    <button class="btn btn-secondary" style="width:100%;margin-bottom:10px;" onclick="window.relistFacebook()">🔄 Relist on Facebook — renew stale listings</button>
     <div class="inv-tabs" id="posted-filters">
       <button class="inv-tab active" id="pf-all" onclick="window.setPostedFilter('all')">All</button>
       <button class="inv-tab" id="pf-unposted" onclick="window.setPostedFilter('unposted')">🆕 To Post</button>
@@ -758,29 +759,43 @@ window.togglePosted = function(id) {
   showToast(car.posted ? '✅ Marked as posted!' : '↩ Moved back to To Post');
 };
 
-// Scout Facebook: hand the extension every active car's stock # to check on FB.
+// Scout Facebook: hand the extension every active car's stock # to check (posted + renew).
 window.scoutFacebook = function() {
   const stocks = cars.filter(c => !c.sold && !c.delivered && c.stock).map(c => c.stock);
   if (!stocks.length) { showToast('No active cars with a stock # to scout.'); return; }
-  window.postMessage({ type: 'mouse:scoutFacebook', stocks }, '*');
+  window.postMessage({ type: 'mouse:scoutFacebook', stocks, mode: 'scout' }, '*');
   showToast(`🔍 Opening Facebook to scout ${stocks.length} cars… (keep that tab open)`);
 };
 
-// Scout results come back from the Snake extension → mark each car posted/not.
+// Relist: send the cars that need renewing to the extension to auto-renew on Facebook.
+window.relistFacebook = function() {
+  const stocks = cars.filter(c => !c.sold && !c.delivered && c.needsRenew && c.stock).map(c => c.stock);
+  if (!stocks.length) { showToast('Nothing to relist — run 🔍 Scout first to find renewable listings.'); return; }
+  if (!confirm(`Auto-renew ${stocks.length} listing(s) on Facebook?\n\nThis clicks the "Renew listing" button for each. Keep the Facebook tab open and don't touch it while it runs.`)) return;
+  window.postMessage({ type: 'mouse:scoutFacebook', stocks, mode: 'relist' }, '*');
+  showToast(`🔄 Opening Facebook to relist ${stocks.length} cars…`);
+};
+
+// Results back from the Snake extension (scout or relist).
 window.addEventListener('message', function(e) {
   if (e.source !== window || !e.data || e.data.type !== 'snake:scoutResults') return;
-  const results = e.data.results || {};
-  let posted = 0, toPost = 0;
+  const p = e.data.payload || {};
+  if (p.kind === 'relist') { showToast(`🔄 Relisted ${p.relisted || 0} on Facebook — re-run Scout to refresh.`); return; }
+  const results = p.results || {};
+  const renewable = new Set((p.renewable || []).map(s => String(s).toLowerCase()));
+  let posted = 0, toPost = 0, renew = 0;
   Object.keys(results).forEach(stock => {
     const car = cars.find(c => c.stock && String(c.stock).toLowerCase() === String(stock).toLowerCase());
     if (!car) return;
-    const isPosted = results[stock] === 'posted';
+    const isPosted = !!results[stock].posted;
     car.posted = isPosted;
     car.postedAt = isPosted ? Date.now() : null;
+    car.needsRenew = renewable.has(String(stock).toLowerCase());
     isPosted ? posted++ : toPost++;
+    if (car.needsRenew) renew++;
   });
   saveCars(); renderCars();
-  showToast(`🔍 Scout done — ✅ ${posted} posted, 🆕 ${toPost} to post`);
+  showToast(`🔍 Scout done — ✅ ${posted} posted · 🆕 ${toPost} to post · 🔄 ${renew} to relist`);
 });
 
 window.switchInvTab = function(tab) {
@@ -845,6 +860,7 @@ function renderCars(list_) {
             ${car.price ? `<span style="color:var(--muted);"> · $${Number(car.price).toLocaleString()}</span>` : ''}
             ${car.odometer ? `<span style="color:var(--muted);"> · ${Number(car.odometer).toLocaleString()} km</span>` : ''}
             ${(!car.sold && !car.delivered) ? (car.posted ? `<span style="color:#22c55e;font-weight:700;"> · ✅ Posted</span>` : `<span style="color:var(--accent);font-weight:700;"> · 🆕 To post</span>`) : ''}
+            ${(!car.sold && !car.delivered && car.needsRenew) ? `<span style="color:#f59e0b;font-weight:700;"> · 🔄 Renew</span>` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
             ${car.vin ? `<span style="font-size:11px;color:var(--muted);">VIN: ${car.vin}</span><button onclick="event.stopPropagation();navigator.clipboard.writeText('${car.vin}').then(()=>window.showToast('📋 VIN copied!'))" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-size:10px;padding:1px 6px;cursor:pointer;">Copy</button>` : ''}
