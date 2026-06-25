@@ -1230,6 +1230,31 @@ window.addEventListener('message', function(e) {
 });
 
 // ============ SNAKE IMPORT LISTENER ============
+// Bulk import: a whole D2C list (Pre-owned / Not published) scanned by Snake.
+window.addEventListener('message', function(e) {
+  if (e.source !== window || !e.data || e.data.type !== 'snake:importVehicles') return;
+  const list = e.data.vehicles || [];
+  let added = 0, updated = 0, base = Date.now();
+  list.forEach((v, i) => {
+    if (!v.stockNumber) return;
+    const fields = {
+      year: v.year, make: v.make, model: v.model, bodyStyle: v.bodyStyle,
+      exteriorColor: v.exteriorColor, odometer: v.odometer, transmission: v.transmission,
+      doors: v.doors, price: v.price, d2cEditUrl: v.d2cEditUrl,
+    };
+    const car = cars.find(c => c.stock && String(c.stock).toLowerCase() === String(v.stockNumber).toLowerCase());
+    if (car) {
+      Object.keys(fields).forEach(k => { if (fields[k]) car[k] = fields[k]; });
+      updated++;
+    } else {
+      cars.push(Object.assign({ id: base + i, stock: v.stockNumber, vin: '', photos: [], posted: false }, fields));
+      added++;
+    }
+  });
+  saveCars(); renderCars();
+  showToast(`🐍 Imported from D2C — ${added} new, ${updated} updated`);
+});
+
 window.addEventListener('message', function(e) {
   if (e.source !== window || !e.data || e.data.type !== 'snake:importVehicle') return;
   const v = e.data.vehicle;
