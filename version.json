@@ -1,5 +1,5 @@
 {
-  "version": "3.8.1",
-  "releaseDate": "2026-06-09",
-  "changelog": "The Posting tab now shows Interior Color (defaults to Black when unknown, matching the Snake scraper). Pairs with the extension fix where an unset D2C interior colour ('Select') automatically becomes Black."
+  "version": "3.9.0",
+  "releaseDate": "2026-06-25",
+  "changelog": "Big update. NEW: Posted tracking (auto-marks when you Post Now, plus All/To Post/Posted filters and a manual toggle). Facebook Scout — checks your listings by stock # to see what's posted, what needs relisting, and can auto-renew stale listings. D2C whole-list import (Pre-owned / Not published) straight into your inventory. Days-on-lot shown per car with a warning under 25 days, sort by days on lot, and a Last-scan timestamp in the header."
 }
