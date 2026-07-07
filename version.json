@@ -1,5 +1,5 @@
 {
-  "version": "3.9.1",
+  "version": "3.9.2",
   "releaseDate": "2026-06-25",
-  "changelog": "Added a Reset Inventory button (Setup tab) that wipes active cars for a clean re-scan while keeping Sold/Delivered records. Fixed the D2C list-scan hang (now opens Snake's Hustle reliably via the background). Builds on 3.9.0: posted tracking, Facebook scout/relist, D2C whole-list import, days-on-lot + under-25 flag, sort by days, and a last-scan timestamp."
+  "changelog": "Click a car's stock # to copy it (paste into Facebook search to double-check the scout before posting). Builds on 3.9.1: Reset Inventory button, D2C list-scan hang fix, posted tracking, Facebook scout/relist, D2C whole-list import, days-on-lot, sort by days, last-scan timestamp."
 }
