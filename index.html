@@ -159,6 +159,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <div class="stat">Cars: <span id="totalCars">0</span></div>
       <div class="stat">Photos: <span id="totalPhotos">0</span></div>
       <div class="stat">Done: <span id="doneCars">0</span></div>
+      <div class="stat">Last scan: <span id="lastScan">—</span></div>
     </div>
     <div id="userNameEl" class="user-name" style="display:none;"></div>
     <span id="syncDot" title="Live sync off" style="width:8px;height:8px;border-radius:50%;background:var(--muted);display:none;"></span>
@@ -726,6 +727,11 @@ function updateStats() {
   document.getElementById('totalCars').textContent = cars.length;
   document.getElementById('totalPhotos').textContent = cars.reduce((s,c) => s + c.photos.length, 0);
   document.getElementById('doneCars').textContent = cars.filter(c => c.photos.length > 0).length;
+  const ts = Number(localStorage.getItem('pm_lastScan') || 0);
+  const el = document.getElementById('lastScan');
+  if (el) el.textContent = ts
+    ? new Date(ts).toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+    : '—';
 }
 
 let currentInvTab = 'active';
@@ -1274,6 +1280,7 @@ window.addEventListener('message', function(e) {
       added++;
     }
   });
+  try { localStorage.setItem('pm_lastScan', String(Date.now())); } catch (_) {}
   saveCars(); renderCars();
   showToast(`🐍 Imported from D2C — ${added} new, ${updated} updated`);
 });
