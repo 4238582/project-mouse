@@ -268,6 +268,12 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;" id="lastChecked"></div>
     </div>
 
+    <div class="card" style="margin-top:12px;border-color:#5a2a2a;">
+      <div class="config-title" style="color:#ff8a8a;">🗑️ Reset Inventory</div>
+      <div class="config-desc">Wipes all <b>active</b> cars so you can re-scan D2C fresh. <b>Keeps your Sold &amp; Delivered cars.</b> Syncs to every device — can't be undone.</div>
+      <button class="btn btn-danger" style="width:100%;" onclick="window.clearActiveInventory()">🗑️ Clear active inventory &amp; re-scan</button>
+    </div>
+
     <div class="card" style="margin-top:12px;border-color:#3a2a4a;">
       <div class="config-title" style="color:#c8a2ff;">📁 Photo Download Folder</div>
       <div class="config-desc">Pick the folder where car photos download (e.g. your CARS folder). Each car saves into its own subfolder named by stock # + car name. Set it once.</div>
@@ -1591,6 +1597,30 @@ window.viewPhoto = function(src) {
   o.innerHTML = `<img src="${src}" style="max-width:95vw;max-height:95vh;border-radius:8px;object-fit:contain;">`;
   o.onclick = () => document.body.removeChild(o);
   document.body.appendChild(o);
+};
+
+// Wipe all ACTIVE cars (keep Sold + Delivered) so the D2C list can be re-scanned fresh.
+window.clearActiveInventory = async function() {
+  const removed = cars.filter(c => !c.sold && !c.delivered);
+  const keep = cars.filter(c => c.sold || c.delivered);
+  if (!removed.length) { showToast('No active cars to clear.'); return; }
+  if (!confirm(`⚠️ Clear ALL ${removed.length} active cars?\n\nKeeps your ${keep.length} Sold/Delivered cars. Wipes everything else so you can re-scan D2C fresh.\n\nThis syncs to ALL your devices and CANNOT be undone.`)) return;
+  removed.forEach(c => markDeleted(c.id));      // tombstone so devices don't resurrect them
+  cars = keep;
+  saveCars();
+  if (currentUser) autoPushToCloud(true);
+  renderCars();
+  showToast(`🗑️ Cleared ${removed.length} — now re-scan D2C`);
+  // Clean up their cloud photos
+  if (currentUser) {
+    for (const car of removed) {
+      for (const photo of (car.photos || [])) {
+        if (photo.uploaded && photo.id) {
+          try { await deleteObject(storageRef(storage, `users/${currentUser.uid}/cars/${car.id}/${photo.id}.jpg`)); } catch (e) {}
+        }
+      }
+    }
+  }
 };
 
 window.deleteCar = async function(id) {
