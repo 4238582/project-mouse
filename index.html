@@ -195,6 +195,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <button class="inv-tab" id="pf-unposted" onclick="window.setPostedFilter('unposted')">🆕 To Post</button>
       <button class="inv-tab" id="pf-posted" onclick="window.setPostedFilter('posted')">✅ Posted</button>
     </div>
+    <button id="sort-btn" class="inv-tab" style="width:100%;margin-bottom:10px;" onclick="window.cycleSort()">↕️ Sort: default</button>
     <input id="carSearch" type="text" placeholder="🔍 Search stock # or VIN…" oninput="window.filterCars(this.value)" style="width:100%;box-sizing:border-box;padding:10px 14px;margin-bottom:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none;">
     <div id="carList"></div>
   </div>
@@ -729,6 +730,15 @@ function updateStats() {
 
 let currentInvTab = 'active';
 let currentPostedFilter = 'all';
+let currentSort = 'default';
+
+window.cycleSort = function() {
+  currentSort = currentSort === 'default' ? 'days-desc' : currentSort === 'days-desc' ? 'days-asc' : 'default';
+  const b = document.getElementById('sort-btn');
+  if (b) b.textContent = currentSort === 'days-desc' ? '📅 Most days on lot first'
+    : currentSort === 'days-asc' ? '📅 Fewest days on lot first' : '↕️ Sort: default';
+  renderCars();
+};
 
 window.setPostedFilter = function(f) {
   currentPostedFilter = f;
@@ -747,6 +757,8 @@ function baseCars() {
   if (currentInvTab === 'active' && currentPostedFilter !== 'all') {
     base = base.filter(c => currentPostedFilter === 'posted' ? !!c.posted : !c.posted);
   }
+  if (currentSort === 'days-desc') base = base.slice().sort((a, b) => (Number(b.daysListed) || 0) - (Number(a.daysListed) || 0));
+  else if (currentSort === 'days-asc') base = base.slice().sort((a, b) => (Number(a.daysListed) || 0) - (Number(b.daysListed) || 0));
   return base;
 }
 
@@ -859,6 +871,7 @@ function renderCars(list_) {
             ${car.stock ? `<span style="font-weight:600;">${car.stock}</span>` : ''}
             ${car.price ? `<span style="color:var(--muted);"> · $${Number(car.price).toLocaleString()}</span>` : ''}
             ${car.odometer ? `<span style="color:var(--muted);"> · ${Number(car.odometer).toLocaleString()} km</span>` : ''}
+            ${car.daysListed ? `<span style="color:${Number(car.daysListed) < 25 ? '#f59e0b' : 'var(--muted)'};${Number(car.daysListed) < 25 ? 'font-weight:700;' : ''}"> · 📅 ${car.daysListed}d${Number(car.daysListed) < 25 ? ' ⚠️ need own photos' : ''}</span>` : ''}
             ${(!car.sold && !car.delivered) ? (car.posted ? `<span style="color:#22c55e;font-weight:700;"> · ✅ Posted</span>` : `<span style="color:var(--accent);font-weight:700;"> · 🆕 To post</span>`) : ''}
             ${(!car.sold && !car.delivered && car.needsRenew) ? `<span style="color:#f59e0b;font-weight:700;"> · 🔄 Renew</span>` : ''}
           </div>
@@ -1240,7 +1253,7 @@ window.addEventListener('message', function(e) {
     const fields = {
       year: v.year, make: v.make, model: v.model, bodyStyle: v.bodyStyle,
       exteriorColor: v.exteriorColor, odometer: v.odometer, transmission: v.transmission,
-      doors: v.doors, price: v.price, d2cEditUrl: v.d2cEditUrl,
+      doors: v.doors, price: v.price, d2cEditUrl: v.d2cEditUrl, daysListed: v.daysListed,
     };
     const car = cars.find(c => c.stock && String(c.stock).toLowerCase() === String(v.stockNumber).toLowerCase());
     if (car) {
