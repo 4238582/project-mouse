@@ -1,5 +1,5 @@
 {
-  "version": "3.9.2",
-  "releaseDate": "2026-06-25",
-  "changelog": "Click a car's stock # to copy it (paste into Facebook search to double-check the scout before posting). Builds on 3.9.1: Reset Inventory button, D2C list-scan hang fix, posted tracking, Facebook scout/relist, D2C whole-list import, days-on-lot, sort by days, last-scan timestamp."
+  "version": "3.10.3",
+  "releaseDate": "2026-07-13",
+  "changelog": "New full Edit Vehicle page, like D2C's Edit a Vehicle screen — click the pencil icon on any car row to open it. Covers Status (category, condition, posted), General Info (VIN, Stock #, Make, Model, Year, Trim), Vehicle Info (odometer, price, original price, passengers, transmission, drivetrain, colors, doors, fuel type, engine, cylinders), and Features (comma-separated tags, auto-filled from D2C scans when available). Saves back into the same car record used everywhere else in the app — Inventory table, Dashboard, Facebook posting all reflect the changes immediately."
 }
