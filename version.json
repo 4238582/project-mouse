@@ -1,5 +1,5 @@
 {
-  "version": "3.10.3",
+  "version": "3.10.4",
   "releaseDate": "2026-07-13",
-  "changelog": "New full Edit Vehicle page, like D2C's Edit a Vehicle screen — click the pencil icon on any car row to open it. Covers Status (category, condition, posted), General Info (VIN, Stock #, Make, Model, Year, Trim), Vehicle Info (odometer, price, original price, passengers, transmission, drivetrain, colors, doors, fuel type, engine, cylinders), and Features (comma-separated tags, auto-filled from D2C scans when available). Saves back into the same car record used everywhere else in the app — Inventory table, Dashboard, Facebook posting all reflect the changes immediately."
+  "changelog": "Added a download icon next to the edit pencil on each Inventory row — downloads that car's photos straight from the table, no need to expand the row first. Reuses the existing download-to-folder flow, so it warns you the same way if there are no photos yet or you're not on desktop Chrome."
 }
