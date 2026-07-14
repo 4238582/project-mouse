@@ -1,5 +1,5 @@
 {
-  "version": "3.11.0",
+  "version": "3.12.0",
   "releaseDate": "2026-07-14",
-  "changelog": "Delivered cars now auto-remove from Inventory 5 days after delivery (same as pressing Delete — car + Storage photos are gone). Before that happens, a data-only record (stock#, VIN, price, buyer name/phone, sold/delivered dates — no photos) is logged to a local sales archive kept for ~1 year, in case a dispute or fraud question comes up later. Added Buyer Name/Phone fields to the Edit Vehicle page so that info gets captured before the car is archived. Runs automatically on app load + hourly while the app is open."
+  "changelog": "Schedule is now a real month-grid calendar (was 'Coming soon') — click a day or the + New Event button to add an Appointment/Task/Delivery with time and notes, click an event chip to edit or delete it, prev/next month + Today navigation. Local-only for now (localStorage), hand-rolled vanilla JS (no calendar library). First step of the bigger PestDesk-integration pass; Analytics and the Customers client-sheet already largely match PestDesk's design from an earlier session — Leads pipeline and deeper client-sheet/car-purchase linking are still to come."
 }
