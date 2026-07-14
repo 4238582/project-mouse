@@ -112,6 +112,29 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .inv-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
 .inv-tab { display: flex; align-items: center; justify-content: center; gap: 5px; flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; }
 .inv-tab.active { background: rgba(37,99,235,0.1); border-color: var(--accent); color: var(--accent); }
+.inv-tab-count { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; font-size: 10px; font-weight: 700; margin-left: 4px; background: rgba(37,99,235,0.14); color: var(--accent); }
+.inv-tabs-main .inv-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.inv-tabs-main .inv-tab.active .inv-tab-count { background: rgba(255,255,255,0.25); color: #fff; }
+
+/* Compact toolbar (Inventory tab): dealer status pills + action icons on one line, salesman posting-status pills on a lighter secondary line */
+.inv-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.pill-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pill { display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.pill .icon { width: 14px; height: 14px; }
+.pill-count { display: inline-flex; align-items: center; justify-content: center; min-width: 17px; height: 17px; padding: 0 5px; border-radius: 9px; font-size: 10px; font-weight: 700; background: rgba(37,99,235,0.14); color: var(--accent); }
+.pill.active { background: var(--sidebar-bg); border-color: var(--sidebar-bg); color: #fff; }
+.pill.active .pill-count { background: rgba(255,255,255,0.25); color: #fff; }
+.inv-toolbar-actions { display: flex; align-items: center; gap: 6px; }
+.icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); cursor: pointer; flex-shrink: 0; }
+.icon-btn:hover { color: var(--accent); border-color: var(--accent); }
+.icon-btn .icon { width: 16px; height: 16px; }
+.sort-select { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: 12.5px; font-weight: 600; cursor: pointer; outline: none; }
+.posted-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.posted-row-label { font-size: 10.5px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.pill-sm { padding: 5px 12px; font-size: 12px; }
+.pill-sm.active { background: var(--surface); border-color: var(--text); color: var(--text); }
+#pf-unposted.pill-sm.active { background: rgba(37,99,235,0.1); border-color: var(--accent); color: var(--accent); }
+#pf-posted.pill-sm.active { background: rgba(22,163,74,0.1); border-color: var(--success); color: var(--success); }
 .btn-sold { background: none; border: 1px solid #ff3b30; color: #ff3b30; border-radius: 6px; font-size: 11px; font-weight: 700; padding: 3px 8px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
 .btn-sold:hover { background: #ff3b30; color: #fff; }
 .btn-unsold { background: none; border: 1px solid var(--muted); color: var(--muted); border-radius: 6px; font-size: 11px; font-weight: 700; padding: 3px 8px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
@@ -206,6 +229,19 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .dash-row-name { font-size: 13px; font-weight: 600; }
 .dash-row-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
 .dash-empty { font-size: 12px; color: var(--muted); text-align: center; padding: 18px 0; }
+
+/* ===== ANALYTICS ===== */
+.an-cols { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
+@media (min-width: 800px) { .an-cols { grid-template-columns: 1fr 1fr; } }
+.an-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.an-bar-label { width: 70px; font-size: 11px; color: var(--muted); flex-shrink: 0; }
+.an-bar-track { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+.an-bar-fill { height: 100%; border-radius: 4px; }
+.an-bar-value { width: 30px; text-align: right; font-size: 11px; font-weight: 700; color: var(--text); flex-shrink: 0; }
+.an-legend-row { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 3px 0; }
+.an-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.an-legend-name { flex: 1; text-transform: capitalize; }
+.an-legend-value { color: var(--muted); font-weight: 600; }
 
 /* ===== INVENTORY TABLE ===== */
 .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; -webkit-overflow-scrolling: touch; }
@@ -336,19 +372,37 @@ input:focus, textarea:focus { border-color: var(--accent); }
         <button class="btn btn-primary" style="width:auto;padding:9px 16px;font-size:13px;" onclick="window.switchTab('add')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Add Car</button>
       </div>
     </div>
-    <div class="inv-tabs">
-      <button class="inv-tab active" id="inv-tab-active" onclick="window.switchInvTab('active')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11"/><rect x="3" y="11" width="18" height="6" rx="2"/><circle cx="7.5" cy="18" r="1.5"/><circle cx="16.5" cy="18" r="1.5"/></svg> Active</button>
-      <button class="inv-tab" id="inv-tab-sold" onclick="window.switchInvTab('sold')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l8.29-8.29a1 1 0 0 0 0-1.41z"/><circle cx="7" cy="7" r="1.5"/></svg> Sold</button>
-      <button class="inv-tab" id="inv-tab-delivered" onclick="window.switchInvTab('delivered')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg> Delivered</button>
+    <div class="pill-row" id="inv-type-filters" style="margin-bottom:8px;">
+      <button class="pill active" id="tf-all" onclick="window.setTypeFilter('all')">All <span class="pill-count" id="cnt-type-all">0</span></button>
+      <button class="pill" id="tf-new" onclick="window.setTypeFilter('new')">New <span class="pill-count" id="cnt-type-new">0</span></button>
+      <button class="pill" id="tf-preowned" onclick="window.setTypeFilter('preowned')">Pre-owned <span class="pill-count" id="cnt-type-preowned">0</span></button>
+      <button class="pill" id="tf-notpub" onclick="window.setTypeFilter('notpub')">Not published <span class="pill-count" id="cnt-type-notpub">0</span></button>
+      <button class="pill" id="tf-certified" onclick="window.setTypeFilter('certified')">Certified <span class="pill-count" id="cnt-type-certified">0</span></button>
     </div>
-    <button class="btn btn-secondary" style="width:100%;margin-bottom:8px;" onclick="window.scoutFacebook()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg> Scout Facebook — find what's not posted</button>
-    <button class="btn btn-secondary" style="width:100%;margin-bottom:10px;" onclick="window.relistFacebook()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> Relist on Facebook — renew stale listings</button>
-    <div class="inv-tabs" id="posted-filters">
-      <button class="inv-tab active" id="pf-all" onclick="window.setPostedFilter('all')">All</button>
-      <button class="inv-tab" id="pf-unposted" onclick="window.setPostedFilter('unposted')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg> To Post</button>
-      <button class="inv-tab" id="pf-posted" onclick="window.setPostedFilter('posted')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg> Posted</button>
+    <div class="inv-toolbar">
+      <div class="pill-row" id="inv-tabs-main">
+        <button class="pill active" id="inv-tab-active" onclick="window.switchInvTab('active')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11"/><rect x="3" y="11" width="18" height="6" rx="2"/><circle cx="7.5" cy="18" r="1.5"/><circle cx="16.5" cy="18" r="1.5"/></svg> Active <span class="pill-count" id="cnt-active">0</span></button>
+        <button class="pill" id="inv-tab-sold" onclick="window.switchInvTab('sold')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l8.29-8.29a1 1 0 0 0 0-1.41z"/><circle cx="7" cy="7" r="1.5"/></svg> Sold <span class="pill-count" id="cnt-sold">0</span></button>
+        <button class="pill" id="inv-tab-delivered" onclick="window.switchInvTab('delivered')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg> Delivered <span class="pill-count" id="cnt-delivered">0</span></button>
+      </div>
+      <div class="inv-toolbar-actions">
+        <button class="icon-btn" title="Scout Facebook — find what's not posted" onclick="window.scoutFacebook()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg></button>
+        <button class="icon-btn" title="Relist on Facebook — renew stale listings" onclick="window.relistFacebook()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></button>
+        <select id="sort-select" class="sort-select" title="Sort" onchange="window.setSort(this.value)">
+          <option value="default">Sort: Default</option>
+          <option value="days-desc">Most days on lot</option>
+          <option value="days-asc">Fewest days on lot</option>
+        </select>
+      </div>
     </div>
-    <button id="sort-btn" class="inv-tab" style="width:100%;margin-bottom:10px;" onclick="window.cycleSort()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v14"/><path d="M4 8l4-5 4 5"/><path d="M16 21V7"/><path d="M12 16l4 5 4-5"/></svg> Sort: default</button>
+    <div class="posted-row" id="posted-row">
+      <span class="posted-row-label">Salesman — posting status</span>
+      <div class="pill-row" id="posted-filters">
+        <button class="pill pill-sm active" id="pf-all" onclick="window.setPostedFilter('all')">All</button>
+        <button class="pill pill-sm" id="pf-unposted" onclick="window.setPostedFilter('unposted')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg> To Post</button>
+        <button class="pill pill-sm" id="pf-posted" onclick="window.setPostedFilter('posted')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg> Posted</button>
+      </div>
+    </div>
     <div class="table-scroll">
       <table class="inv-table" id="invTable">
         <thead>
@@ -422,6 +476,10 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <div class="input-group" style="display:flex;align-items:center;gap:10px;margin-top:4px;">
         <input type="checkbox" id="ecPosted" style="width:auto;">
         <label style="margin:0;text-transform:none;letter-spacing:0;font-size:14px;color:var(--text);">Marked as posted on Facebook</label>
+      </div>
+      <div class="input-group" style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+        <input type="checkbox" id="ecPublished" style="width:auto;" checked>
+        <label style="margin:0;text-transform:none;letter-spacing:0;font-size:14px;color:var(--text);">Published on website (uncheck if this car has no live D2C page)</label>
       </div>
     </div>
 
@@ -556,7 +614,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
 
   <!-- LEADS -->
   <div id="tab-leads" style="display:none;">
-    <div class="section-title">📋 Leads — Groups & Mass Text</div>
+    <div class="section-title">📋 Mass Texting — Groups & Contacts</div>
 
     <div class="dash-grid" id="stageSummary" style="margin-bottom:16px;"></div>
     <div class="inv-tabs" id="stageTabs" style="margin-bottom:16px;flex-wrap:wrap;"></div>
@@ -611,10 +669,38 @@ input:focus, textarea:focus { border-color: var(--accent); }
     </div>
 
     <div style="display:flex;align-items:center;justify-content:space-between;margin:14px 2px 8px;">
-      <div class="section-title" style="margin:0;">Your Leads (<span id="leadCount">0</span>)</div>
+      <div class="section-title" style="margin:0;">Your Contacts (<span id="leadCount">0</span>)</div>
       <button class="btn-danger" style="font-size:11px;padding:4px 10px;" onclick="window.clearTextedLeads()">Clear ✓ Texted</button>
     </div>
     <div id="leadsList"></div>
+  </div>
+
+  <!-- LEAD WEB -->
+  <div id="tab-leadweb" style="display:none;">
+    <div class="section-title">🌐 Lead Web</div>
+    <div class="card">
+      <div class="config-title">Your Capture Link</div>
+      <div class="config-desc">Share this link anywhere, or paste the embed code into a website you control. Submissions land below in real time — no refresh needed.</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <input id="leadWebLink" type="text" readonly style="flex:1;min-width:200px;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;">
+        <button class="btn btn-secondary" style="width:auto;padding:10px 14px;" onclick="window.copyLeadWebLink()">📋 Copy Link</button>
+      </div>
+      <button class="btn btn-secondary" style="width:100%;margin-top:10px;" onclick="window.toggleLeadEmbedCode()">&lt;/&gt; Show Embed Code (for your own website)</button>
+      <textarea id="leadEmbedCode" readonly rows="10" style="display:none;width:100%;margin-top:8px;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px;font-family:monospace;white-space:pre;"></textarea>
+    </div>
+    <div class="card" style="border-color:#c7d2fe;">
+      <div class="config-title" style="color:#3b5bdb;">📢 Marketing Integrations</div>
+      <div class="config-desc">
+        <strong>Google Ads Lead Forms:</strong> not connected yet — auto-importing real Lead Form submissions needs a Google Ads API + OAuth setup, which is its own project (Google's developer token approval alone can take days). Flagging so it doesn't get lost.<br><br>
+        <strong>Facebook Lead Ads:</strong> same story — needs a Meta Lead Ads webhook integration, not built yet.<br><br>
+        For now, leads from any source can be dropped in manually below, or connected via the link/embed above once a site can call it.
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 12px;gap:10px;flex-wrap:wrap;">
+      <div class="section-title" style="margin:0;">Incoming Leads (<span id="webLeadCount">0</span>)</div>
+      <button class="btn btn-secondary" style="width:auto;padding:8px 12px;font-size:12px;" onclick="window.seedDemoLeads()" title="Adds a few realistic sample leads so you can see how this page looks with data">🎭 Add Demo Leads</button>
+    </div>
+    <div id="webLeadsList"></div>
   </div>
 
   <!-- DASHBOARD -->
@@ -624,7 +710,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <div class="dash-card" onclick="window.switchTab('inventory')"><div class="dash-label">Active Inventory</div><div class="dash-value" id="dashActiveCars">0</div></div>
       <div class="dash-card" onclick="window.switchTab('inventory');window.setPostedFilter('unposted');"><div class="dash-label">To Post</div><div class="dash-value" id="dashToPost">0</div></div>
       <div class="dash-card" onclick="window.switchTab('inventory')"><div class="dash-label">Needs Renew</div><div class="dash-value" id="dashNeedsRenew">0</div></div>
-      <div class="dash-card" onclick="window.switchTab('leads')"><div class="dash-label">Total Leads</div><div class="dash-value" id="dashLeadsCount">0</div></div>
+      <div class="dash-card" onclick="window.switchTab('leads')"><div class="dash-label">Total Contacts</div><div class="dash-value" id="dashLeadsCount">0</div></div>
     </div>
     <div class="dash-cols">
       <div class="dash-col-main">
@@ -637,7 +723,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
           <div id="dashNeedsAttention"></div>
         </div>
         <div class="dash-panel">
-          <div class="dash-panel-title">Recent Leads</div>
+          <div class="dash-panel-title">Recent Contacts</div>
           <div id="dashRecentLeads"></div>
         </div>
       </div>
@@ -649,7 +735,10 @@ input:focus, textarea:focus { border-color: var(--accent); }
     <div id="customersListView">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap;">
         <div class="section-title" style="margin-bottom:0;">Customers</div>
-        <button class="btn btn-primary" style="width:auto;padding:9px 16px;font-size:13px;" onclick="window.openNewCustomer()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> New Customer</button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-secondary" style="width:auto;padding:9px 14px;font-size:13px;" onclick="window.seedDemoCustomer()" title="Adds a couple of sample customers so you can see how this page looks">🎭 Add Demo</button>
+          <button class="btn btn-primary" style="width:auto;padding:9px 16px;font-size:13px;" onclick="window.openNewCustomer()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> New Customer</button>
+        </div>
       </div>
       <div class="inv-tabs" style="margin-bottom:12px;">
         <button class="inv-tab active" id="cust-tab-all" onclick="window.setCustomerTab('all')">All</button>
@@ -677,7 +766,47 @@ input:focus, textarea:focus { border-color: var(--accent); }
   <div id="tab-schedule" style="display:none;"><div class="empty-state"><div class="big-icon">📅</div><h3>Schedule</h3><p>Coming soon.</p></div></div>
   <div id="tab-emails" style="display:none;"><div class="empty-state"><div class="big-icon">✉️</div><h3>Emails</h3><p>Coming soon.</p></div></div>
   <div id="tab-inbox" style="display:none;"><div class="empty-state"><div class="big-icon">📥</div><h3>Inbox</h3><p>Coming soon.</p></div></div>
-  <div id="tab-analytics" style="display:none;"><div class="empty-state"><div class="big-icon">📊</div><h3>Analytics</h3><p>Coming soon.</p></div></div>
+  <div id="tab-analytics" style="display:none;">
+    <div class="section-title">Analytics</div>
+    <div class="config-desc" style="margin:-8px 0 16px;">Money moved and where your leads come from.</div>
+    <div class="dash-grid">
+      <div class="dash-card"><div class="dash-label">Sold This Month</div><div class="dash-value" id="anSoldMonth" style="color:#16a34a;">$0</div></div>
+      <div class="dash-card"><div class="dash-label">Pending Delivery</div><div class="dash-value" id="anPending" style="color:#d97706;">$0</div></div>
+      <div class="dash-card"><div class="dash-label">Total Leads</div><div class="dash-value" id="anTotalLeads">0</div></div>
+      <div class="dash-card"><div class="dash-label">Conversion Rate</div><div class="dash-value" id="anConversion" style="color:#9333ea;">0%</div></div>
+    </div>
+    <div class="an-cols">
+      <div class="dash-panel">
+        <div class="dash-panel-title">Cars Sold by Month</div>
+        <div id="anRevenueChart"></div>
+      </div>
+      <div class="dash-panel">
+        <div class="dash-panel-title">Where Leads Come From</div>
+        <div id="anSourceChart" style="display:flex;align-items:center;gap:16px;"></div>
+      </div>
+    </div>
+    <div class="an-cols">
+      <div class="dash-panel">
+        <div class="dash-panel-title">Leads by Channel</div>
+        <div id="anChannelBars"></div>
+      </div>
+      <div class="dash-panel" style="padding:0;overflow:hidden;">
+        <div style="padding:14px 14px 0;">
+          <div class="dash-panel-title">Which Source Converts Best?</div>
+          <div class="config-desc" style="margin-top:-4px;">Leads that became "Won" contacts</div>
+        </div>
+        <table style="width:100%;font-size:12px;border-collapse:collapse;margin-top:10px;">
+          <thead><tr style="border-top:1px solid var(--border);background:var(--surface2);">
+            <th style="text-align:left;padding:8px 14px;color:var(--muted);font-weight:600;">Source</th>
+            <th style="text-align:right;padding:8px 14px;color:var(--muted);font-weight:600;">Leads</th>
+            <th style="text-align:right;padding:8px 14px;color:var(--muted);font-weight:600;">Won</th>
+            <th style="text-align:right;padding:8px 14px;color:var(--muted);font-weight:600;">Rate</th>
+          </tr></thead>
+          <tbody id="anSourceTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </main>
 </div><!-- /content-area -->
 </div><!-- /appRoot -->
@@ -718,7 +847,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
 // ============ FIREBASE ============
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, query, orderBy, deleteDoc, updateDoc, addDoc, serverTimestamp, writeBatch } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { getStorage, ref as storageRef, uploadString, getDownloadURL, deleteObject, listAll, getBytes, getBlob } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
 import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -774,6 +903,7 @@ onAuthStateChanged(auth, async (user) => {
   if (!user) {
     currentUser = null;
     stopCloudSync();
+    stopWebLeadsSync();
     showAuthGate('signin');
     return;
   }
@@ -811,6 +941,8 @@ onAuthStateChanged(auth, async (user) => {
   if(cloudOut) cloudOut.style.display = 'none';
   if(cloudIn) cloudIn.style.display = 'block';
   startCloudSync();
+  startWebLeadsSync();
+  renderLeadWebLink();
   // First sync car list, then load photos
   try {
     await window.syncFromCloud();
@@ -884,6 +1016,118 @@ function stopCloudSync() {
   if(cloudUnsub) { cloudUnsub(); cloudUnsub = null; }
   const sd = document.getElementById('syncDot');
   if(sd) { sd.style.background = 'var(--muted)'; sd.title = 'Live sync off'; }
+}
+
+// ── Lead Web — real-time listener on users/{uid}/webLeads, populated by the
+// receiveWebLead Cloud Function (a public webhook external sites POST to). ──
+let webLeads = [];
+let webLeadsUnsub = null;
+function startWebLeadsSync() {
+  if (!currentUser || webLeadsUnsub) return;
+  const q = query(collection(db, 'users', currentUser.uid, 'webLeads'), orderBy('receivedAt', 'desc'));
+  webLeadsUnsub = onSnapshot(q, (snap) => {
+    webLeads = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderWebLeads();
+  }, (err) => { console.warn('webLeads sync error', err); });
+}
+function stopWebLeadsSync() {
+  if (webLeadsUnsub) { webLeadsUnsub(); webLeadsUnsub = null; }
+  webLeads = [];
+}
+function renderWebLeads() {
+  const list = document.getElementById('webLeadsList');
+  const count = document.getElementById('webLeadCount');
+  if (count) count.textContent = webLeads.length;
+  if (!list) return;
+  if (!webLeads.length) { list.innerHTML = `<div class="empty-state"><div class="big-icon">🌐</div><h3>No Web Leads Yet</h3><p>Share your capture link or embed the form on a website to start receiving leads here.</p></div>`; return; }
+  list.innerHTML = webLeads.map(l => `
+    <div class="card" style="padding:14px;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:180px;">
+          <div style="font-weight:700;font-size:14px;">${l.name || 'Unnamed'} <span class="status-pill topost" style="margin-left:4px;">${l.source || 'website'}</span></div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px;">${l.phone ? formatPhone(l.phone) : ''}${l.phone && l.email ? ' · ' : ''}${l.email || ''}</div>
+          ${l.message ? `<div style="font-size:12px;margin-top:6px;padding:8px;background:var(--surface2);border-radius:8px;">${l.message}</div>` : ''}
+          <div style="font-size:10px;color:var(--muted);margin-top:6px;">${l.receivedAt?.toDate ? l.receivedAt.toDate().toLocaleString() : 'Just now'}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button class="btn btn-secondary" style="width:auto;padding:8px 10px;font-size:12px;" onclick="window.addWebLeadToTexting('${l.id}')" title="Add to Mass Texting">+ Contact</button>
+          <button class="btn-danger" style="padding:8px 10px;" onclick="window.deleteWebLead('${l.id}')">✕</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+window.addWebLeadToTexting = function(id) {
+  const l = webLeads.find(x => x.id === id);
+  if (!l) return;
+  leads.unshift({ id: `${Date.now()}_${leadSeq++}`, name: l.name || '', phone: l.phone || '', email: l.email || '', group: 'General', status: 'new', stage: 'New', source: l.source || 'website', addedAt: new Date().toLocaleDateString() });
+  saveLeads();
+  showToast('✅ Added to Mass Texting contacts');
+};
+window.deleteWebLead = async function(id) {
+  if (!currentUser) return;
+  try { await deleteDoc(doc(db, 'users', currentUser.uid, 'webLeads', id)); }
+  catch (e) { showToast('⚠️ Could not delete: ' + e.message); }
+};
+const DEMO_WEB_LEADS = [
+  { name: 'Martin Rousseau', phone: '8195551042', email: 'm.rousseau@gmail.com', message: 'Interested in the 2024 Hyundai Kona — is it still available? Looking to trade in a 2018 Elantra.', source: 'website' },
+  { name: 'Sylvie Côté', phone: '8195557788', email: 'sylvie.cote@outlook.com', message: 'What financing options do you have on the Tucson? Looking for something under $400/month.', source: 'google_ads' },
+  { name: 'Jean Tremblay', phone: '8195553321', email: '', message: 'Can I book a test drive for this weekend?', source: 'website' },
+  { name: 'Anne Dubois', phone: '', email: 'anne.dubois88@gmail.com', message: 'Do you have any certified pre-owned SUVs under $30k?', source: 'facebook' },
+  { name: 'Robert Gagné', phone: '8195559012', email: 'r.gagne@gmail.com', message: 'Following up on the Santa Fe I saw on Marketplace — still interested!', source: 'website' },
+];
+window.seedDemoLeads = async function() {
+  if (!currentUser) { showToast('⚠️ Sign in first'); return; }
+  showToast('🎭 Adding demo leads…');
+  try {
+    const batch = writeBatch(db);
+    const col = collection(db, 'users', currentUser.uid, 'webLeads');
+    DEMO_WEB_LEADS.forEach(l => {
+      batch.set(doc(col), { ...l, status: 'new', receivedAt: serverTimestamp() });
+    });
+    await batch.commit();
+    showToast(`✅ ${DEMO_WEB_LEADS.length} demo leads added!`);
+  } catch (e) {
+    showToast('⚠️ Could not seed demo leads: ' + e.message);
+  }
+};
+window.copyLeadWebLink = function() {
+  const link = document.getElementById('leadWebLink').value;
+  navigator.clipboard.writeText(link).then(() => showToast('📋 Link copied!'));
+};
+window.toggleLeadEmbedCode = function() {
+  const box = document.getElementById('leadEmbedCode');
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+};
+function renderLeadWebLink() {
+  if (!currentUser) return;
+  const linkEl = document.getElementById('leadWebLink');
+  const codeEl = document.getElementById('leadEmbedCode');
+  const uid = currentUser.uid;
+  const link = `https://4238582.github.io/project-mouse/lead-form.html?uid=${uid}`;
+  if (linkEl) linkEl.value = link;
+  if (codeEl) codeEl.value = `<!-- Snake's Hustle Lead Web — paste anywhere in your site -->
+<form id="snake-lead-form" onsubmit="return snakeSubmitLead(event)">
+  <input name="name" placeholder="Name" required>
+  <input name="phone" placeholder="Phone" type="tel">
+  <input name="email" placeholder="Email" type="email">
+  <textarea name="message" placeholder="What are you looking for?"></textarea>
+  <input type="text" name="company" style="display:none" tabindex="-1" autocomplete="off">
+  <button type="submit">Send</button>
+</form>
+<script>
+function snakeSubmitLead(e){
+  e.preventDefault();
+  var f = e.target, data = Object.fromEntries(new FormData(f).entries());
+  data.uid = "${uid}"; data.source = "website";
+  fetch("https://us-central1-project-mouse-b7b28.cloudfunctions.net/receiveWebLead", {
+    method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(data)
+  }).then(function(r){ return r.json(); }).then(function(r){
+    if (r.ok) { f.innerHTML = "<p>Thanks! We'll be in touch shortly.</p>"; }
+    else { alert(r.error || "Something went wrong — please call us directly."); }
+  }).catch(function(){ alert("Something went wrong — please call us directly."); });
+  return false;
+}
+<\/script>`;
 }
 
 // Serialize cars for the cloud. Photos are STRIPPED ENTIRELY — they're recovered on every
@@ -1106,17 +1350,29 @@ function updateStats() {
   if (el) el.textContent = ts
     ? new Date(ts).toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
     : '—';
+  const cntActive = document.getElementById('cnt-active');
+  const cntSold = document.getElementById('cnt-sold');
+  const cntDelivered = document.getElementById('cnt-delivered');
+  if (cntActive) cntActive.textContent = cars.filter(c => !c.sold && !c.delivered).length;
+  if (cntSold) cntSold.textContent = cars.filter(c => c.sold && !c.delivered).length;
+  if (cntDelivered) cntDelivered.textContent = cars.filter(c => c.delivered).length;
+  // D2C-style New/Pre-owned/Not published/Certified counts, scoped to the current Active/Sold/Delivered tab.
+  const lc = lifecycleCars();
+  const setCnt = (id, n) => { const c = document.getElementById(id); if (c) c.textContent = n; };
+  setCnt('cnt-type-all', lc.length);
+  setCnt('cnt-type-new', lc.filter(c => (c.condition || 'Used').toLowerCase() === 'new').length);
+  setCnt('cnt-type-preowned', lc.filter(c => (c.condition || 'Used').toLowerCase() === 'used').length);
+  setCnt('cnt-type-notpub', lc.filter(c => c.published === false).length);
+  setCnt('cnt-type-certified', lc.filter(c => (c.condition || 'Used').toLowerCase() === 'certified').length);
 }
 
 let currentInvTab = 'active';
 let currentPostedFilter = 'all';
+let currentTypeFilter = 'all';
 let currentSort = 'default';
 
-window.cycleSort = function() {
-  currentSort = currentSort === 'default' ? 'days-desc' : currentSort === 'days-desc' ? 'days-asc' : 'default';
-  const b = document.getElementById('sort-btn');
-  if (b) b.textContent = currentSort === 'days-desc' ? '📅 Most days on lot first'
-    : currentSort === 'days-asc' ? '📅 Fewest days on lot first' : '↕️ Sort: default';
+window.setSort = function(v) {
+  currentSort = v;
   renderCars();
 };
 
@@ -1124,6 +1380,18 @@ window.setPostedFilter = function(f) {
   currentPostedFilter = f;
   ['all','unposted','posted'].forEach(t => {
     const el = document.getElementById('pf-' + t);
+    if(el) el.classList.toggle('active', t === f);
+  });
+  const search = document.getElementById('carSearch');
+  if(search) search.value = '';
+  renderCars();
+};
+
+// D2C-style category filter: New / Pre-owned / Not published / Certified (dealer's own classification).
+window.setTypeFilter = function(f) {
+  currentTypeFilter = f;
+  ['all','new','preowned','notpub','certified'].forEach(t => {
+    const el = document.getElementById('tf-' + t);
     if(el) el.classList.toggle('active', t === f);
   });
   const search = document.getElementById('carSearch');
@@ -1198,10 +1466,22 @@ window.sortInvBy = function(field) {
   renderCars();
 };
 const NUMERIC_SORT_FIELDS = ['price', 'odometer', 'doors', 'year'];
+function lifecycleCars() {
+  return cars.filter(c => currentInvTab === 'sold' ? (c.sold && !c.delivered) : currentInvTab === 'delivered' ? c.delivered : (!c.sold && !c.delivered));
+}
 function baseCars() {
-  let base = cars.filter(c => currentInvTab === 'sold' ? (c.sold && !c.delivered) : currentInvTab === 'delivered' ? c.delivered : (!c.sold && !c.delivered));
+  let base = lifecycleCars();
   if (currentInvTab === 'active' && currentPostedFilter !== 'all') {
     base = base.filter(c => currentPostedFilter === 'posted' ? !!c.posted : !c.posted);
+  }
+  if (currentTypeFilter !== 'all') {
+    base = base.filter(c => {
+      if (currentTypeFilter === 'notpub') return c.published === false;
+      const cond = (c.condition || 'Used').toLowerCase();
+      if (currentTypeFilter === 'new') return cond === 'new';
+      if (currentTypeFilter === 'certified') return cond === 'certified';
+      return cond === 'used'; // preowned
+    });
   }
   if (colSort.field) {
     base = base.slice().sort((a, b) => {
@@ -1273,7 +1553,7 @@ window.switchInvTab = function(tab) {
     if(el) el.classList.toggle('active', t === tab);
   });
   // The posted filter only applies to active inventory.
-  const pf = document.getElementById('posted-filters');
+  const pf = document.getElementById('posted-row');
   if(pf) pf.style.display = tab === 'active' ? 'flex' : 'none';
   const search = document.getElementById('carSearch');
   if(search) search.value = '';
@@ -1285,6 +1565,8 @@ window.markSold = function(id, status) {
   if(!car) return;
   car.sold = status === 'sold';
   car.delivered = status === 'delivered';
+  if (status === 'sold' && !car.soldAt) car.soldAt = Date.now();
+  if (status === 'active') car.soldAt = null;
   saveCars(); renderCars();
   const msg = status === 'sold' ? '🏷️ Marked as sold!' : status === 'delivered' ? '✅ Marked as delivered!' : '↩ Moved back to active';
   showToast(msg);
@@ -1717,10 +1999,16 @@ window.addEventListener('message', function(e) {
       exteriorColor: v.exteriorColor, odometer: v.odometer, transmission: v.transmission,
       doors: v.doors, price: v.price, d2cEditUrl: v.d2cEditUrl,
       daysListed: v.daysListed, daysScannedAt: v.daysListed ? Date.now() : undefined,
+      // condition/published come from which D2C tab (New/Pre-owned/Not published/Certified) Snake scanned —
+      // only present when the extension could tell; otherwise left undefined so we don't clobber existing data.
+      condition: v.condition, published: v.published,
     };
     const car = cars.find(c => c.stock && String(c.stock).toLowerCase() === String(v.stockNumber).toLowerCase());
     if (car) {
-      Object.keys(fields).forEach(k => { if (fields[k]) car[k] = fields[k]; });
+      Object.keys(fields).forEach(k => {
+        if (k === 'published') { if (fields[k] !== undefined) car[k] = fields[k]; return; }
+        if (fields[k]) car[k] = fields[k];
+      });
       updated++;
     } else {
       cars.push(Object.assign({ id: base + i, stock: v.stockNumber, vin: '', photos: [], posted: false }, fields));
@@ -1818,11 +2106,12 @@ window.addEventListener('message', function(e) {
 });
 
 // ============ WINDOW FUNCTIONS ============
-const ALL_PAGES = ['dashboard','inventory','add','editcar','leads','customers','schedule','emails','inbox','analytics','setup'];
+const ALL_PAGES = ['dashboard','inventory','add','editcar','leads','leadweb','customers','schedule','emails','inbox','analytics','setup'];
 const NAV_MAIN = [
   { id: 'dashboard', label: 'Dashboard', icon: '<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>' },
   { id: 'inventory', label: 'Inventory', icon: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 7l9-4 9 4"/><path d="M12 12v8"/>' },
-  { id: 'leads', label: 'Leads', icon: '<path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.4 8.5 8.5 0 0 1-4-1L3 20l1.1-5.5A8.38 8.38 0 0 1 3.5 11 8.38 8.38 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/>' },
+  { id: 'leads', label: 'Mass Texting', icon: '<path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.4 8.5 8.5 0 0 1-4-1L3 20l1.1-5.5A8.38 8.38 0 0 1 3.5 11 8.38 8.38 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/>' },
+  { id: 'leadweb', label: 'Lead Web', icon: '<circle cx="12" cy="12" r="9"/><path d="M2.5 12h19"/><path d="M12 2.5a15.5 15.5 0 0 1 0 19"/><path d="M12 2.5a15.5 15.5 0 0 0 0 19"/>' },
   { id: 'customers', label: 'Customers', icon: '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14c2.5.3 4.5 2.3 4.5 6"/>' },
   { id: 'schedule', label: 'Schedule', icon: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M8 3v4"/><path d="M16 3v4"/>' },
   { id: 'emails', label: 'Emails', icon: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>' },
@@ -1850,6 +2139,90 @@ window.closeSidebar = function() {
   document.getElementById('desktopSidebar').classList.remove('open');
   document.getElementById('sidebarBackdrop').classList.remove('open');
 };
+const AN_SOURCE_COLORS = { website:'#3b82f6', google_ads:'#8b5cf6', facebook:'#10b981', manual:'#f59e0b', scan:'#ef4444' };
+function renderAnalytics() {
+  const allLeads = [...leads, ...webLeads.map(l => ({ ...l, stage: l.stage || 'New' }))];
+  const totalLeads = allLeads.length;
+  const won = allLeads.filter(l => (l.stage||'New') === 'Won').length;
+  const conversion = totalLeads ? Math.round((won/totalLeads)*100) : 0;
+  document.getElementById('anTotalLeads').textContent = totalLeads;
+  document.getElementById('anConversion').textContent = conversion + '%';
+
+  const now = new Date();
+  const soldThisMonth = cars.filter(c => c.sold && c.soldAt && new Date(c.soldAt).getMonth() === now.getMonth() && new Date(c.soldAt).getFullYear() === now.getFullYear()).reduce((s,c) => s + (Number(c.price)||0), 0);
+  const pending = cars.filter(c => c.sold && !c.delivered).reduce((s,c) => s + (Number(c.price)||0), 0);
+  document.getElementById('anSoldMonth').textContent = '$' + soldThisMonth.toLocaleString();
+  document.getElementById('anPending').textContent = '$' + pending.toLocaleString();
+
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    months.push({ key: d.getFullYear()+'-'+d.getMonth(), label: d.toLocaleDateString(undefined,{month:'short'}), total: 0 });
+  }
+  cars.filter(c => c.sold && c.soldAt).forEach(c => {
+    const d = new Date(c.soldAt);
+    const key = d.getFullYear()+'-'+d.getMonth();
+    const m = months.find(x => x.key === key);
+    if (m) m.total += Number(c.price)||0;
+  });
+  const maxMonth = Math.max(1, ...months.map(m => m.total));
+  document.getElementById('anRevenueChart').innerHTML = `
+    <div style="display:flex;align-items:flex-end;gap:10px;height:160px;padding-top:10px;">
+      ${months.map(m => `
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;">
+          <div style="font-size:10px;color:var(--muted);">${m.total ? '$'+(m.total/1000).toFixed(1)+'k' : ''}</div>
+          <div style="width:100%;max-width:36px;background:var(--accent);border-radius:4px 4px 0 0;height:${Math.max(3,(m.total/maxMonth)*100)}%;"></div>
+          <div style="font-size:10px;color:var(--muted);">${m.label}</div>
+        </div>`).join('')}
+    </div>`;
+
+  const bySource = {};
+  allLeads.forEach(l => { const s = l.source || 'manual'; bySource[s] = (bySource[s]||0)+1; });
+  const sourceEntries = Object.entries(bySource).sort((a,b)=>b[1]-a[1]);
+  const sourceChartEl = document.getElementById('anSourceChart');
+  if (!sourceEntries.length) {
+    sourceChartEl.innerHTML = '<div class="dash-empty">No leads yet.</div>';
+  } else {
+    let cumulative = 0;
+    const gradParts = sourceEntries.map(([src,count]) => {
+      const pct = (count/totalLeads)*100;
+      const start = cumulative; cumulative += pct;
+      return `${AN_SOURCE_COLORS[src]||'#6b7280'} ${start}% ${cumulative}%`;
+    }).join(', ');
+    sourceChartEl.innerHTML = `
+      <div style="width:110px;height:110px;border-radius:50%;background:conic-gradient(${gradParts});flex-shrink:0;position:relative;">
+        <div style="position:absolute;inset:18px;background:var(--surface);border-radius:50%;"></div>
+      </div>
+      <div style="flex:1;min-width:0;">
+        ${sourceEntries.map(([src,count]) => `
+          <div class="an-legend-row">
+            <span class="an-legend-dot" style="background:${AN_SOURCE_COLORS[src]||'#6b7280'};"></span>
+            <span class="an-legend-name">${src.replace('_',' ')}</span>
+            <span class="an-legend-value">${count}</span>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  const maxSource = Math.max(1, ...sourceEntries.map(e=>e[1]));
+  document.getElementById('anChannelBars').innerHTML = sourceEntries.length ? sourceEntries.map(([src,count]) => `
+    <div class="an-bar-row">
+      <div class="an-bar-label">${src.replace('_',' ')}</div>
+      <div class="an-bar-track"><div class="an-bar-fill" style="width:${(count/maxSource)*100}%;background:${AN_SOURCE_COLORS[src]||'#6b7280'};"></div></div>
+      <div class="an-bar-value">${count}</div>
+    </div>`).join('') : '<div class="dash-empty">No leads yet.</div>';
+
+  const tableRows = sourceEntries.map(([src,count]) => {
+    const srcWon = allLeads.filter(l => (l.source||'manual')===src && (l.stage||'New')==='Won').length;
+    const rate = count ? Math.round((srcWon/count)*100) : 0;
+    return `<tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:8px 14px;text-transform:capitalize;">${src.replace('_',' ')}</td>
+      <td style="padding:8px 14px;text-align:right;color:var(--muted);">${count}</td>
+      <td style="padding:8px 14px;text-align:right;color:var(--muted);">${srcWon}</td>
+      <td style="padding:8px 14px;text-align:right;font-weight:700;color:${rate>=50?'#16a34a':rate>0?'#d97706':'var(--muted)'};">${rate}%</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('anSourceTable').innerHTML = tableRows || `<tr><td colspan="4" style="padding:14px;text-align:center;color:var(--muted);">No leads yet.</td></tr>`;
+}
 function renderDashboard() {
   const active = cars.filter(c => !c.sold && !c.delivered);
   document.getElementById('dashActiveCars').textContent = active.length;
@@ -1899,7 +2272,9 @@ window.switchTab = function(name) {
   if(name==='inventory') renderCars();
   if(name==='leads') renderLeads();
   if(name==='dashboard') renderDashboard();
+  if(name==='analytics') renderAnalytics();
   if(name==='customers') { document.getElementById('customerDetailView').style.display='none'; document.getElementById('customersListView').style.display='block'; window.renderCustomers(); }
+  if(name==='leadweb') { renderLeadWebLink(); renderWebLeads(); }
 };
 
 window.addCar = function() {
@@ -1941,6 +2316,7 @@ window.openEditCar = function(id) {
     if (el) el.value = car[EDIT_CAR_FIELDS[elId]] ?? '';
   });
   document.getElementById('ecPosted').checked = !!car.posted;
+  document.getElementById('ecPublished').checked = car.published !== false;
   document.getElementById('ecFeatures').value = Array.isArray(car.features) ? car.features.join(', ') : (car.features || '');
   window.switchTab('editcar');
 };
@@ -1957,6 +2333,7 @@ window.saveEditCar = function() {
     car[EDIT_CAR_FIELDS[elId]] = elId === 'ecStock' ? newStock : elId === 'ecVin' ? el.value.trim().toUpperCase() : el.value.trim();
   });
   car.posted = document.getElementById('ecPosted').checked;
+  car.published = document.getElementById('ecPublished').checked;
   const featuresRaw = document.getElementById('ecFeatures').value.trim();
   car.features = featuresRaw ? featuresRaw.split(',').map(f => f.trim()).filter(Boolean) : [];
   saveCars();
@@ -2410,7 +2787,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.10.4';
+const CURRENT_VERSION = '3.10.9';
 
 async function autoCheckVersion(silent = true) {
   try {
@@ -2479,6 +2856,16 @@ window.saveNewCustomer = function() {
   window.closeNewCustomer();
   window.renderCustomers();
   showToast('✅ Customer added!');
+};
+window.seedDemoCustomer = function() {
+  const demo = [
+    { name: 'Marc-André Fortin', phone: '8195552211', email: 'ma.fortin@gmail.com', address: '212 Rue Wellington, Gatineau', notes: 'Bought a 2023 Tucson. Financed through the dealership, 60-month term. Mentioned he might trade in his wife\'s car next year.', dealStatus: 'complete' },
+    { name: 'Nathalie Bergeron', phone: '8195558843', email: 'n.bergeron@outlook.com', address: '77 Boul. Gréber, Gatineau', notes: 'Interested in a Santa Fe, still deciding between that and the Sorento. Follow up next week.', dealStatus: 'active' },
+  ];
+  demo.forEach(d => customers.unshift({ id: `${Date.now()}_${Math.random().toString(36).slice(2,7)}`, ...d, date: new Date().toLocaleDateString('en-CA', { month:'short', day:'numeric' }) }));
+  saveCustomers();
+  window.renderCustomers();
+  showToast('✅ Demo customers added!');
 };
 window.deleteCustomer = function(id) {
   if (!confirm('Delete this customer?')) return;
@@ -2620,7 +3007,7 @@ window.addOneLead = function() {
   const addSel = document.getElementById('leadAddGroup');
   const g = (addSel && addSel.value) ? addSel.value : targetGroup();
   if (!leadGroups.includes(g)) { leadGroups.push(g); saveLeadGroups(); }
-  leads.unshift({ id: `${Date.now()}_${leadSeq++}`, name, phone, email, group: g, status:'new', stage:'New', addedAt:new Date().toLocaleDateString() });
+  leads.unshift({ id: `${Date.now()}_${leadSeq++}`, name, phone, email, group: g, status:'new', stage:'New', source:'manual', addedAt:new Date().toLocaleDateString() });
   saveLeads();
   ['leadAddName','leadAddPhone','leadAddEmail'].forEach(id => document.getElementById(id).value = '');
   renderLeads();
@@ -2703,7 +3090,7 @@ window.confirmLeads = function() {
   const g = targetGroup();
   document.querySelectorAll('#leadReviewItems input[type=checkbox]:checked').forEach(c => {
     const l = _pendingLeads[+c.dataset.idx]; if (!l) return;
-    leads.unshift({ id: `${Date.now()}_${leadSeq++}`, name:'', phone: l.type==='phone'?l.value:'', email: l.type==='email'?l.value:'', group: g, status:'new', stage:'New', addedAt:new Date().toLocaleDateString() });
+    leads.unshift({ id: `${Date.now()}_${leadSeq++}`, name:'', phone: l.type==='phone'?l.value:'', email: l.type==='email'?l.value:'', group: g, status:'new', stage:'New', source:'scan', addedAt:new Date().toLocaleDateString() });
     added++;
   });
   saveLeads();

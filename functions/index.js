@@ -2,9 +2,13 @@
 // The Twilio Auth Token NEVER lives in the app/repo — it's stored as a Firebase secret
 // and only read here, server-side. The app calls this function; it sends the text.
 
-const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const twilio = require("twilio");
+const admin = require("firebase-admin");
+
+admin.initializeApp();
+const db = admin.firestore();
 
 // These are set with: firebase functions:secrets:set NAME  (you type the value, never in code)
 const TWILIO_ACCOUNT_SID = defineSecret("TWILIO_ACCOUNT_SID");
@@ -44,3 +48,38 @@ exports.sendSms = onCall(
     }
   }
 );
+
+// ── Lead Web intake ─────────────────────────────────────────────────────────
+// Public webhook any dealership website (or, eventually, an ads platform) can POST
+// to. No Firebase Auth here — the caller is an external website, not a signed-in
+// user — so this endpoint validates + writes on the account's behalf using the
+// Admin SDK. Which account it lands in is decided by `uid` in the payload (each
+// Snake's Hustle account gets its own capture link/embed from Settings).
+exports.receiveWebLead = onRequest({ region: "us-central1", cors: true }, async (req, res) => {
+  if (req.method !== "POST") { res.status(405).send("Use POST"); return; }
+
+  const body = req.body || {};
+  const uid = String(body.uid || "").trim();
+  const name = String(body.name || "").trim().slice(0, 120);
+  const phoneDigits = String(body.phone || "").replace(/[^0-9]/g, "");
+  const email = String(body.email || "").trim().slice(0, 200);
+  const message = String(body.message || "").trim().slice(0, 1000);
+  const source = String(body.source || "website").trim().slice(0, 40);
+  const honeypot = String(body.company || ""); // hidden field — real humans leave it blank
+
+  if (honeypot) { res.json({ ok: true }); return; } // silently drop likely-bot submissions
+  if (!uid) { res.status(400).json({ ok: false, error: "Missing uid — this link isn't configured correctly." }); return; }
+  if (!name && !phoneDigits && !email) { res.status(400).json({ ok: false, error: "Enter at least a name, phone, or email." }); return; }
+
+  try {
+    await db.collection("users").doc(uid).collection("webLeads").add({
+      name, phone: phoneDigits, email, message, source,
+      status: "new",
+      receivedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("receiveWebLead error:", e && e.message);
+    res.status(500).json({ ok: false, error: "Something went wrong saving your info. Please call the dealership directly." });
+  }
+});

@@ -1,5 +1,5 @@
 {
-  "version": "3.10.4",
-  "releaseDate": "2026-07-13",
-  "changelog": "Added a download icon next to the edit pencil on each Inventory row — downloads that car's photos straight from the table, no need to expand the row first. Reuses the existing download-to-folder flow, so it warns you the same way if there are no photos yet or you're not on desktop Chrome."
+  "version": "3.10.9",
+  "releaseDate": "2026-07-14",
+  "changelog": "Added a D2C-style dealer classification row above Active/Sold/Delivered: All/New/Pre-owned/Not published/Certified pills with live counts. New/Pre-owned/Certified read car.condition (already tracked); Not published is a new car.published flag you can set manually on the Edit Vehicle page, or that Snake auto-detects when you scan a specific D2C tab (extension change, unverified against the live D2C DOM yet — needs a real first-scan check)."
 }

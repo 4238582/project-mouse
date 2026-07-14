@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Get in Touch</title>
+<link rel="icon" href="icon-192.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #f9fafb; color: #111827; font-family: 'DM Sans', sans-serif;
+  min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.card {
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 16px;
+  padding: 32px 28px; max-width: 420px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.06);
+}
+.logo { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+.logo img { width: 40px; height: 40px; border-radius: 10px; }
+.logo-text { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; color: #2563eb; }
+h1 { font-size: 19px; font-weight: 700; margin-bottom: 6px; }
+.sub { font-size: 13px; color: #6b7280; margin-bottom: 22px; }
+label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; margin-bottom: 5px; margin-top: 14px; }
+label:first-of-type { margin-top: 0; }
+input, textarea {
+  width: 100%; padding: 11px 13px; background: #f3f4f6; border: 1px solid #e5e7eb;
+  border-radius: 8px; font-family: inherit; font-size: 14px; color: #111827; outline: none;
+}
+input:focus, textarea:focus { border-color: #2563eb; }
+textarea { resize: vertical; min-height: 70px; }
+.honeypot { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+button {
+  width: 100%; margin-top: 20px; padding: 13px; background: #2563eb; color: #fff;
+  border: none; border-radius: 10px; font-family: 'Bebas Neue', sans-serif; font-size: 16px;
+  letter-spacing: 1px; cursor: pointer;
+}
+button:disabled { opacity: 0.6; cursor: default; }
+.error { color: #dc2626; font-size: 12px; margin-top: 10px; display: none; }
+.thanks { text-align: center; padding: 10px 0; }
+.thanks .big { font-size: 40px; margin-bottom: 12px; }
+.missing-uid { text-align: center; color: #6b7280; font-size: 14px; padding: 20px 0; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <img src="icon-192.png" alt="">
+    <div class="logo-text">GET IN TOUCH</div>
+  </div>
+
+  <div id="formState">
+    <h1>Interested in a vehicle?</h1>
+    <div class="sub">Leave your info and we'll reach out shortly.</div>
+    <form id="leadForm">
+      <label>Name</label>
+      <input name="name" required autocomplete="name">
+      <label>Phone</label>
+      <input name="phone" type="tel" autocomplete="tel">
+      <label>Email</label>
+      <input name="email" type="email" autocomplete="email">
+      <label>What are you looking for?</label>
+      <textarea name="message" placeholder="e.g. 2023 Tucson, trade-in question, financing…"></textarea>
+      <div class="honeypot"><label>Company</label><input name="company" tabindex="-1" autocomplete="off"></div>
+      <button type="submit" id="submitBtn">Send</button>
+      <div class="error" id="errorMsg"></div>
+    </form>
+  </div>
+</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const uid = params.get('uid');
+const FUNCTION_URL = 'https://us-central1-project-mouse-b7b28.cloudfunctions.net/receiveWebLead';
+
+const formState = document.getElementById('formState');
+if (!uid) {
+  formState.innerHTML = '<div class="missing-uid">This link is missing its destination — ask the dealership for a fresh link.</div>';
+} else {
+  document.getElementById('leadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const err = document.getElementById('errorMsg');
+    err.style.display = 'none';
+    const data = Object.fromEntries(new FormData(e.target).entries());
+    if (!data.name && !data.phone && !data.email) {
+      err.textContent = 'Enter at least a name, phone, or email.';
+      err.style.display = 'block';
+      return;
+    }
+    data.uid = uid;
+    data.source = 'website';
+    btn.disabled = true; btn.textContent = 'SENDING…';
+    try {
+      const res = await fetch(FUNCTION_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || 'Something went wrong');
+      formState.innerHTML = '<div class="thanks"><div class="big">✅</div><h1>Thanks!</h1><div class="sub">We\'ll be in touch shortly.</div></div>';
+    } catch (ex) {
+      btn.disabled = false; btn.textContent = 'Send';
+      err.textContent = ex.message || 'Something went wrong — please call us directly.';
+      err.style.display = 'block';
+    }
+  });
+}
+</script>
+</body>
+</html>
