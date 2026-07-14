@@ -484,6 +484,15 @@ input:focus, textarea:focus { border-color: var(--accent); }
     </div>
 
     <div class="card">
+      <div class="config-title">Buyer (once Sold/Delivered)</div>
+      <div class="row">
+        <div class="input-group"><label>Buyer Name</label><input type="text" id="ecBuyerName" placeholder="Who bought it"></div>
+        <div class="input-group"><label>Buyer Phone</label><input type="text" id="ecBuyerPhone" placeholder="(819) 555-1234"></div>
+      </div>
+      <p style="font-size:11px;color:var(--muted);margin-top:6px;">Kept for your records — Delivered cars auto-archive 5 days after delivery (removed from Inventory, but this info + sale details stay logged for a year in case of a dispute).</p>
+    </div>
+
+    <div class="card">
       <div class="config-title">General Information</div>
       <div class="row">
         <div class="input-group"><label>VIN</label><input type="text" id="ecVin" autocapitalize="characters"></div>
@@ -1321,6 +1330,24 @@ function markDeleted(id) {
   localStorage.setItem('pm_deleted', JSON.stringify(deletedIds));
 }
 
+// Sales archive: a data-only (no photos) fraud/audit record of every car that's been auto-removed
+// from Inventory, kept for ~1 year. Local-only for now (localStorage pm_archive).
+let salesArchive = JSON.parse(localStorage.getItem('pm_archive') || '[]');
+function saveArchive() {
+  const oneYearAgo = Date.now() - 365 * 86400000;
+  salesArchive = salesArchive.filter(a => a.removedAt >= oneYearAgo);
+  localStorage.setItem('pm_archive', JSON.stringify(salesArchive));
+}
+function archiveCar(car) {
+  salesArchive.push({
+    stock: car.stock || '', vin: car.vin || '', year: car.year || '', make: car.make || '', model: car.model || '',
+    price: car.price || '', condition: car.condition || 'Used',
+    buyerName: car.buyerName || '', buyerPhone: car.buyerPhone || '', notes: car.notes || '',
+    soldAt: car.soldAt || null, deliveredAt: car.deliveredAt || null, removedAt: Date.now(),
+  });
+  saveArchive();
+}
+
 // ============ CORE FUNCTIONS ============
 function showToast(msg, duration = 2500) {
   const t = document.getElementById('toast');
@@ -1567,6 +1594,8 @@ window.markSold = function(id, status) {
   car.delivered = status === 'delivered';
   if (status === 'sold' && !car.soldAt) car.soldAt = Date.now();
   if (status === 'active') car.soldAt = null;
+  if (status === 'delivered' && !car.deliveredAt) car.deliveredAt = Date.now();
+  if (status !== 'delivered') car.deliveredAt = null; // moved back out of Delivered — cancel the auto-archive clock
   saveCars(); renderCars();
   const msg = status === 'sold' ? '🏷️ Marked as sold!' : status === 'delivered' ? '✅ Marked as delivered!' : '↩ Moved back to active';
   showToast(msg);
@@ -2306,6 +2335,7 @@ const EDIT_CAR_FIELDS = {
   ecTransmission: 'transmission', ecDrivetrain: 'drivetrain', ecExteriorColor: 'exteriorColor',
   ecInteriorColor: 'interiorColor', ecDoors: 'doors', ecFuelType: 'fuelType',
   ecEngine: 'engine', ecCylinders: 'cylinders',
+  ecBuyerName: 'buyerName', ecBuyerPhone: 'buyerPhone',
 };
 window.openEditCar = function(id) {
   const car = cars.find(c => c.id === id);
@@ -2578,6 +2608,35 @@ window.deleteCar = async function(id) {
   }
 };
 
+// Auto-archive: Delivered cars get pulled off Inventory 5 days after delivery (same hard-delete
+// as the 🗑️ button — car + Storage photos gone), but first a data-only record (no photos) is
+// logged to salesArchive for ~1 year in case a fraud/dispute question comes up later.
+const DELIVERED_RETENTION_MS = 5 * 86400000;
+async function sweepDeliveredExpiry() {
+  const now = Date.now();
+  const expired = cars.filter(c => c.delivered && c.deliveredAt && (now - c.deliveredAt) >= DELIVERED_RETENTION_MS);
+  if (!expired.length) return;
+  for (const car of expired) {
+    archiveCar(car);
+    markDeleted(car.id);
+    if (currentUser) {
+      for (const photo of car.photos) {
+        if (photo.uploaded && photo.id) {
+          try {
+            await deleteObject(storageRef(storage, `users/${currentUser.uid}/cars/${car.id}/${photo.id}.jpg`));
+          } catch (e) {}
+        }
+      }
+    }
+  }
+  const expiredIds = new Set(expired.map(c => c.id));
+  cars = cars.filter(c => !expiredIds.has(c.id));
+  saveCars();
+  if (currentUser) autoPushToCloud(true);
+  renderCars();
+  showToast(`🗄️ ${expired.length} delivered car${expired.length > 1 ? 's' : ''} auto-archived (5+ days delivered)`);
+}
+
 window.copyCarInfo = function(id) {
   const car = cars.find(c => c.id === id);
   if(!car) return;
@@ -2787,7 +2846,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.10.9';
+const CURRENT_VERSION = '3.11.0';
 
 async function autoCheckVersion(silent = true) {
   try {
@@ -3220,6 +3279,9 @@ const lc = localStorage.getItem('pm_last_checked');
 if(lc) document.getElementById('lastChecked').textContent = 'Last checked: ' + lc;
 
 if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
+sweepDeliveredExpiry(); // check on load
+setInterval(() => { if(document.visibilityState === 'visible') sweepDeliveredExpiry(); }, 3600000); // + hourly while open
 
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', e => {

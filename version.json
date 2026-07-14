@@ -1,5 +1,5 @@
 {
-  "version": "3.10.9",
+  "version": "3.11.0",
   "releaseDate": "2026-07-14",
-  "changelog": "Added a D2C-style dealer classification row above Active/Sold/Delivered: All/New/Pre-owned/Not published/Certified pills with live counts. New/Pre-owned/Certified read car.condition (already tracked); Not published is a new car.published flag you can set manually on the Edit Vehicle page, or that Snake auto-detects when you scan a specific D2C tab (extension change, unverified against the live D2C DOM yet — needs a real first-scan check)."
+  "changelog": "Delivered cars now auto-remove from Inventory 5 days after delivery (same as pressing Delete — car + Storage photos are gone). Before that happens, a data-only record (stock#, VIN, price, buyer name/phone, sold/delivered dates — no photos) is logged to a local sales archive kept for ~1 year, in case a dispute or fraud question comes up later. Added Buyer Name/Phone fields to the Edit Vehicle page so that info gets captured before the car is archived. Runs automatically on app load + hourly while the app is open."
 }
