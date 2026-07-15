@@ -1,5 +1,5 @@
 {
-  "version": "3.12.0",
+  "version": "3.12.1",
   "releaseDate": "2026-07-14",
-  "changelog": "Schedule is now a real month-grid calendar (was 'Coming soon') — click a day or the + New Event button to add an Appointment/Task/Delivery with time and notes, click an event chip to edit or delete it, prev/next month + Today navigation. Local-only for now (localStorage), hand-rolled vanilla JS (no calendar library). First step of the bigger PestDesk-integration pass; Analytics and the Customers client-sheet already largely match PestDesk's design from an earlier session — Leads pipeline and deeper client-sheet/car-purchase linking are still to come."
+  "changelog": "Moved the Lead Web capture link, embed code, and marketing integrations into a new Settings → Lead Setup panel. Lead Web itself is now just the live Incoming Leads feed. Also added a demo customer via the existing Add Demo button so you can see the client-sheet detail view."
 }
