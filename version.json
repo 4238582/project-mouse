@@ -1,5 +1,5 @@
 {
-  "version": "3.12.1",
+  "version": "3.13.0",
   "releaseDate": "2026-07-14",
-  "changelog": "Moved the Lead Web capture link, embed code, and marketing integrations into a new Settings → Lead Setup panel. Lead Web itself is now just the live Incoming Leads feed. Also added a demo customer via the existing Add Demo button so you can see the client-sheet detail view."
+  "changelog": "Lead Web leads are now clickable — each opens an Activix-style client sheet: bilingual FR/EN deal pipeline (Soumission/Submission, Échange/Exchange, Présentation/Presentation, Vente/Sale, Financement/Financing, Livraison/Delivery), Tasks & Appointments (wired into the real Schedule calendar), Communications log, Notes log, an Offer Browser to link the lead to an actual vehicle from Inventory (pulls real stock#/VIN/price/colors), and general lead info (source, received date, original message)."
 }

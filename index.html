@@ -179,6 +179,23 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .cal-event.type-task { background: rgba(217,119,6,0.14); color: #d97706; }
 .cal-event.type-delivery { background: rgba(22,163,74,0.14); color: var(--success); }
 @media (max-width: 640px) { .cal-day { min-height: 64px; } .cal-event { font-size: 9px; } }
+
+/* Lead Web client sheet: Activix-style deal pipeline stepper + 3-up info cards */
+.deal-stepper { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+.deal-step { flex: 1; min-width: 110px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); cursor: pointer; text-align: center; }
+.deal-step-fr { font-size: 12.5px; font-weight: 700; color: var(--text); }
+.deal-step-en { font-size: 10px; color: var(--muted); }
+.deal-step.done { border-color: var(--success); background: rgba(22,163,74,0.08); }
+.deal-step.done .deal-step-fr { color: var(--success); }
+.deal-step.current { border-color: var(--accent); background: var(--accent); }
+.deal-step.current .deal-step-fr, .deal-step.current .deal-step-en { color: #fff; }
+.lead-info-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+@media (max-width: 800px) { .lead-info-row { grid-template-columns: 1fr; } }
+.lead-info-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+.lead-info-card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 10px; }
+.lead-log-item { padding: 8px 0; border-top: 1px solid var(--border); font-size: 12.5px; }
+.lead-log-item:first-child { border-top: none; }
+.lead-log-meta { font-size: 10px; color: var(--muted); margin-top: 2px; }
 .btn-sold { background: none; border: 1px solid #ff3b30; color: #ff3b30; border-radius: 6px; font-size: 11px; font-weight: 700; padding: 3px 8px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
 .btn-sold:hover { background: #ff3b30; color: #fff; }
 .btn-unsold { background: none; border: 1px solid var(--muted); color: var(--muted); border-radius: 6px; font-size: 11px; font-weight: 700; padding: 3px 8px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
@@ -996,7 +1013,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
 // ============ FIREBASE ============
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, query, orderBy, deleteDoc, updateDoc, addDoc, serverTimestamp, writeBatch } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, query, orderBy, deleteDoc, updateDoc, addDoc, serverTimestamp, writeBatch, arrayUnion } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { getStorage, ref as storageRef, uploadString, getDownloadURL, deleteObject, listAll, getBytes, getBlob } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
 import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -1169,6 +1186,15 @@ function stopCloudSync() {
 
 // ── Lead Web — real-time listener on users/{uid}/webLeads, populated by the
 // receiveWebLead Cloud Function (a public webhook external sites POST to). ──
+// Activix-style deal pipeline for a Lead Web lead (bilingual labels — JP works FR/EN).
+const LEAD_STAGES = [
+  { key: 'submission',   fr: 'Soumission',    en: 'Submission' },
+  { key: 'exchange',     fr: 'Échange',       en: 'Exchange' },
+  { key: 'presentation', fr: 'Présentation',  en: 'Presentation' },
+  { key: 'sale',         fr: 'Vente',         en: 'Sale' },
+  { key: 'financing',    fr: 'Financement',   en: 'Financing' },
+  { key: 'delivery',     fr: 'Livraison',     en: 'Delivery' },
+];
 let webLeads = [];
 let webLeadsUnsub = null;
 function startWebLeadsSync() {
@@ -1220,6 +1246,172 @@ window.deleteWebLead = async function(id) {
   try { await deleteDoc(doc(db, 'users', currentUser.uid, 'webLeads', id)); }
   catch (e) { showToast('⚠️ Could not delete: ' + e.message); }
 };
+
+// ── Lead Web client sheet (Activix-style detail page) ──────────────────────
+// Updates the in-memory lead immediately (so the UI feels instant even offline),
+// then best-effort persists to Firestore when signed in.
+function updateWebLead(id, fields) {
+  const l = webLeads.find(x => x.id === id);
+  if (l) Object.assign(l, fields);
+  if (currentUser) {
+    updateDoc(doc(db, 'users', currentUser.uid, 'webLeads', id), fields)
+      .catch(e => showToast('⚠️ Sync failed: ' + e.message));
+  }
+}
+window.openWebLeadDetail = function(id) {
+  document.getElementById('webLeadsListView').style.display = 'none';
+  document.getElementById('webLeadDetailView').style.display = 'block';
+  renderWebLeadDetail(id);
+};
+window.backToWebLeadsList = function() {
+  document.getElementById('webLeadDetailView').style.display = 'none';
+  document.getElementById('webLeadsListView').style.display = 'block';
+  renderWebLeads();
+};
+window.setWebLeadStage = function(id, stageKey) {
+  updateWebLead(id, { stage: stageKey });
+  renderWebLeadDetail(id);
+};
+window.addWebLeadNote = function(id) {
+  const input = document.getElementById('leadNoteInput');
+  const text = input.value.trim();
+  if (!text) return;
+  const entry = { id: 'n' + Date.now(), text, createdAt: Date.now() };
+  const l = webLeads.find(x => x.id === id);
+  const notesLog = (l && l.notesLog ? l.notesLog : []).concat([entry]);
+  updateWebLead(id, { notesLog });
+  if (currentUser) updateDoc(doc(db, 'users', currentUser.uid, 'webLeads', id), { notesLog: arrayUnion(entry) }).catch(() => {});
+  renderWebLeadDetail(id);
+};
+window.addWebLeadComm = function(id) {
+  const type = document.getElementById('commType').value;
+  const text = document.getElementById('commText').value.trim();
+  if (!text) return;
+  const entry = { id: 'c' + Date.now(), type, text, createdAt: Date.now() };
+  const l = webLeads.find(x => x.id === id);
+  const commsLog = (l && l.commsLog ? l.commsLog : []).concat([entry]);
+  updateWebLead(id, { commsLog });
+  if (currentUser) updateDoc(doc(db, 'users', currentUser.uid, 'webLeads', id), { commsLog: arrayUnion(entry) }).catch(() => {});
+  renderWebLeadDetail(id);
+};
+window.linkCarToWebLead = function(id) {
+  const sel = document.getElementById('leadCarPicker');
+  if (!sel || !sel.value) return;
+  updateWebLead(id, { linkedCarId: sel.value });
+  renderWebLeadDetail(id);
+};
+window.unlinkCarFromWebLead = function(id) {
+  updateWebLead(id, { linkedCarId: null });
+  renderWebLeadDetail(id);
+};
+window.addLeadTask = function(leadId) {
+  window.switchTab('schedule');
+  window.openNewEvent();
+  pendingEventLeadId = leadId;
+};
+window.goToLeadTask = function(eventId) {
+  const ev = calendarEvents.find(e => e.id === eventId);
+  if (!ev) return;
+  window.switchTab('schedule');
+  const [y, m] = ev.date.split('-').map(Number);
+  calViewDate = new Date(y, m - 1, 1);
+  renderCalendar();
+  window.openEditEvent(eventId);
+};
+function renderWebLeadDetail(id) {
+  const l = webLeads.find(x => x.id === id);
+  const view = document.getElementById('webLeadDetailView');
+  if (!l || !view) return;
+  const stage = l.stage || 'submission';
+  const stageIdx = LEAD_STAGES.findIndex(s => s.key === stage);
+  const linkedCar = l.linkedCarId ? cars.find(c => String(c.id) === String(l.linkedCarId)) : null;
+  const availableCars = cars.filter(c => !c.sold && !c.delivered);
+  const tasks = calendarEvents.filter(e => e.leadId === id).sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+  const notesLog = (l.notesLog || []).slice().reverse();
+  const commsLog = (l.commsLog || []).slice().reverse();
+
+  view.innerHTML = `
+    <button class="btn btn-secondary" style="width:auto;padding:8px 12px;margin-bottom:14px;" onclick="window.backToWebLeadsList()">← Back to Leads</button>
+
+    <div class="dash-panel" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px;">
+      <div class="dash-avatar" style="width:52px;height:52px;font-size:16px;flex-shrink:0;">${custInitials(l.name || '?')}</div>
+      <div style="flex:1;min-width:200px;">
+        <div style="font-weight:700;font-size:17px;">${l.name || 'Unnamed'}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:5px;display:flex;gap:14px;flex-wrap:wrap;">
+          <span>${l.phone ? formatPhone(l.phone) : 'No phone'}</span>
+          <span>${l.email || 'No email'}</span>
+          <span class="status-pill topost">${l.source || 'website'}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="deal-stepper">
+      ${LEAD_STAGES.map((s, i) => `<div class="deal-step ${i < stageIdx ? 'done' : ''} ${i === stageIdx ? 'current' : ''}" onclick="window.setWebLeadStage('${id}','${s.key}')">
+        <div class="deal-step-fr">${s.fr}</div>
+        <div class="deal-step-en">${s.en}</div>
+      </div>`).join('')}
+    </div>
+
+    <div class="lead-info-row">
+      <div class="lead-info-card">
+        <div class="lead-info-card-title">Tâches et rendez-vous <span style="text-transform:none;">(Tasks &amp; Appointments)</span></div>
+        ${tasks.length ? tasks.map(t => `<div class="lead-log-item" style="cursor:pointer;" onclick="window.goToLeadTask('${t.id}')">${t.title}<div class="lead-log-meta">${t.date}${t.time ? ' · ' + t.time : ''}</div></div>`).join('') : `<div style="font-size:12px;color:var(--muted);">Aucune tâche planifiée (No tasks yet)</div>`}
+        <button class="btn btn-secondary" style="width:100%;margin-top:10px;font-size:12px;padding:8px;" onclick="window.addLeadTask('${id}')">+ Ajouter (Add)</button>
+      </div>
+      <div class="lead-info-card">
+        <div class="lead-info-card-title">Communications</div>
+        ${commsLog.length ? commsLog.map(c => `<div class="lead-log-item"><b>${c.type}</b> — ${c.text}<div class="lead-log-meta">${new Date(c.createdAt).toLocaleString()}</div></div>`).join('') : `<div style="font-size:12px;color:var(--muted);">Aucune communication (No communications yet)</div>`}
+        <div style="display:flex;gap:6px;margin-top:10px;">
+          <select id="commType" style="padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;">
+            <option value="call">📞 Call</option>
+            <option value="sms">💬 SMS</option>
+            <option value="email">✉️ Email</option>
+          </select>
+          <input id="commText" type="text" placeholder="Log a note…" style="flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;">
+        </div>
+        <button class="btn btn-secondary" style="width:100%;margin-top:8px;font-size:12px;padding:8px;" onclick="window.addWebLeadComm('${id}')">+ Log</button>
+      </div>
+      <div class="lead-info-card">
+        <div class="lead-info-card-title">Notes</div>
+        ${notesLog.length ? notesLog.map(n => `<div class="lead-log-item">${n.text}<div class="lead-log-meta">${new Date(n.createdAt).toLocaleString()}</div></div>`).join('') : `<div style="font-size:12px;color:var(--muted);">Aucune note (No notes yet)</div>`}
+        <textarea id="leadNoteInput" rows="2" placeholder="Ajoutez une note…" style="width:100%;margin-top:10px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;"></textarea>
+        <button class="btn btn-secondary" style="width:100%;margin-top:8px;font-size:12px;padding:8px;" onclick="window.addWebLeadNote('${id}')">+ Ajouter (Add)</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="config-title">Navigateur d'offres <span style="font-weight:400;font-size:12px;color:var(--muted);">(Offer Browser)</span></div>
+      ${linkedCar ? `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:10px;background:var(--surface2);border-radius:10px;">
+          <div>
+            <div style="font-weight:700;">${linkedCar.year || ''} ${linkedCar.make || ''} ${linkedCar.model || ''}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:3px;">Stock ${linkedCar.stock || '—'} · VIN ${linkedCar.vin || '—'} · ${linkedCar.exteriorColor || '—'} ext / ${linkedCar.interiorColor || '—'} int</div>
+            <div style="font-size:13px;color:var(--accent);font-weight:700;margin-top:4px;">$${linkedCar.price ? Number(linkedCar.price).toLocaleString() : '—'}</div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-secondary" style="width:auto;padding:8px 12px;font-size:12px;" onclick="window.switchTab('inventory');window.filterCars('${(linkedCar.stock || '').replace(/'/g, "\\'")}')">Détails du véhicule</button>
+            <button class="btn-danger" style="padding:8px 10px;" onclick="window.unlinkCarFromWebLead('${id}')">✕</button>
+          </div>
+        </div>` : `
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select id="leadCarPicker" style="flex:1;min-width:200px;padding:9px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;">
+            <option value="">— Select a vehicle —</option>
+            ${availableCars.map(c => `<option value="${c.id}">${c.stock || ''} — ${c.year || ''} ${c.make || ''} ${c.model || ''}</option>`).join('')}
+          </select>
+          <button class="btn btn-primary" style="width:auto;padding:9px 16px;font-size:13px;" onclick="window.linkCarToWebLead('${id}')">Link Vehicle</button>
+        </div>`}
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <div class="config-title">Information générale <span style="font-weight:400;font-size:12px;color:var(--muted);">(General Information)</span></div>
+      <div class="row">
+        <div class="input-group"><label>Source</label><div style="font-size:14px;padding:8px 0;">${l.source || 'website'}</div></div>
+        <div class="input-group"><label>Received</label><div style="font-size:14px;padding:8px 0;">${l.receivedAt?.toDate ? l.receivedAt.toDate().toLocaleString() : '—'}</div></div>
+      </div>
+      ${l.message ? `<div class="input-group"><label>Original message</label><div style="font-size:13px;padding:10px;background:var(--surface2);border-radius:8px;">${l.message}</div></div>` : ''}
+    </div>
+  `;
+}
 const DEMO_WEB_LEADS = [
   { name: 'Martin Rousseau', phone: '8195551042', email: 'm.rousseau@gmail.com', message: 'Interested in the 2024 Hyundai Kona — is it still available? Looking to trade in a 2018 Elantra.', source: 'website' },
   { name: 'Sylvie Côté', phone: '8195557788', email: 'sylvie.cote@outlook.com', message: 'What financing options do you have on the Tucson? Looking for something under $400/month.', source: 'google_ads' },
@@ -1525,6 +1717,7 @@ let calendarEvents = JSON.parse(localStorage.getItem('pm_calendar') || '[]');
 function saveCalendarEvents() { localStorage.setItem('pm_calendar', JSON.stringify(calendarEvents)); }
 let calViewDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 let editingEventId = null;
+let pendingEventLeadId = null; // set by window.addLeadTask right after opening a fresh New Event form
 function pad2(n) { return String(n).padStart(2, '0'); }
 function dateKey(y, m, d) { return `${y}-${pad2(m + 1)}-${pad2(d)}`; }
 
@@ -1567,6 +1760,7 @@ window.calGoToday = function() {
 };
 window.openNewEvent = function(dateKeyStr) {
   editingEventId = null;
+  pendingEventLeadId = null; // reset — window.addLeadTask sets this right after calling openNewEvent
   document.getElementById('eventFormTitle').textContent = 'New Event';
   document.getElementById('evTitle').value = '';
   const today = new Date();
@@ -1608,7 +1802,7 @@ window.saveEvent = function() {
     const ev = calendarEvents.find(e => e.id === editingEventId);
     if (ev) Object.assign(ev, fields);
   } else {
-    calendarEvents.push(Object.assign({ id: 'ev' + Date.now() }, fields));
+    calendarEvents.push(Object.assign({ id: 'ev' + Date.now(), leadId: pendingEventLeadId || null }, fields));
   }
   saveCalendarEvents();
   window.closeEventForm();
@@ -3123,7 +3317,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.12.1';
+const CURRENT_VERSION = '3.13.0';
 
 async function autoCheckVersion(silent = true) {
   try {
