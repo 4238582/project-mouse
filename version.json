@@ -1,5 +1,5 @@
 {
-  "version": "3.13.0",
-  "releaseDate": "2026-07-14",
-  "changelog": "Lead Web leads are now clickable — each opens an Activix-style client sheet: bilingual FR/EN deal pipeline (Soumission/Submission, Échange/Exchange, Présentation/Presentation, Vente/Sale, Financement/Financing, Livraison/Delivery), Tasks & Appointments (wired into the real Schedule calendar), Communications log, Notes log, an Offer Browser to link the lead to an actual vehicle from Inventory (pulls real stock#/VIN/price/colors), and general lead info (source, received date, original message)."
+  "version": "3.23.0",
+  "releaseDate": "2026-07-16",
+  "changelog": "Sidebar now behaves like Activix's: it collapses to a slim 70px icon rail and slides open to 256px when you mouse over it, using Activix's exact timing (0.3s). The expanded rail overlays the page instead of pushing it, so nothing reflows while you hover. Labels fade in with it. Added Activix's 'Verrouiller la navigation' (Lock navigation) control at the bottom — click it to pin the menu open permanently (that mode does push the content over), and the choice is remembered per device. Mobile still uses the hamburger drawer."
 }

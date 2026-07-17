@@ -15,7 +15,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Source+Sans+3:wght@400;600;700&display=swap');
 :root {
   color-scheme: light;
   --bg: #ffffff; --surface: #ffffff; --surface2: #f3f4f6;
@@ -179,23 +179,265 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .cal-event.type-task { background: rgba(217,119,6,0.14); color: #d97706; }
 .cal-event.type-delivery { background: rgba(22,163,74,0.14); color: var(--success); }
 @media (max-width: 640px) { .cal-day { min-height: 64px; } .cal-event { font-size: 9px; } }
+/* Calendar toolbar + view toggle (Activix-style) */
+.cal-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.cal-toolbar-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cal-view-toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.cal-view-toggle button { padding: 7px 16px; font-size: 13px; border: none; background: var(--surface); color: var(--muted); cursor: pointer; font-family: inherit; border-left: 1px solid var(--border); }
+.cal-view-toggle button:first-child { border-left: none; }
+.cal-view-toggle button.active { background: var(--accent); color: #fff; font-weight: 600; }
+.cal-legend { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 10px 4px 0; font-size: 12px; }
+.cal-legend-item { display: inline-flex; align-items: center; gap: 6px; }
+.cal-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+/* Week view */
+.cal-week { display: grid; grid-template-columns: repeat(7, 1fr); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.cal-week-col { border-right: 1px solid var(--border); min-height: 340px; display: flex; flex-direction: column; }
+.cal-week-col:nth-child(7n) { border-right: none; }
+.cal-week-head { padding: 8px; text-align: center; border-bottom: 1px solid var(--border); background: var(--surface2); cursor: pointer; }
+.cal-week-head.today { background: rgba(37,99,235,0.1); }
+.cal-week-dow { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.cal-week-date { font-size: 16px; font-weight: 700; margin-top: 2px; }
+.cal-week-head.today .cal-week-date { color: var(--accent); }
+.cal-week-body { padding: 6px; display: flex; flex-direction: column; gap: 4px; flex: 1; cursor: pointer; }
+.cal-week-body:hover { background: var(--surface2); }
+@media (max-width: 760px) { .cal-week { grid-template-columns: 1fr; } .cal-week-col { min-height: auto; } }
+/* Day view */
+.cal-day-view { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.cal-day-head { padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface2); font-weight: 700; }
+.cal-day-list { padding: 8px; }
+.cal-day-row { display: flex; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 8px; cursor: pointer; }
+.cal-day-row:hover { background: var(--surface2); }
+.cal-day-time { font-size: 13px; font-weight: 700; color: var(--muted); width: 60px; flex-shrink: 0; }
+.cal-day-bar { width: 4px; align-self: stretch; border-radius: 2px; flex-shrink: 0; }
+.cal-day-bar.type-appointment { background: var(--accent); }
+.cal-day-bar.type-task { background: #d97706; }
+.cal-day-bar.type-delivery { background: var(--success); }
+.cal-empty-cal { text-align: center; padding: 50px 20px; color: var(--muted); font-size: 14px; }
 
-/* Lead Web client sheet: Activix-style deal pipeline stepper + 3-up info cards */
-.deal-stepper { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
-.deal-step { flex: 1; min-width: 110px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); cursor: pointer; text-align: center; }
-.deal-step-fr { font-size: 12.5px; font-weight: 700; color: var(--text); }
-.deal-step-en { font-size: 10px; color: var(--muted); }
-.deal-step.done { border-color: var(--success); background: rgba(22,163,74,0.08); }
+/* ── Lead Web client sheet — rebuilt to match Activix exactly (values pulled live off
+   crm.activix.ca via computed styles, not eyeballed): Source Sans Pro, 14px base,
+   steel blue #3e8dbc buttons (radius 3.5px), green pill #00a65a, borders #e9e9e9-ish,
+   white cards separated by a soft shadow, 10px uppercase gray field labels. ── */
+#webLeadDetailView { font-family: 'Source Sans 3', 'Source Sans Pro', 'DM Sans', sans-serif; font-size: 14px; }
+.ax-card { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 16px; }
+.ax-card-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; border-bottom: 1px solid var(--border); }
+.ax-card-title { font-size: 15.5px; font-weight: 600; color: var(--text); margin: 0; }
+.ax-card-body { padding: 16px 20px; }
+.ax-head-icons { display: flex; gap: 4px; }
+.ax-icon-sq { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 3.5px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); cursor: pointer; }
+.ax-icon-sq:hover { color: var(--text); border-color: var(--muted); }
+.ax-icon-sq .icon { width: 15px; height: 15px; }
+.ax-btn-blue { display: inline-flex; align-items: center; justify-content: center; gap: 5px; background: #3e8dbc; border: 1px solid #2e7fad; color: #fff; border-radius: 3.5px; padding: 5px 11px; font-size: 12.5px; font-weight: 400; cursor: pointer; font-family: inherit; }
+.ax-btn-blue:hover { background: #2e7fad; }
+.ax-btn-outline { display: inline-flex; align-items: center; justify-content: center; gap: 5px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 3.5px; padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.ax-btn-outline:hover { border-color: var(--muted); }
+.ax-btn-outline-blue { display: inline-flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid #3e8dbc; color: #3e8dbc; border-radius: 3.5px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.ax-pill-green { display: inline-flex; align-items: center; gap: 4px; background: #00a65a; color: #fff; border-radius: 999px; padding: 2px 11px 2px 7px; font-size: 12px; }
+.ax-pill-green .icon { width: 12px; height: 12px; }
+.ax-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 3px; display: flex; align-items: center; gap: 4px; }
+.ax-label .icon { width: 10px; height: 10px; opacity: .7; }
+.ax-value { font-size: 14px; color: var(--text); min-height: 20px; }
+.ax-input { width: 100%; box-sizing: border-box; padding: 7px 9px; font-size: 13.5px; background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-family: inherit; }
+.ax-input:focus { outline: none; border-color: #3e8dbc; }
+
+/* Stage panels (Présentation/Vente/Financement/Livraison checklists — layouts lifted from Activix) */
+.ax-panel-subtitle { font-size: 14.5px; font-weight: 600; color: var(--text); margin: 20px 0 14px; }
+.ax-panel-subtitle:first-child { margin-top: 0; }
+.ax-check-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px 22px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 5px; }
+@media (max-width: 900px) { .ax-check-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 540px) { .ax-check-grid { grid-template-columns: 1fr; } }
+.ax-check-date { font-size: 11.5px; color: var(--muted); }
+
+/* Small contextual dropdown (vehicle ••• actions) */
+.ax-menu-pop { position: absolute; right: 0; top: calc(100% + 4px); background: var(--surface); border: 1px solid var(--border); border-radius: 5px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); min-width: 240px; z-index: 90; padding: 4px; text-align: left; }
+.ax-menu-item { display: flex; gap: 9px; align-items: center; padding: 8px 10px; font-size: 13px; border-radius: 4px; cursor: pointer; color: var(--text); white-space: nowrap; }
+.ax-menu-item:hover { background: var(--surface2); }
+.ax-menu-item.danger { color: var(--danger); }
+.ax-menu-item .icon { width: 14px; height: 14px; flex-shrink: 0; }
+
+/* Note @-tag picker + chips (Activix's person-icon colleague tagger) */
+.ax-tagpicker { position: absolute; left: 0; top: calc(100% + 4px); width: 230px; max-height: 220px; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 5px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); z-index: 90; padding: 6px; }
+.ax-tagpicker label { display: flex; gap: 8px; align-items: center; padding: 5px 8px; font-size: 13px; border-radius: 4px; cursor: pointer; color: var(--text); }
+.ax-tagpicker label:hover { background: var(--surface2); }
+.note-tag-chip { display: inline-flex; align-items: center; background: rgba(62,141,188,0.14); color: #3e8dbc; border-radius: 999px; padding: 1px 9px; font-size: 11px; font-weight: 600; margin: 4px 4px 0 0; }
+.note-tag-badge { position: absolute; top: -5px; right: -5px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 8px; background: #3e8dbc; color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.note-tag-indicator { display: inline-flex; align-items: center; gap: 2px; background: rgba(62,141,188,0.14); color: #3e8dbc; border-radius: 999px; padding: 1px 7px 1px 5px; font-size: 11px; font-weight: 700; cursor: default; }
+.note-tag-indicator .icon { width: 12px; height: 12px; }
+.ax-note-action { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 5px; color: var(--muted); cursor: pointer; }
+.ax-note-action:hover { background: var(--surface2); color: var(--text); }
+.ax-note-action.danger:hover { color: var(--danger); }
+.ax-note-action .icon { width: 14px; height: 14px; }
+.note-file-chip { display: inline-flex; align-items: center; gap: 4px; background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; padding: 3px 8px; font-size: 11.5px; color: var(--text); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.notif-wrap { position: relative; }
+.notif-badge { position: absolute; top: -4px; right: -4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--danger); color: #fff; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.ax-value.dim { color: var(--muted); }
+.ax-topstrip { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.ax-source-tag { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.ax-avatar-box { position: relative; width: 84px; height: 84px; border-radius: 4px; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--muted); flex-shrink: 0; }
+.ax-avatar-box .icon { width: 38px; height: 38px; }
+.ax-avatar-dot { position: absolute; right: -4px; bottom: -4px; width: 13px; height: 13px; border-radius: 50%; background: #00a65a; border: 2px solid var(--surface); }
+.ax-name { font-size: 19px; font-weight: 400; color: var(--text); }
+.ax-name b { font-weight: 700; }
+.ax-header-icons { display: flex; align-items: center; margin-left: auto; }
+.ax-header-icons button { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 42px; height: 36px; padding: 0 10px; background: none; border: none; border-left: 1px solid var(--border); color: var(--muted); cursor: pointer; font-size: 12.5px; font-family: inherit; }
+.ax-header-icons button:hover { color: var(--text); }
+.ax-header-icons .icon { width: 17px; height: 17px; }
+.ax-reps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding-top: 12px; margin-top: 12px; border-top: 1px solid var(--border); }
+@media (max-width: 760px) { .ax-reps { grid-template-columns: repeat(2, 1fr); } }
+.ax-rep-value { display: flex; align-items: center; justify-content: space-between; font-size: 13.5px; color: var(--text); }
+.ax-rep-value .caret { color: var(--muted); font-size: 10px; }
+.ax-rep-select { width: 100%; padding: 4px 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 3.5px; color: var(--text); font-size: 13.5px; font-family: inherit; }
+.ax-summary-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 16px; }
+@media (max-width: 800px) { .ax-summary-row { grid-template-columns: 1fr; } }
+.ax-summary-body { display: flex; align-items: center; gap: 12px; padding: 16px 20px; font-size: 13px; color: var(--text); }
+.ax-summary-body .icon { width: 34px; height: 34px; color: var(--muted); opacity: .6; flex-shrink: 0; }
+.ax-count-box { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 26px; border: 1px solid var(--border); border-radius: 3.5px; font-size: 13px; font-weight: 600; background: var(--surface); }
+.ax-vehicle-row { display: flex; gap: 0; align-items: stretch; border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
+.ax-vehicle-bar { width: 5px; background: var(--muted); opacity: .35; flex-shrink: 0; }
+.ax-vehicle-inner { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; padding: 16px; flex: 1; }
+.ax-vehicle-thumb { width: 120px; color: var(--muted); flex-shrink: 0; }
+.ax-mono { font-family: 'SFMono-Regular', Consolas, monospace; font-size: 11.5px; color: var(--muted); line-height: 1.7; }
+.ax-mono b { color: var(--text); font-weight: 600; }
+.ax-stock-badge { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 2px; padding: 1px 7px; font-size: 10px; font-weight: 700; letter-spacing: .05em; color: var(--muted); text-transform: uppercase; }
+.ax-fin-stats { display: flex; flex-direction: column; gap: 6px; min-width: 150px; }
+.ax-fin-row { display: flex; justify-content: space-between; gap: 18px; }
+.ax-fin-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.ax-fin-value { font-size: 13px; font-weight: 600; color: var(--text); }
+.ax-2col { display: grid; grid-template-columns: 11fr 9fr; gap: 16px; align-items: start; }
+@media (max-width: 900px) { .ax-2col { grid-template-columns: 1fr; } }
+.ax-field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 24px; }
+@media (max-width: 560px) { .ax-field-grid { grid-template-columns: 1fr; } }
+.ax-tab-toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 3.5px; overflow: hidden; }
+.ax-tab-toggle button { padding: 4px 12px; font-size: 12.5px; border: none; background: var(--surface); color: var(--muted); cursor: pointer; font-family: inherit; }
+.ax-tab-toggle button.active { background: var(--surface2); color: var(--text); font-weight: 600; }
+.ax-stars { display: flex; gap: 3px; cursor: pointer; }
+.ax-stars .star { font-size: 17px; color: var(--border); }
+.ax-stars .star.on { color: #f5b942; }
+.ax-composer { display: flex; gap: 10px; }
+.ax-composer-avatar { width: 34px; height: 34px; border-radius: 50%; background: #3e8dbc; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.ax-composer textarea { width: 100%; min-height: 64px; padding: 9px 11px; background: var(--surface2); border: 1px solid var(--border); border-radius: 3.5px; color: var(--text); font-size: 13px; font-family: inherit; resize: vertical; }
+.ax-composer-tools { display: flex; align-items: center; gap: 4px; margin-top: 7px; }
+.ax-empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; padding: 30px 10px; }
+.ax-empty .icon { width: 62px; height: 62px; color: var(--muted); opacity: .35; margin-bottom: 10px; }
+.ax-empty-title { font-size: 15px; font-weight: 600; color: var(--text); }
+.ax-empty-sub { font-size: 12.5px; color: var(--muted); }
+.ax-log-item { padding: 9px 0; border-top: 1px solid var(--border); font-size: 13px; text-align: left; }
+.ax-log-item:first-child { border-top: none; }
+.ax-log-meta { font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+.email-log-item { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
+.email-log-item:first-child { border-top: none; }
+.email-dir { width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+.email-dir.sent { background: rgba(37,99,235,0.14); color: var(--accent); }
+.email-dir.received { background: rgba(22,163,74,0.14); color: var(--success); }
+
+/* ── Lead Web list (Activix /dashboards/lead-xpress clone — values pulled live:
+   card bottom border 2.5px #3e8dbc (blue) / #f39c12 (amber), number 31.5px, label 15.75px) ── */
+.lx-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.lx-pills { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.lx-pill { display: flex; align-items: stretch; border: 1px solid var(--border); border-radius: 5px; overflow: hidden; background: var(--surface); min-width: 150px; flex: 1; cursor: pointer; }
+.lx-pill.active { border-color: #3e8dbc; box-shadow: 0 0 0 1px #3e8dbc; }
+.lx-pill-num { padding: 10px 12px; font-size: 15px; font-weight: 600; background: var(--surface2); color: var(--text); min-width: 46px; text-align: center; }
+.lx-pill-lbl { padding: 10px 12px; font-size: 14px; color: var(--muted); display: flex; align-items: center; }
+.lx-cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 18px; }
+@media (max-width: 1100px) { .lx-cards { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 700px) { .lx-cards { grid-template-columns: 1fr 1fr; } }
+.lx-card { background: var(--surface); border: 1px solid var(--border); border-bottom: 2.5px solid var(--border); border-radius: 5px; padding: 16px; position: relative; }
+.lx-card.blue { border-bottom-color: #3e8dbc; }
+.lx-card.amber { border-bottom-color: #f39c12; }
+.lx-card-num { font-size: 31.5px; font-weight: 400; color: var(--text); line-height: 1.1; }
+.lx-card-pct { font-size: 13px; color: var(--muted); margin-left: 4px; }
+.lx-card-lbl { font-size: 15.75px; font-weight: 600; color: var(--muted); margin-top: 10px; }
+.lx-card-icon { position: absolute; top: 14px; right: 14px; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.lx-card-icon .icon { width: 17px; height: 17px; }
+.lx-card.blue .lx-card-icon { background: rgba(62,141,188,0.14); color: #3e8dbc; }
+.lx-card.amber .lx-card-icon { background: rgba(243,156,18,0.14); color: #f39c12; }
+.lx-collapse-head { display: flex; align-items: center; gap: 10px; padding: 14px 18px; cursor: pointer; font-weight: 600; font-size: 15px; }
+.lx-collapse-head .chev { margin-left: auto; color: var(--muted); transition: transform .2s; }
+.lx-collapse-head.open .chev { transform: rotate(180deg); }
+.lx-collapse-body { padding: 0 18px 16px; }
+.lx-table-head { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.lx-table-title { font-weight: 700; font-size: 15px; }
+.lx-tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; white-space: nowrap; }
+.lx-tbl th { padding: 10px 8px; text-align: center; font-weight: 600; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; }
+.lx-tbl td { padding: 10px 8px; text-align: center; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.lx-tbl tbody tr:hover { background: var(--surface2); }
+.lx-filter-row td { padding: 6px 6px; border-bottom: 1px solid var(--border); }
+.lx-fin { width: 100%; box-sizing: border-box; padding: 5px 7px; font-size: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 3.5px; color: var(--text); font-family: inherit; min-width: 70px; }
+.lx-fin.on { background: #3e8dbc; border-color: #3e8dbc; color: #fff; font-weight: 600; }
+.lx-lead-name { color: #3e8dbc; font-weight: 600; cursor: pointer; text-align: left; }
+.lx-lead-name:hover { text-decoration: underline; }
+.lx-count { color: var(--muted); font-weight: 400; font-size: 11px; }
+.lx-contact-icons { display: flex; gap: 5px; justify-content: center; }
+.lx-contact-icons .icon { width: 14px; height: 14px; }
+.lx-ci { color: var(--muted); cursor: pointer; }
+.lx-ci.on { color: #f39c12; }
+.lx-ci.phone.on { color: #3e8dbc; }
+.lx-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+.lx-dot.green { background: #00a65a; }
+.lx-dot.grey { background: var(--muted); opacity: .5; }
+.lx-badge { display: inline-block; padding: 2px 10px; border-radius: 3px; font-size: 10.5px; font-weight: 700; color: #fff; }
+.lx-badge.rejoint { background: #00a65a; }
+.lx-badge.tentative { background: #3e8dbc; }
+.lx-badge.attente { background: var(--muted); }
+.lx-timers { display: flex; gap: 3px; justify-content: center; margin-top: 3px; }
+.lx-timer { background: var(--surface2); border: 1px solid var(--border); border-radius: 2px; padding: 1px 5px; font-size: 9.5px; color: var(--muted); min-width: 26px; }
+.lx-chk { width: 13px; height: 13px; accent-color: #3e8dbc; pointer-events: none; }
+.lx-suivi { display: flex; gap: 4px; justify-content: center; font-size: 10px; color: var(--muted); }
+.lx-suivi b { color: var(--text); }
+.lx-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--border); flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+.lx-pager { display: flex; gap: 4px; align-items: center; }
+.lx-pager button { min-width: 28px; height: 28px; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 3.5px; cursor: pointer; font-size: 12px; font-family: inherit; }
+.lx-pager button.active { background: #3e8dbc; border-color: #3e8dbc; color: #fff; font-weight: 600; }
+.lx-pager button:disabled { opacity: .4; cursor: default; }
+.lx-byrep-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid var(--border); font-size: 13px; }
+.lx-byrep-row:first-child { border-top: none; }
+.lx-bar { height: 8px; background: #3e8dbc; border-radius: 4px; }
+.ax-checkbox { width: 15px; height: 15px; accent-color: #3e8dbc; }
+
+/* Matches Activix's real "Navigateur d'offres" tabs — inspected live: rounded-top only,
+   thin 1px border all round, plus a thick (7px) colored TOP border as the state accent
+   (not a background tint). Confirmed via computed styles: current = border-t-orange-600,
+   done = bg-green-100 + border-t-green-800 + text-green-800, upcoming = plain border-gray. */
+.deal-stepper { display: flex; gap: 3px; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
+.deal-step { flex: 1; min-width: 0; padding: 9px 6px 8px; text-align: center; cursor: pointer;
+  border: 1px solid var(--border); border-top-width: 7px; border-radius: 7px 7px 0 0;
+  background: var(--surface2); margin-bottom: -1px; }
+.deal-step-fr { font-size: 12px; font-weight: 700; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; }
+.deal-step-fr .icon { width: 12px; height: 12px; flex-shrink: 0; }
+.deal-step-en { font-size: 9px; color: var(--muted); margin-top: 1px; text-transform: uppercase; letter-spacing: .03em; }
+.deal-step.done { background: rgba(22,163,74,0.12); border-color: var(--border); border-top-color: var(--success); }
 .deal-step.done .deal-step-fr { color: var(--success); }
-.deal-step.current { border-color: var(--accent); background: var(--accent); }
-.deal-step.current .deal-step-fr, .deal-step.current .deal-step-en { color: #fff; }
-.lead-info-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
-@media (max-width: 800px) { .lead-info-row { grid-template-columns: 1fr; } }
-.lead-info-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
-.lead-info-card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 10px; }
-.lead-log-item { padding: 8px 0; border-top: 1px solid var(--border); font-size: 12.5px; }
-.lead-log-item:first-child { border-top: none; }
-.lead-log-meta { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.deal-step.current { background: var(--surface); border-color: var(--border); border-top-color: #d97706; }
+.deal-step.current .deal-step-fr { color: #d97706; }
+@media (max-width: 720px) { .deal-stepper { flex-wrap: wrap; } .deal-step { flex: 1 1 33%; } }
+
+@media (max-width: 800px) { .ax-2col, .ax-bottom-grid { grid-template-columns: 1fr !important; } }
+
+/* Generic popup modal (task/appointment picker, reusable) */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.modal-box { background: var(--surface); border-radius: 14px; width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--border); }
+.modal-header h3 { font-size: 15px; font-weight: 700; color: var(--text); margin: 0; }
+.modal-close { background: none; border: none; color: var(--muted); font-size: 16px; cursor: pointer; padding: 4px; }
+.modal-close:hover { color: var(--text); }
+.modal-body { padding: 16px 18px; }
+.modal-footer { display: flex; gap: 8px; padding: 14px 18px; border-top: 1px solid var(--border); }
+
+/* Global toolbar: search + quick-add, visible on every tab */
+.global-toolbar { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 55; }
+.global-search-wrap { position: relative; flex: 1; max-width: 420px; }
+.global-search-wrap input { width: 100%; box-sizing: border-box; padding: 9px 12px 9px 34px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 13px; outline: none; }
+.global-search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); width: 15px; height: 15px; pointer-events: none; }
+.global-search-results { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-height: 360px; overflow-y: auto; z-index: 60; }
+.global-search-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; cursor: pointer; border-bottom: 1px solid var(--border); }
+.global-search-item:last-child { border-bottom: none; }
+.global-search-item:hover { background: var(--surface2); }
+.global-search-item-icon { width: 28px; height: 28px; border-radius: 6px; background: var(--surface2); display: flex; align-items: center; justify-content: center; color: var(--muted); flex-shrink: 0; }
+.global-search-item-icon .icon { width: 15px; height: 15px; }
+.global-search-item-main { flex: 1; min-width: 0; }
+.global-search-item-title { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.global-search-item-sub { font-size: 11px; color: var(--muted); }
+.global-search-empty { padding: 14px; text-align: center; font-size: 12px; color: var(--muted); }
 .btn-sold { background: none; border: 1px solid #ff3b30; color: #ff3b30; border-radius: 6px; font-size: 11px; font-weight: 700; padding: 3px 8px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
 .btn-sold:hover { background: #ff3b30; color: #fff; }
 .btn-unsold { background: none; border: 1px solid var(--muted); color: var(--muted); border-radius: 6px; font-size: 11px; font-weight: 700; padding: 3px 8px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
@@ -239,7 +481,12 @@ input:focus, textarea:focus { border-color: var(--accent); }
 @keyframes gateFloatC { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) translate(-50px, 70px) scale(1.2); } }
 @media (prefers-reduced-motion: reduce) { .gate-blob { animation: none !important; } }
 
-/* ===== SIDEBAR — PestDesk-style hover-expand rail on desktop, off-canvas drawer on mobile ===== */
+/* ===== SIDEBAR — Activix-style hover-expand rail on desktop, off-canvas drawer on mobile.
+   Real Activix values (inspected live): 70px collapsed → 256px on hover (w-64), position:fixed,
+   z-50, transition .3s cubic-bezier(.4,0,.2,1), overflow-x:hidden, and it OVERLAYS the content
+   (main stays at left:70px) so nothing reflows while you hover. "Verrouiller la navigation"
+   pins it open — that's Activix's own escape hatch, and it fixes the cramped-on-a-wide-monitor
+   complaint that made us drop the hover rail the first time. ===== */
 .sidebar {
   display: flex; flex-direction: column;
   position: fixed; top: 0; left: 0; width: 230px; height: 100vh; height: 100dvh;
@@ -251,13 +498,6 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .sidebar-backdrop.open { display: block; }
 .content-area { min-height: 100vh; }
 .hamburger-btn { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--text); cursor: pointer; margin-right: 4px; flex-shrink: 0; }
-@media (min-width: 900px) {
-  .sidebar { transform: none; width: 230px; box-shadow: none; }
-  .sidebar-backdrop { display: none !important; }
-  .content-area { margin-left: 230px; }
-  .hamburger-btn { display: none; }
-  main { max-width: 1600px; }
-}
 .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 6px 6px 20px; }
 .sidebar-logo-label { opacity: 1; overflow: hidden; white-space: nowrap; }
 .sidebar-logo-text { font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 2px; color: #fff; }
@@ -267,11 +507,59 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .sidebar-nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; color: var(--sidebar-fg); font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; }
 .sidebar-nav-item:hover { background: var(--sidebar-hover); color: #fff; }
 .sidebar-nav-item.active { background: var(--sidebar-active); color: #fff; }
+.sidebar-nav-item .icon { flex-shrink: 0; }
 .sidebar-nav-item .nav-label { overflow: hidden; }
 .sidebar-footer { border-top: 1px solid var(--sidebar-border); padding-top: 12px; margin-top: 12px; flex: 1; display: flex; flex-direction: column; justify-content: flex-end; }
 .sidebar-user { font-size: 11px; color: var(--sidebar-fg); margin-bottom: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 4px; }
 .sidebar-signout { width: 100%; background: var(--sidebar-hover); color: #fff; border: none; padding: 9px; border-radius: 8px; font-size: 12px; cursor: pointer; white-space: nowrap; overflow: hidden; }
 .sidebar-signout:hover { background: var(--sidebar-active); }
+.sidebar-lock { display: none; }
+
+@media (min-width: 900px) {
+  .sidebar {
+    transform: none; box-shadow: none; overflow-x: hidden;
+    width: 70px; padding: 14px 0;
+    transition: width .3s cubic-bezier(.4,0,.2,1);
+  }
+  .sidebar:hover, body.nav-locked .sidebar { width: 256px; }
+  .sidebar:hover { box-shadow: 6px 0 28px rgba(0,0,0,.35); }
+  body.nav-locked .sidebar { box-shadow: none; }
+  .sidebar-backdrop { display: none !important; }
+  /* Content sits beside the 70px rail and does NOT reflow on hover (the rail overlays it),
+     exactly like Activix. Locking the nav is the only thing that pushes the content over. */
+  .content-area { margin-left: 70px; transition: margin-left .3s cubic-bezier(.4,0,.2,1); }
+  body.nav-locked .content-area { margin-left: 256px; }
+  .hamburger-btn { display: none; }
+  main { max-width: 1600px; }
+
+  /* Keep icons pinned so nothing shifts as the rail widens (icon centred in the 70px rail) */
+  .sidebar-nav-item { padding: 10px 12px 10px 26px; border-radius: 0; }
+  .sidebar-logo { padding: 6px 0 20px 15px; }
+  .sidebar-divider { margin: 10px 16px; }
+  .sidebar-footer { padding: 12px 14px 0; }
+
+  /* Labels fade in with the rail */
+  .sidebar-nav-item .nav-label, .sidebar-logo-label, .sidebar-footer {
+    opacity: 0; transition: opacity .2s ease .05s;
+  }
+  .sidebar:hover .nav-label, .sidebar:hover .sidebar-logo-label, .sidebar:hover .sidebar-footer,
+  body.nav-locked .nav-label, body.nav-locked .sidebar-logo-label, body.nav-locked .sidebar-footer {
+    opacity: 1;
+  }
+  .sidebar-footer { pointer-events: none; }
+  .sidebar:hover .sidebar-footer, body.nav-locked .sidebar-footer { pointer-events: auto; }
+
+  /* Lock / unlock control (Activix's "Verrouiller la navigation") */
+  .sidebar-lock {
+    display: flex; align-items: center; gap: 10px; white-space: nowrap; cursor: pointer;
+    color: var(--sidebar-fg); font-size: 12px; padding: 10px 12px 10px 26px; margin-top: 6px;
+  }
+  .sidebar-lock:hover { background: var(--sidebar-hover); color: #fff; }
+  .sidebar-lock .icon { flex-shrink: 0; transition: transform .3s ease; }
+  body.nav-locked .sidebar-lock .icon { transform: rotate(180deg); }
+  .sidebar-lock .nav-label { opacity: 0; transition: opacity .2s ease .05s; }
+  .sidebar:hover .sidebar-lock .nav-label, body.nav-locked .sidebar-lock .nav-label { opacity: 1; }
+}
 
 /* ===== DASHBOARD ===== */
 .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; }
@@ -389,6 +677,10 @@ input:focus, textarea:focus { border-color: var(--accent); }
     <div id="sidebarUserEl" class="sidebar-user" style="display:none;"></div>
     <button id="sidebarLogoutBtn" class="sidebar-signout" style="display:none;" onclick="window.googleLogout()">Sign out</button>
   </div>
+  <div class="sidebar-lock" onclick="window.toggleNavLock()" id="sidebarLock">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+    <span class="nav-label" data-i18n="nav.lock">Verrouiller la navigation</span>
+  </div>
 </nav>
 <div class="content-area">
 <header>
@@ -417,6 +709,24 @@ input:focus, textarea:focus { border-color: var(--accent); }
     <button id="logoutBtn" class="btn-signout" style="display:none;" onclick="window.googleLogout()">Sign out</button>
   </div>
 </header>
+
+<div class="global-toolbar">
+  <div class="global-search-wrap">
+    <svg class="global-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+    <input id="globalSearchInput" type="text" data-i18n-ph="toolbar.searchPh" placeholder="Search cars, leads, customers…" oninput="window.handleGlobalSearch(this.value)" onfocus="window.handleGlobalSearch(this.value)">
+    <div id="globalSearchResults" class="global-search-results" style="display:none;"></div>
+  </div>
+  <button class="btn btn-primary" style="width:auto;padding:9px 16px;font-size:13px;" onclick="window.openGlobalNewClient()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> <span data-i18n="toolbar.newClient">New Client</span></button>
+  <span style="flex:1;"></span>
+  <button class="ax-icon-sq" onclick="window.switchTab('schedule')" title="Calendar"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>
+  <div class="notif-wrap">
+    <button class="ax-icon-sq" onclick="window.toggleNotifPanel()" title="Notifications">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span id="notifBadge" class="notif-badge" style="display:none;">0</span>
+    </button>
+    <div id="notifPanel" class="global-search-results" style="display:none;right:0;left:auto;width:300px;"></div>
+  </div>
+</div>
 
 <main>
   <!-- INVENTORY -->
@@ -649,6 +959,18 @@ input:focus, textarea:focus { border-color: var(--accent); }
               </button>
             </div>
           </div>
+          <div class="card" style="margin-top:12px;">
+            <div class="config-title" data-i18n="set.language">Langue / Language</div>
+            <div class="config-desc" style="margin-bottom:12px;" data-i18n="set.lang.desc">Choose the app language.</div>
+            <div class="theme-picker">
+              <button class="theme-option lang-option" data-lang="fr" onclick="window.setLang('fr')">
+                <span style="font-size:22px;">🇫🇷</span><span>Français</span>
+              </button>
+              <button class="theme-option lang-option" data-lang="en" onclick="window.setLang('en')">
+                <span style="font-size:22px;">🇬🇧</span><span>English</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <div class="settings-panel" id="panel-account">
@@ -822,13 +1144,38 @@ input:focus, textarea:focus { border-color: var(--accent); }
   <!-- LEAD WEB -->
   <div id="tab-leadweb" style="display:none;">
     <div id="webLeadsListView">
-      <div class="section-title">🌐 Lead Web</div>
-      <div class="config-desc" style="margin:-8px 0 16px;">Every lead coming in — Google, Facebook, your website, wherever. Click one to open its client sheet.</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin:0 0 12px;gap:10px;flex-wrap:wrap;">
-        <div class="section-title" style="margin:0;">Incoming Leads (<span id="webLeadCount">0</span>)</div>
-        <button class="btn btn-secondary" style="width:auto;padding:8px 12px;font-size:12px;" onclick="window.seedDemoLeads()" title="Adds a few realistic sample leads so you can see how this page looks with data">🎭 Add Demo Leads</button>
+      <div class="lx-head">
+        <div class="section-title" style="margin:0;" data-i18n="nav.leadweb">Lead Web</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="ax-icon-sq" title="Rafraîchir" onclick="renderWebLeads()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg></span>
+          <button class="btn btn-secondary" style="width:auto;padding:8px 12px;font-size:12px;" onclick="window.seedDemoLeads()" title="Adds a few realistic sample leads so you can see how this page looks with data">🎭 Demo</button>
+        </div>
       </div>
-      <div id="webLeadsList"></div>
+      <div id="lxPills" class="lx-pills"></div>
+      <div id="lxCards" class="lx-cards"></div>
+      <div class="ax-card">
+        <div class="lx-collapse-head" id="lxChartsHead" onclick="window.lxToggle('graphiques')"><span data-i18n="lx.charts">Graphiques</span><span class="chev">⌄</span></div>
+        <div class="lx-collapse-body" id="lxCharts" style="display:none;"></div>
+      </div>
+      <div class="ax-card">
+        <div class="lx-collapse-head" id="lxByRepHead" onclick="window.lxToggle('byRep')"><span data-i18n="lx.leadsBy">Leads par</span>
+          <select class="sort-select" style="padding:4px 8px;font-size:12.5px;" onclick="event.stopPropagation()" onchange="window.lxSetByField(this.value)" id="lxByField"></select>
+          <span class="chev">⌄</span>
+        </div>
+        <div class="lx-collapse-body" id="lxByRep" style="display:none;"></div>
+      </div>
+      <div class="ax-card" style="padding:0;">
+        <div class="lx-table-head">
+          <span class="lx-table-title" data-i18n="lx.leads">Leads</span>
+          <span class="ax-icon-sq" title="Nouveau lead" onclick="window.openGlobalNewClient()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+          <span style="flex:1;"></span>
+          <button class="ax-btn-blue" onclick="window.lxClearFilters()" data-i18n="lx.clear">Effacer</button>
+        </div>
+        <div class="table-scroll" style="max-height:none;overflow-x:auto;">
+          <table class="lx-tbl" id="lxTable"><thead id="lxHead"></thead><tbody id="lxBody"></tbody></table>
+        </div>
+        <div class="lx-foot" id="lxFoot"></div>
+      </div>
     </div>
     <div id="webLeadDetailView" style="display:none;"></div>
   </div>
@@ -894,40 +1241,51 @@ input:focus, textarea:focus { border-color: var(--accent); }
     <div id="customerDetailView" style="display:none;"></div>
   </div>
   <div id="tab-schedule" style="display:none;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap;">
-      <div class="section-title" style="margin-bottom:0;">Schedule</div>
-      <button class="btn btn-primary" style="width:auto;padding:9px 16px;font-size:13px;" onclick="window.openNewEvent()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> New Event</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;flex-wrap:wrap;">
+      <div class="section-title" style="margin-bottom:0;" data-i18n="cal.title">Calendrier</div>
+      <button class="btn btn-primary" style="width:auto;padding:9px 16px;font-size:13px;" onclick="window.openNewEvent()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> <span data-i18n="cal.new">Nouvel événement</span></button>
     </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap;">
-      <div style="display:flex;align-items:center;gap:8px;">
+    <div class="cal-toolbar">
+      <div class="cal-toolbar-left">
+        <select id="calFilterSelect" class="sort-select" onchange="window.calSetFilter(this.value)"></select>
         <button class="icon-btn" onclick="window.calNavigate(-1)">‹</button>
-        <div id="calMonthLabel" style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;min-width:170px;text-align:center;">Month Year</div>
+        <div id="calMonthLabel" style="font-weight:700;font-size:16px;min-width:150px;text-align:center;">—</div>
         <button class="icon-btn" onclick="window.calNavigate(1)">›</button>
+        <button class="btn btn-secondary" style="width:auto;padding:8px 14px;font-size:13px;" onclick="window.calGoToday()" data-i18n="cal.today">Aujourd'hui</button>
       </div>
-      <button class="btn btn-secondary" style="width:auto;padding:8px 14px;font-size:13px;" onclick="window.calGoToday()">Today</button>
+      <div class="cal-view-toggle">
+        <button data-mode="month" onclick="window.calSetView('month')" data-i18n="cal.month">Mois</button>
+        <button data-mode="week" onclick="window.calSetView('week')" data-i18n="cal.week">Semaine</button>
+        <button data-mode="day" onclick="window.calSetView('day')" data-i18n="cal.day">Jour</button>
+      </div>
     </div>
 
     <div id="eventForm" class="card" style="display:none;margin-bottom:14px;">
-      <div class="config-title" id="eventFormTitle">New Event</div>
-      <div class="input-group"><label>Title *</label><input type="text" id="evTitle" placeholder="Test drive with…"></div>
+      <div class="config-title" id="eventFormTitle">Nouvel événement</div>
+      <div class="input-group"><label>Titre *</label><input type="text" id="evTitle" placeholder="Essai routier avec…"></div>
       <div class="row">
         <div class="input-group"><label>Date</label><input type="date" id="evDate"></div>
-        <div class="input-group"><label>Time</label><input type="time" id="evTime"></div>
+        <div class="input-group"><label>Heure</label><input type="time" id="evTime"></div>
       </div>
       <div class="input-group"><label>Type</label>
-        <select id="evType"><option value="appointment">🚗 Appointment</option><option value="task">✅ Task</option><option value="delivery">📦 Delivery</option></select>
+        <select id="evType"><option value="appointment">🚗 Rendez-vous</option><option value="task">✅ Tâche</option><option value="delivery">📦 Livraison</option></select>
       </div>
       <div class="input-group"><label>Notes</label><textarea id="evNotes" rows="2" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;"></textarea></div>
       <div style="display:flex;gap:8px;">
-        <button class="btn btn-secondary" style="flex:1;" onclick="window.closeEventForm()">Cancel</button>
-        <button class="btn-danger" id="evDeleteBtn" style="display:none;" onclick="window.deleteEvent()">Delete</button>
-        <button class="btn btn-primary" style="flex:1;" onclick="window.saveEvent()">Save</button>
+        <button class="btn btn-secondary" style="flex:1;" onclick="window.closeEventForm()">Annuler</button>
+        <button class="btn-danger" id="evDeleteBtn" style="display:none;" onclick="window.deleteEvent()">Supprimer</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="window.saveEvent()">Enregistrer</button>
       </div>
     </div>
 
-    <div class="cal-grid-wrap">
-      <div class="cal-weekdays"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
-      <div class="cal-grid" id="calGrid"></div>
+    <div id="calBody"></div>
+
+    <div class="cal-legend">
+      <span class="cal-legend-item"><span class="cal-dot" style="background:var(--accent);"></span> <span data-i18n="cal.view.appointments">Rendez-vous</span></span>
+      <span class="cal-legend-item"><span class="cal-dot" style="background:#d97706;"></span> <span data-i18n="cal.view.myTasks">Tâches</span></span>
+      <span class="cal-legend-item"><span class="cal-dot" style="background:var(--success);"></span> <span data-i18n="cal.view.deliveries">Livraisons</span></span>
+      <span style="flex:1;"></span>
+      <span class="cal-legend-item" style="color:var(--muted);"><span data-i18n="cal.total">Total</span>: <span id="calTotal">0</span></span>
     </div>
   </div>
   <div id="tab-emails" style="display:none;"><div class="empty-state"><div class="big-icon">✉️</div><h3>Emails</h3><p>Coming soon.</p></div></div>
@@ -997,6 +1355,80 @@ input:focus, textarea:focus { border-color: var(--accent); }
     <div class="cam-thumbs" id="camThumbs"></div>
     <div class="cam-shutter" id="camShutter" onclick="window.snapPhoto()"></div>
     <button class="cam-done" onclick="window.closeCamera()">DONE</button>
+  </div>
+</div>
+
+<!-- ADD TASK / APPOINTMENT — Activix-style popup, also used from the Lead Web client sheet -->
+<div class="modal-overlay" id="taskModalOverlay" style="display:none;" onclick="if(event.target===this) window.closeTaskModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 data-i18n="task.modalTitle">Ajouter une tâche ou rendez-vous</h3>
+      <button class="modal-close" onclick="window.closeTaskModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="input-group">
+        <label><span data-i18n="task.type">Type</span> *</label>
+        <select id="taskTypeSelect"></select>
+      </div>
+      <div class="input-group">
+        <label data-i18n="task.title">Titre</label>
+        <input type="text" id="taskTitleInput" data-i18n-ph="task.titlePh" placeholder="Optionnel">
+      </div>
+      <div class="row">
+        <div class="input-group"><label><span data-i18n="task.date">Date</span> *</label><input type="date" id="taskDateInput"></div>
+        <div class="input-group"><label data-i18n="task.time">Heure</label><input type="time" id="taskTimeInput"></div>
+      </div>
+      <div class="input-group">
+        <label data-i18n="task.notes">Notes</label>
+        <textarea id="taskNotesInput" rows="2" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" style="flex:1;" onclick="window.closeTaskModal()" data-i18n="task.cancel">Annuler</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="window.saveTaskModal()" data-i18n="task.save">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- TRADE-IN VEHICLE — Échange stage on the Lead Web client sheet -->
+<div class="modal-overlay" id="exchangeModalOverlay" style="display:none;" onclick="if(event.target===this) window.closeExchangeModal()">
+  <div class="modal-box" style="max-width:520px;">
+    <div class="modal-header">
+      <h3 data-i18n="ex.modalTitle">Véhicule d'échange</h3>
+      <button class="modal-close" onclick="window.closeExchangeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="row">
+        <div class="input-group"><label data-i18n="ex.vin">NIV</label><input type="text" id="exVinInput" autocapitalize="characters"></div>
+        <div class="input-group"><label data-i18n="ex.stock">Stock #</label><input type="text" id="exStockInput"></div>
+      </div>
+      <div class="row">
+        <div class="input-group"><label data-i18n="ex.year">Année</label><input type="text" id="exYearInput"></div>
+        <div class="input-group"><label data-i18n="ex.make">Marque</label><input type="text" id="exMakeInput"></div>
+      </div>
+      <div class="row">
+        <div class="input-group"><label data-i18n="ex.model">Modèle</label><input type="text" id="exModelInput"></div>
+        <div class="input-group"><label data-i18n="ex.trim">Version</label><input type="text" id="exTrimInput"></div>
+      </div>
+      <div class="row">
+        <div class="input-group"><label data-i18n="ex.odometer">Odomètre (km)</label><input type="number" id="exOdometerInput"></div>
+        <div class="input-group"><label data-i18n="ex.transmission">Transmission</label>
+          <select id="exTransmissionInput"><option value="">—</option><option value="auto" data-i18n="ex.auto">Automatique</option><option value="manual" data-i18n="ex.manual">Manuelle</option><option value="CVT">CVT</option></select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="input-group"><label data-i18n="ex.extColor">Couleur extérieure</label><input type="text" id="exExtColorInput"></div>
+        <div class="input-group"><label data-i18n="ex.intColor">Couleur intérieure</label><input type="text" id="exIntColorInput"></div>
+      </div>
+      <div class="input-group">
+        <label data-i18n="ex.comments">Commentaires</label>
+        <textarea id="exCommentsInput" rows="2" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" style="flex:1;" onclick="window.closeExchangeModal()" data-i18n="task.cancel">Annuler</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="window.saveExchangeModal()" data-i18n="task.save">Enregistrer</button>
+    </div>
   </div>
 </div>
 
@@ -1195,6 +1627,40 @@ const LEAD_STAGES = [
   { key: 'financing',    fr: 'Financement',   en: 'Financing' },
   { key: 'delivery',     fr: 'Livraison',     en: 'Delivery' },
 ];
+// Activix's real task/appointment type list (inspected live) — each maps down to one of the
+// 3 calendar color buckets (appointment/task/delivery) for day-cell rendering.
+const TASK_TYPES = [
+  { key: 'call',          fr: 'Appel',                       en: 'Call',                bucket: 'task' },
+  { key: 'email',         fr: 'Courriel',                    en: 'Email',               bucket: 'task' },
+  { key: 'sms',           fr: 'SMS',                         en: 'SMS',                 bucket: 'task' },
+  { key: 'phone_appt',    fr: 'Rendez-vous téléphonique',    en: 'Phone appointment',   bucket: 'appointment' },
+  { key: 'appt',          fr: 'Rendez-vous',                 en: 'Appointment',         bucket: 'appointment' },
+  { key: 'delivery',      fr: 'Livraison',                   en: 'Delivery',            bucket: 'delivery' },
+  { key: 'other',         fr: 'Autre',                       en: 'Other',               bucket: 'task' },
+  { key: 'csi',           fr: 'CSI',                         en: 'CSI',                 bucket: 'task' },
+  { key: 'virtual_appt',  fr: 'Rendez-vous virtuel',         en: 'Virtual appointment', bucket: 'appointment' },
+  { key: 'test_drive',    fr: 'Essai routier',               en: 'Test drive',          bucket: 'appointment' },
+];
+const taskTypeLabel = tt => (LANG === 'en' ? tt.en : tt.fr);
+// Dealership team roster (Conseiller/Agent BDC/Second conseiller/Directeur financier dropdowns
+// on a lead all pull from this shared list — plain names, no auth, just an assignable roster).
+let reps = JSON.parse(localStorage.getItem('pm_reps') || '[]');
+function saveReps() { localStorage.setItem('pm_reps', JSON.stringify(reps)); }
+const REP_ROLE_LABELS = { conseiller: 'Conseiller', agentBdc: 'Agent BDC', secondConseiller: 'Second conseiller', directeurFinancier: 'Directeur financier' };
+window.setLeadRep = function(id, roleField, value) {
+  let assigned = value;
+  if (value === '__add__') {
+    const name = (prompt("Nom du nouveau membre de l'équipe :") || '').trim();
+    if (!name) { renderWebLeadDetail(id); return; }
+    if (!reps.includes(name)) { reps.push(name); saveReps(); }
+    assigned = name;
+    updateWebLead(id, { [roleField]: name });
+  } else {
+    updateWebLead(id, { [roleField]: value });
+  }
+  logLeadHistory(id, assigned ? `a assigné ${assigned} comme ${REP_ROLE_LABELS[roleField] || roleField}` : `a retiré le ${REP_ROLE_LABELS[roleField] || roleField}`);
+  renderWebLeadDetail(id);
+};
 let webLeads = [];
 let webLeadsUnsub = null;
 function startWebLeadsSync() {
@@ -1209,30 +1675,247 @@ function stopWebLeadsSync() {
   if (webLeadsUnsub) { webLeadsUnsub(); webLeadsUnsub = null; }
   webLeads = [];
 }
+// ── Lead Web list — Activix /dashboards/lead-xpress clone ────────────────────
+let lxFilters = { name:'', division:'', statut:'', resultat:'', conseiller:'', marque:'', modele:'' };
+let lxPage = 1, lxPerPage = 25, lxByField = 'conseiller';
+let lxOpen = { graphiques:false, byRep:false };
+let lxPillFilter = '';   // '', 'attente', 'tentative', 'rejoint'
+
+function lxReceivedMs(l) { return l.receivedAt?.toDate ? l.receivedAt.toDate().getTime() : (typeof l.receivedAtMs === 'number' ? l.receivedAtMs : null); }
+// "Rejoint" = we actually logged a communication with them. "Tentative" = we've worked it
+// (a note or a task) but no comm yet. Otherwise it's still waiting.
+function lxState(l) {
+  if ((l.commsLog || []).length) return 'rejoint';
+  if ((l.notesLog || []).length || calendarEvents.some(e => e.leadId === l.id)) return 'tentative';
+  return 'attente';
+}
+function lxInfo(l) {
+  const car = l.linkedCarId ? cars.find(c => String(c.id) === String(l.linkedCarId)) : null;
+  const m = l.milestones || {};
+  const comms = l.commsLog || [], notes = l.notesLog || [];
+  const tasks = calendarEvents.filter(e => e.leadId === l.id);
+  const recv = lxReceivedMs(l);
+  const firstTouch = [...comms, ...notes].map(x => x.createdAt).filter(Boolean).sort((a,b) => a-b)[0] || null;
+  return {
+    car, m, comms, notes, tasks, recv,
+    state: lxState(l),
+    responseMs: (recv && firstTouch && firstTouch > recv) ? firstTouch - recv : null,
+    activity: comms.length + notes.length + tasks.length,
+    hasRv: tasks.some(e => e.type === 'appointment'),
+  };
+}
+function lxFmtDur(ms) {
+  if (ms == null) return '-';
+  const mins = Math.round(ms / 60000);
+  if (mins < 60) return mins + ' m';
+  const h = Math.floor(mins / 60), r = mins % 60;
+  return h + 'h' + (r ? ' ' + r + 'm' : '');
+}
+function lxFiltered() {
+  return webLeads.filter(l => {
+    const i = lxInfo(l);
+    if (lxPillFilter && i.state !== lxPillFilter) return false;
+    if (lxFilters.name && !(l.name || '').toLowerCase().includes(lxFilters.name.toLowerCase())) return false;
+    if (lxFilters.division && (i.car ? (i.car.condition || 'Used') : '') !== lxFilters.division) return false;
+    if (lxFilters.statut && (l.doNotMarket ? 'dnm' : 'active') !== lxFilters.statut) return false;
+    if (lxFilters.resultat && i.state !== lxFilters.resultat) return false;
+    if (lxFilters.conseiller && (l.conseiller || '') !== lxFilters.conseiller) return false;
+    if (lxFilters.marque && (i.car?.make || '') !== lxFilters.marque) return false;
+    if (lxFilters.modele && !((i.car?.model || '').toLowerCase().includes(lxFilters.modele.toLowerCase()))) return false;
+    return true;
+  }).sort((a,b) => (lxReceivedMs(b) || 0) - (lxReceivedMs(a) || 0));
+}
+window.lxToggle = function(k) {
+  lxOpen[k] = !lxOpen[k];
+  const head = document.getElementById(k === 'graphiques' ? 'lxChartsHead' : 'lxByRepHead');
+  const body = document.getElementById(k === 'graphiques' ? 'lxCharts' : 'lxByRep');
+  head.classList.toggle('open', lxOpen[k]);
+  body.style.display = lxOpen[k] ? 'block' : 'none';
+  renderWebLeads();
+};
+window.lxSetByField = function(v) { lxByField = v; renderWebLeads(); };
+window.lxSetFilter = function(k, v) { lxFilters[k] = v; lxPage = 1; lxRenderRows(); };
+window.lxClearFilters = function() {
+  lxFilters = { name:'', division:'', statut:'', resultat:'', conseiller:'', marque:'', modele:'' };
+  lxPillFilter = ''; lxPage = 1; renderWebLeads();
+};
+window.lxSetPill = function(s) { lxPillFilter = (lxPillFilter === s ? '' : s); lxPage = 1; renderWebLeads(); };
+window.lxSetPage = function(p) { lxPage = p; lxRenderRows(); };
+window.lxSetPerPage = function(n) { lxPerPage = +n; lxPage = 1; lxRenderRows(); };
+
 function renderWebLeads() {
-  const list = document.getElementById('webLeadsList');
-  const count = document.getElementById('webLeadCount');
-  if (count) count.textContent = webLeads.length;
-  if (!list) return;
-  if (!webLeads.length) { list.innerHTML = `<div class="empty-state"><div class="big-icon">🌐</div><h3>No Web Leads Yet</h3><p>Share your capture link or embed the form on a website to start receiving leads here.</p></div>`; return; }
-  list.innerHTML = webLeads.map(l => {
-    const stage = LEAD_STAGES.find(s => s.key === (l.stage || 'submission')) || LEAD_STAGES[0];
-    return `
-    <div class="card" style="padding:14px;margin-bottom:10px;cursor:pointer;" onclick="window.openWebLeadDetail('${l.id}')">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">
-        <div style="flex:1;min-width:180px;">
-          <div style="font-weight:700;font-size:14px;">${l.name || 'Unnamed'} <span class="status-pill topost" style="margin-left:4px;">${l.source || 'website'}</span> <span class="pill-count" style="background:rgba(37,99,235,0.14);color:var(--accent);">${stage.fr}</span></div>
-          <div style="font-size:12px;color:var(--muted);margin-top:3px;">${l.phone ? formatPhone(l.phone) : ''}${l.phone && l.email ? ' · ' : ''}${l.email || ''}</div>
-          ${l.message ? `<div style="font-size:12px;margin-top:6px;padding:8px;background:var(--surface2);border-radius:8px;">${l.message}</div>` : ''}
-          <div style="font-size:10px;color:var(--muted);margin-top:6px;">${l.receivedAt?.toDate ? l.receivedAt.toDate().toLocaleString() : 'Just now'}</div>
-        </div>
-        <div style="display:flex;gap:6px;flex-shrink:0;" onclick="event.stopPropagation();">
-          <button class="btn btn-secondary" style="width:auto;padding:8px 10px;font-size:12px;" onclick="window.addWebLeadToTexting('${l.id}')" title="Add to Mass Texting">+ Contact</button>
-          <button class="btn-danger" style="padding:8px 10px;" onclick="window.deleteWebLead('${l.id}')">✕</button>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
+  window.renderNotifBadge();
+  const pills = document.getElementById('lxPills');
+  if (!pills) return;
+  const all = webLeads;
+  const infos = all.map(lxInfo);
+  const n = all.length;
+  const cnt = s => infos.filter(i => i.state === s).length;
+  const pct = x => n ? Math.round(x / n * 100) + '%' : '0%';
+
+  // count pills
+  const P = [['', t('lx.leads'), n], ['attente', t('lx.waiting'), cnt('attente')], ['tentative', t('lx.attempts'), cnt('tentative')], ['rejoint', t('lx.reached'), cnt('rejoint')]];
+  pills.innerHTML = P.map(([k, lbl, v]) => `<div class="lx-pill ${lxPillFilter === k && k ? 'active' : ''}" onclick="window.lxSetPill('${k}')"><div class="lx-pill-num">${v}</div><div class="lx-pill-lbl">${lbl}</div></div>`).join('');
+
+  // stat cards — all computed from real data
+  const resp = infos.map(i => i.responseMs).filter(x => x != null);
+  const avgResp = resp.length ? Math.round(resp.reduce((a,b) => a+b, 0) / resp.length) : null;
+  const rv = infos.filter(i => i.hasRv).length;
+  const vis = infos.filter(i => i.m.visite).length;
+  const ven = infos.filter(i => i.m.vendu).length;
+  const liv = infos.filter(i => i.m.livre || i.car?.delivered).length;
+  const I = p => `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+  const CARDS = [
+    { cls:'blue',  num: avgResp != null ? lxFmtDur(avgResp) : '-', pct:'', lbl: t('lx.avgResponse'), icon: I('<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M9 2h6"/>') },
+    { cls:'amber', num: rv,  pct: pct(rv),  lbl: t('cal.view.appointments'), icon: I('<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>') },
+    { cls:'amber', num: vis, pct: pct(vis), lbl: t('lx.visits'), icon: I('<circle cx="12" cy="4" r="2"/><path d="M10 22l2-6 2 6"/><path d="M8 10l4-2 4 2"/><path d="M12 8v8"/>') },
+    { cls:'amber', num: ven, pct: pct(ven), lbl: t('lx.sales'), icon: I('<path d="M6 3h12l3 6-9 12L3 9z"/>') },
+    { cls:'blue',  num: liv, pct: pct(liv), lbl: t('lx.delivered'), icon: I('<path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11"/><rect x="3" y="11" width="18" height="6" rx="2"/><circle cx="7.5" cy="18" r="1.5"/><circle cx="16.5" cy="18" r="1.5"/>') },
+  ];
+  document.getElementById('lxCards').innerHTML = CARDS.map(c => `<div class="lx-card ${c.cls}" title="${c.pct ? c.num + ' / ' + n + ' (' + c.pct + ')' : ''}">
+    <div class="lx-card-icon">${c.icon}</div>
+    <div class="lx-card-num">${c.num}${c.pct ? `<span class="lx-card-pct">(${c.pct})</span>` : ''}</div>
+    <div class="lx-card-lbl">${c.lbl}</div>
+  </div>`).join('');
+
+  // Graphiques (collapsible) — leads by source, real data
+  if (lxOpen.graphiques) {
+    const bySrc = {};
+    all.forEach(l => { const s = (l.source || 'website'); bySrc[s] = (bySrc[s] || 0) + 1; });
+    const max = Math.max(1, ...Object.values(bySrc));
+    document.getElementById('lxCharts').innerHTML = Object.keys(bySrc).length
+      ? Object.entries(bySrc).sort((a,b) => b[1]-a[1]).map(([s, v]) => `<div class="lx-byrep-row"><span style="width:120px;text-transform:capitalize;">${s.replace(/_/g,' ')}</span><div class="lx-bar" style="width:${v/max*60}%;"></div><b>${v}</b></div>`).join('')
+      : `<div style="font-size:12.5px;color:var(--muted);">${t('lx.noData')}</div>`;
+  }
+  // Leads par [Conseiller|Source|Marque]
+  const byFieldSel = document.getElementById('lxByField');
+  if (byFieldSel && !byFieldSel.options.length) {
+    [['conseiller', t('lead.conseiller')], ['source', t('lead.source')], ['marque', t('lx.make')]].forEach(([v, lbl]) => {
+      const o = document.createElement('option'); o.value = v; o.textContent = lbl; byFieldSel.appendChild(o);
+    });
+  }
+  if (byFieldSel) byFieldSel.value = lxByField;
+  if (lxOpen.byRep) {
+    const grp = {};
+    all.forEach((l, idx) => {
+      const key = lxByField === 'conseiller' ? (l.conseiller || '—') : lxByField === 'source' ? (l.source || 'website') : (infos[idx].car?.make || '—');
+      grp[key] = (grp[key] || 0) + 1;
+    });
+    const max = Math.max(1, ...Object.values(grp));
+    document.getElementById('lxByRep').innerHTML = Object.entries(grp).sort((a,b) => b[1]-a[1])
+      .map(([k, v]) => `<div class="lx-byrep-row"><span style="width:150px;">${k}</span><div class="lx-bar" style="width:${v/max*55}%;"></div><b>${v}</b></div>`).join('');
+  }
+
+  lxRenderHead();
+  lxRenderRows();
+}
+
+const LX_COLS = ['leads','contact','date','division','statut','resultat','conseiller','agentBdc','marque','modele','annee','stock','rv','visite','essai','h24','approuve','vendu','prepare','suivi'];
+function lxRenderHead() {
+  const head = document.getElementById('lxHead');
+  if (!head) return;
+  const uniq = (f) => [...new Set(webLeads.map(f).filter(Boolean))].sort();
+  const sel = (k, opts, ph) => `<select class="lx-fin ${lxFilters[k] ? 'on' : ''}" onchange="window.lxSetFilter('${k}', this.value)">
+    <option value="">-</option>${opts.map(([v, lbl]) => `<option value="${v}" ${lxFilters[k] === v ? 'selected' : ''}>${lbl}</option>`).join('')}</select>`;
+  head.innerHTML = `
+    <tr>
+      <th style="width:26px;"></th>
+      <th style="text-align:left;">${t('lx.leads')}</th><th>${t('lead.tabContact')}</th><th>${t('task.date')}</th><th>${t('lead.division')}</th>
+      <th>${t('lx.status')}</th><th>${t('lx.result')}</th><th>${t('lead.conseiller')}</th><th>${t('lead.agentBdc')}</th>
+      <th>${t('lx.make')}</th><th>${t('lead.model')}</th><th>${t('ex.year')}</th><th>${t('lead.stockNo')}</th>
+      <th>${t('lx.rv')}</th><th>${t('lead.visite')}</th><th>${t('lx.testDrive')}</th><th>24h</th>
+      <th>${t('lead.opt.approved')}</th><th>${t('lead.sold')}</th><th>${t('lead.prepped')}</th><th>${t('lx.followup')}</th>
+    </tr>
+    <tr class="lx-filter-row">
+      <td><svg class="icon" style="width:13px;height:13px;color:var(--muted);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3"/></svg></td>
+      <td><input class="lx-fin ${lxFilters.name ? 'on' : ''}" id="lxFName" placeholder="${t('lx.filter')}" value="${(lxFilters.name || '').replace(/"/g,'&quot;')}" oninput="window.lxSetFilter('name', this.value)"></td>
+      <td></td><td></td>
+      <td>${sel('division', [['New', t('lx.new')], ['Used', t('lead.used')], ['Certified', t('lx.certified')]])}</td>
+      <td>${sel('statut', [['active', t('lx.active')], ['dnm', t('lead.dnm')]])}</td>
+      <td>${sel('resultat', [['rejoint', t('lead.reached')], ['tentative', t('lx.tentative')], ['attente', t('lx.waiting')]])}</td>
+      <td>${sel('conseiller', uniq(l => l.conseiller).map(v => [v, v]))}</td>
+      <td></td>
+      <td>${sel('marque', [...new Set(webLeads.map(l => { const c = l.linkedCarId ? cars.find(x => String(x.id) === String(l.linkedCarId)) : null; return c?.make; }).filter(Boolean))].sort().map(v => [v, v]))}</td>
+      <td><input class="lx-fin ${lxFilters.modele ? 'on' : ''}" placeholder="${t('lx.filter')}" value="${(lxFilters.modele || '').replace(/"/g,'&quot;')}" oninput="window.lxSetFilter('modele', this.value)"></td>
+      <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+    </tr>`;
+}
+function lxRenderRows() {
+  const body = document.getElementById('lxBody'), foot = document.getElementById('lxFoot');
+  if (!body) return;
+  // keep focus/caret through re-render (filters type into these)
+  const act = document.activeElement, actId = act && act.id, caret = act && act.selectionStart;
+
+  const rows = lxFiltered();
+  const total = rows.length;
+  const pages = Math.max(1, Math.ceil(total / lxPerPage));
+  if (lxPage > pages) lxPage = pages;
+  const slice = rows.slice((lxPage - 1) * lxPerPage, lxPage * lxPerPage);
+
+  const ICO = { phone:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>',
+    mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+    chat:'<path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 8.5-8.5 8.38 8.38 0 0 1 8.5 8.5z"/>',
+    video:'<path d="m22 8-6 4 6 4V8z"/><rect x="2" y="6" width="14" height="12" rx="2"/>' };
+  const sv = (p, on, cls, click) => `<span class="lx-ci ${cls} ${on ? 'on' : ''}" ${click ? `onclick="event.stopPropagation();${click}"` : ''}><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg></span>`;
+  const cb = on => `<input type="checkbox" class="lx-chk" ${on ? 'checked' : ''} disabled>`;
+
+  body.innerHTML = slice.length ? slice.map(l => {
+    const i = lxInfo(l);
+    const c = i.car;
+    const recv = i.recv ? new Date(i.recv) : null;
+    const emails = i.comms.length;
+    const calls = i.tasks.filter(e => e.taskType === 'call').length;
+    const smss = i.tasks.filter(e => e.taskType === 'sms').length;
+    const vids = i.tasks.filter(e => e.taskType === 'virtual_appt').length;
+    const badge = i.state === 'rejoint' ? `<span class="lx-badge rejoint">${t('lead.reached')}</span>`
+      : i.state === 'tentative' ? `<span class="lx-badge tentative">${t('lx.tentative')}</span>`
+      : `<span class="lx-badge attente">${t('lx.waiting')}</span>`;
+    return `<tr onclick="window.openWebLeadDetail('${l.id}')" style="cursor:pointer;">
+      <td onclick="event.stopPropagation()"><input type="checkbox" class="lx-chk" style="pointer-events:auto;"></td>
+      <td class="lx-lead-name">${l.name || 'Unnamed'} <span class="lx-count">(${i.activity})</span></td>
+      <td><div class="lx-contact-icons">
+        ${sv(ICO.phone, !!l.phone, 'phone', l.phone ? `location.href='tel:${l.phone}'` : '')}
+        ${sv(ICO.mail, !!l.email, '', l.email ? `location.href='mailto:${l.email}'` : '')}
+        ${sv(ICO.chat, !!l.phone, '', l.phone ? `location.href='sms:${l.phone}'` : '')}
+        ${sv(ICO.video, false, '', '')}
+      </div></td>
+      <td>${recv ? recv.toLocaleDateString(LANG === 'en' ? 'en-CA' : 'fr-CA', { day:'numeric', month:'short', year:'numeric' }) + '<br>' + recv.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }) : '-'}</td>
+      <td>${c ? (c.condition === 'New' ? t('lx.new') : c.condition === 'Certified' ? t('lx.certified') : t('lead.used')) : '-'}</td>
+      <td><span class="lx-dot ${l.doNotMarket ? 'grey' : 'green'}"></span></td>
+      <td>${badge}<div class="lx-timers"><span class="lx-timer">${lxFmtDur(i.responseMs)}</span><span class="lx-timer">-</span></div></td>
+      <td>${l.conseiller || '-'}</td>
+      <td>${l.agentBdc || '-'}</td>
+      <td>${c?.make || '-'}</td>
+      <td>${c?.model || '-'}</td>
+      <td>${c?.year || '-'}</td>
+      <td>${c?.stock || '-'}</td>
+      <td>${cb(i.hasRv)}</td>
+      <td>${cb(!!i.m.visite)}</td>
+      <td>${cb(!!i.m.essai)}</td>
+      <td>${cb(!!i.m.suivi24h)}</td>
+      <td>${cb(i.m.approbationPreteur === 'approved' || !!i.m.approbationClient)}</td>
+      <td>${cb(!!i.m.vendu)}</td>
+      <td>${cb(!!i.m.prepare)}</td>
+      <td><div class="lx-suivi"><span>${calls}📞</span><span>${emails}✉️</span><span>${smss}💬</span><span>${vids}📹</span></div></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="21" style="padding:40px;color:var(--muted);">${webLeads.length ? t('lx.noMatch') : t('lx.noLeads')}</td></tr>`;
+
+  // footer: total + per-page + pager
+  const btn = (lbl, p, dis, on) => `<button ${dis ? 'disabled' : ''} class="${on ? 'active' : ''}" onclick="window.lxSetPage(${p})">${lbl}</button>`;
+  let pager = btn('‹', Math.max(1, lxPage-1), lxPage === 1, false);
+  const show = [...new Set([1, 2, lxPage-1, lxPage, lxPage+1, pages-1, pages])].filter(p => p >= 1 && p <= pages).sort((a,b) => a-b);
+  let last = 0;
+  show.forEach(p => { if (p - last > 1) pager += `<button disabled>…</button>`; pager += btn(p, p, false, p === lxPage); last = p; });
+  pager += btn('›', Math.min(pages, lxPage+1), lxPage === pages, false);
+  foot.innerHTML = `<div style="display:flex;align-items:center;gap:10px;">
+      <span>${t('cal.total')} ${total}</span>
+      <select class="sort-select" style="padding:4px 8px;font-size:12px;" onchange="window.lxSetPerPage(this.value)">
+        ${[25,50,100].map(n => `<option value="${n}" ${lxPerPage === n ? 'selected' : ''}>${n}/page</option>`).join('')}
+      </select>
+    </div>
+    <div class="lx-pager">${pager}</div>`;
+
+  if (actId) { const el = document.getElementById(actId); if (el) { el.focus(); if (caret != null && el.setSelectionRange) try { el.setSelectionRange(caret, caret); } catch(e){} } }
 }
 window.addWebLeadToTexting = function(id) {
   const l = webLeads.find(x => x.id === id);
@@ -1258,9 +1941,47 @@ function updateWebLead(id, fields) {
       .catch(e => showToast('⚠️ Sync failed: ' + e.message));
   }
 }
+// Per-open UI state for the client sheet (not persisted — just which sub-tab is showing).
+let leadInfoTab = 'general';
+let leadCarPickerOpen = false;
+let leadCarMenuOpen = false;   // vehicle ••• actions dropdown
+let noteTags = [];             // colleagues tagged on the note being composed
+let pendingNoteFiles = [];     // attachments staged on the note being composed
+let editingNoteId = null;      // note currently in inline-edit mode
+// Only non-executable document/image types — deliberately excludes anything that could run
+// (no .exe/.js/.bat/.sh/.zip). "cannot contain viruses" per JP: PDFs, text, and pictures.
+const NOTE_FILE_TYPES = ['application/pdf','text/plain','text/csv','image/png','image/jpeg','image/gif','image/webp'];
+const NOTE_FILE_MAX = 2 * 1024 * 1024; // 2MB cap so we don't blow the Firestore 1MB doc / localStorage
 window.openWebLeadDetail = function(id) {
+  leadInfoTab = 'general';
+  leadCarPickerOpen = false;
+  leadCarMenuOpen = false;
+  noteTags = [];
+  pendingNoteFiles = [];
+  editingNoteId = null;
   document.getElementById('webLeadsListView').style.display = 'none';
   document.getElementById('webLeadDetailView').style.display = 'block';
+  renderWebLeadDetail(id);
+};
+window.setLeadInfoTab = function(id, tab) { leadInfoTab = tab; renderWebLeadDetail(id); };
+window.toggleLeadCarPicker = function(id) { leadCarPickerOpen = !leadCarPickerOpen; renderWebLeadDetail(id); };
+window.setLeadRating = function(id, n) { updateWebLead(id, { rating: n }); renderWebLeadDetail(id); };
+window.toggleLeadDNM = function(id, checked) { updateWebLead(id, { doNotMarket: !!checked }); logLeadHistory(id, (checked ? 'a activé' : 'a désactivé') + ' « Do not market »'); };
+window.saveLeadContactField = function(id, field, value) {
+  const v = value.trim();
+  const updates = { [field]: v };
+  // Prénom/Nom recompose the canonical `name` (header, search, notifications read from it).
+  if (field === 'prenom' || field === 'nom') {
+    const l = webLeads.find(x => x.id === id) || {};
+    const nameParts = (l.name || '').trim().split(/\s+/);
+    const curLast = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+    const curFirst = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : (nameParts[0] || '');
+    const prenom = field === 'prenom' ? v : (l.prenom ?? curFirst);
+    const nom = field === 'nom' ? v : (l.nom ?? curLast);
+    updates.name = [prenom, nom].filter(Boolean).join(' ');
+  }
+  updateWebLead(id, updates);
+  logLeadHistory(id, 'a modifié les informations de contact');
   renderWebLeadDetail(id);
 };
 window.backToWebLeadsList = function() {
@@ -1268,46 +1989,166 @@ window.backToWebLeadsList = function() {
   document.getElementById('webLeadsListView').style.display = 'block';
   renderWebLeads();
 };
+// Audit trail, same idea as Activix's "Historique des modifications" panel.
+function logLeadHistory(id, text) {
+  const l = webLeads.find(x => x.id === id);
+  const entry = { at: Date.now(), by: (typeof currentUser !== 'undefined' && currentUser?.displayName) || 'Moi', text };
+  const historyLog = (l && l.historyLog ? l.historyLog : []).concat([entry]);
+  updateWebLead(id, { historyLog });
+}
 window.setWebLeadStage = function(id, stageKey) {
   updateWebLead(id, { stage: stageKey });
+  const s = LEAD_STAGES.find(x => x.key === stageKey);
+  logLeadHistory(id, `est passé à l'étape « ${s ? s.fr : stageKey} »`);
   renderWebLeadDetail(id);
+};
+// Stage-panel checkboxes/fields (Visite, Vendu, Livré…). Checkboxes stamp the date when
+// checked, exactly like Activix shows "13 juil. 2026 18:46" beside a checked milestone.
+window.setLeadMilestone = function(id, key, el) {
+  const l = webLeads.find(x => x.id === id);
+  const m = Object.assign({}, l && l.milestones);
+  const label = el.dataset.label || key;
+  if (el.type === 'checkbox') {
+    if (el.checked) m[key] = { at: Date.now() }; else delete m[key];
+    logLeadHistory(id, `${el.checked ? 'a coché' : 'a décoché'} « ${label} »`);
+  } else {
+    m[key] = el.value;
+    logLeadHistory(id, `a modifié « ${label} »`);
+  }
+  updateWebLead(id, { milestones: m });
+  renderWebLeadDetail(id);
+};
+window.toggleLeadCarMenu = function(id) { leadCarMenuOpen = !leadCarMenuOpen; renderWebLeadDetail(id); };
+window.markLinkedCarSold = function(id) {
+  const l = webLeads.find(x => x.id === id);
+  const car = l && l.linkedCarId ? cars.find(c => String(c.id) === String(l.linkedCarId)) : null;
+  if (!car) return;
+  window.markSold(car.id, 'sold');
+  const m = Object.assign({}, l.milestones);
+  if (!m.vendu) m.vendu = { at: Date.now() };
+  updateWebLead(id, { milestones: m });
+  logLeadHistory(id, `a marqué le véhicule ${car.stock || ''} comme Vendu`);
+  leadCarMenuOpen = false;
+  renderWebLeadDetail(id);
+};
+window.markLinkedCarDelivered = function(id) {
+  const l = webLeads.find(x => x.id === id);
+  const car = l && l.linkedCarId ? cars.find(c => String(c.id) === String(l.linkedCarId)) : null;
+  if (!car) return;
+  window.markSold(car.id, 'delivered');
+  logLeadHistory(id, `a marqué le véhicule ${car.stock || ''} comme Livré`);
+  renderWebLeadDetail(id);
+};
+// Note @-tagging: person icon opens a colleague checklist (the team roster), tags attach
+// to the note when saved. Pure DOM toggle — no re-render, so composer text is never lost.
+window.toggleNoteTagPicker = function() {
+  const p = document.getElementById('noteTagPicker');
+  if (p) p.style.display = p.style.display === 'none' ? 'block' : 'none';
+};
+window.toggleNoteTag = function(name, checked) {
+  if (checked) { if (!noteTags.includes(name)) noteTags.push(name); }
+  else noteTags = noteTags.filter(t => t !== name);
+  const badge = document.getElementById('noteTagCount');
+  if (badge) { badge.style.display = noteTags.length ? 'flex' : 'none'; badge.textContent = noteTags.length; }
+};
+// File attach — validate against the whitelist, cap size, read as data URL. (Signed in we'd
+// ideally push to Firebase Storage; local-only keeps the data URL, hence the size cap.)
+window.pickNoteFile = function() { const el = document.getElementById('noteFileInput'); if (el) el.click(); };
+window.onNoteFileSelected = function(inputEl, leadId) {
+  const files = [...(inputEl.files || [])];
+  inputEl.value = '';
+  files.forEach(file => {
+    if (!NOTE_FILE_TYPES.includes(file.type)) { showToast(`⚠️ Type non autorisé: ${file.name}`); return; }
+    if (file.size > NOTE_FILE_MAX) { showToast(`⚠️ Fichier trop volumineux (max 2 Mo): ${file.name}`); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      pendingNoteFiles.push({ id: 'f' + Date.now() + Math.random().toString(36).slice(2,6), name: file.name, type: file.type, size: file.size, dataUrl: reader.result });
+      renderWebLeadDetail(leadId);
+    };
+    reader.readAsDataURL(file);
+  });
+};
+window.removePendingNoteFile = function(fid, leadId) {
+  pendingNoteFiles = pendingNoteFiles.filter(f => f.id !== fid);
+  renderWebLeadDetail(leadId);
+};
+window.openNoteAttachment = function(leadId, noteId, fileId) {
+  const l = webLeads.find(x => x.id === leadId);
+  const note = l && (l.notesLog || []).find(n => n.id === noteId);
+  const f = note && (note.attachments || []).find(a => a.id === fileId);
+  if (!f || !f.dataUrl) { showToast('Fichier indisponible'); return; }
+  const w = window.open();
+  if (w) w.document.write(f.type.startsWith('image/')
+    ? `<title>${f.name}</title><body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;height:100vh;"><img src="${f.dataUrl}" style="max-width:100%;max-height:100%;"></body>`
+    : `<title>${f.name}</title><iframe src="${f.dataUrl}" style="border:0;width:100%;height:100%;position:fixed;inset:0;"></iframe>`);
 };
 window.addWebLeadNote = function(id) {
   const input = document.getElementById('leadNoteInput');
   const text = input.value.trim();
-  if (!text) return;
-  const entry = { id: 'n' + Date.now(), text, createdAt: Date.now() };
+  if (!text && !pendingNoteFiles.length) return;
+  const entry = { id: 'n' + Date.now(), text, tags: [...noteTags], attachments: pendingNoteFiles.map(f => ({ ...f })), createdAt: Date.now() };
   const l = webLeads.find(x => x.id === id);
   const notesLog = (l && l.notesLog ? l.notesLog : []).concat([entry]);
   updateWebLead(id, { notesLog });
   if (currentUser) updateDoc(doc(db, 'users', currentUser.uid, 'webLeads', id), { notesLog: arrayUnion(entry) }).catch(() => {});
+  if (noteTags.length) pushTagNotification(id, l && l.name, [...noteTags], text);
+  logLeadHistory(id, noteTags.length ? `a ajouté une note (tagué: ${noteTags.join(', ')})` : 'a ajouté une note');
+  input.value = '';
+  noteTags = [];
+  pendingNoteFiles = [];
   renderWebLeadDetail(id);
 };
+window.startEditNote = function(leadId, noteId) { editingNoteId = noteId; renderWebLeadDetail(leadId); };
+window.cancelEditNote = function(leadId) { editingNoteId = null; renderWebLeadDetail(leadId); };
+window.saveEditNote = function(leadId, noteId) {
+  const ta = document.getElementById('editNote-' + noteId);
+  if (!ta) return;
+  const l = webLeads.find(x => x.id === leadId);
+  const notesLog = (l.notesLog || []).map(n => n.id === noteId ? { ...n, text: ta.value.trim(), editedAt: Date.now() } : n);
+  updateWebLead(leadId, { notesLog });
+  if (currentUser) updateDoc(doc(db, 'users', currentUser.uid, 'webLeads', leadId), { notesLog }).catch(() => {});
+  logLeadHistory(leadId, 'a modifié une note');
+  editingNoteId = null;
+  renderWebLeadDetail(leadId);
+};
+window.deleteWebLeadNote = function(leadId, noteId) {
+  if (!confirm('Supprimer cette note ?')) return;
+  const l = webLeads.find(x => x.id === leadId);
+  const notesLog = (l.notesLog || []).filter(n => n.id !== noteId);
+  updateWebLead(leadId, { notesLog });
+  if (currentUser) updateDoc(doc(db, 'users', currentUser.uid, 'webLeads', leadId), { notesLog }).catch(() => {});
+  logLeadHistory(leadId, 'a supprimé une note');
+  renderWebLeadDetail(leadId);
+};
 window.addWebLeadComm = function(id) {
-  const type = document.getElementById('commType').value;
+  const direction = document.getElementById('commDir').value;
+  const subject = document.getElementById('commSubject').value.trim();
   const text = document.getElementById('commText').value.trim();
-  if (!text) return;
-  const entry = { id: 'c' + Date.now(), type, text, createdAt: Date.now() };
+  if (!text && !subject) return;
+  const entry = { id: 'c' + Date.now(), type: 'email', direction, subject, text, createdAt: Date.now() };
   const l = webLeads.find(x => x.id === id);
   const commsLog = (l && l.commsLog ? l.commsLog : []).concat([entry]);
   updateWebLead(id, { commsLog });
   if (currentUser) updateDoc(doc(db, 'users', currentUser.uid, 'webLeads', id), { commsLog: arrayUnion(entry) }).catch(() => {});
+  logLeadHistory(id, `a consigné un courriel (${direction === 'sent' ? 'envoyé' : 'reçu'})`);
   renderWebLeadDetail(id);
 };
 window.linkCarToWebLead = function(id) {
   const sel = document.getElementById('leadCarPicker');
   if (!sel || !sel.value) return;
+  const car = cars.find(c => String(c.id) === String(sel.value));
   updateWebLead(id, { linkedCarId: sel.value });
+  logLeadHistory(id, `a lié le véhicule ${car ? (car.stock || '') + ' ' + (car.model || '') : ''}`.trim());
   renderWebLeadDetail(id);
 };
 window.unlinkCarFromWebLead = function(id) {
   updateWebLead(id, { linkedCarId: null });
+  logLeadHistory(id, 'a retiré le véhicule recherché');
+  leadCarMenuOpen = false;
   renderWebLeadDetail(id);
 };
 window.addLeadTask = function(leadId) {
-  window.switchTab('schedule');
-  window.openNewEvent();
-  pendingEventLeadId = leadId;
+  window.openTaskModal(leadId);
 };
 window.goToLeadTask = function(eventId) {
   const ev = calendarEvents.find(e => e.id === eventId);
@@ -1325,92 +2166,521 @@ function renderWebLeadDetail(id) {
   const stage = l.stage || 'submission';
   const stageIdx = LEAD_STAGES.findIndex(s => s.key === stage);
   const linkedCar = l.linkedCarId ? cars.find(c => String(c.id) === String(l.linkedCarId)) : null;
+  const exchangeVehicle = l.exchangeVehicle || null;
   const availableCars = cars.filter(c => !c.sold && !c.delivered);
   const tasks = calendarEvents.filter(e => e.leadId === id).sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
   const notesLog = (l.notesLog || []).slice().reverse();
   const commsLog = (l.commsLog || []).slice().reverse();
+  const receivedStr = l.receivedAt?.toDate ? l.receivedAt.toDate().toLocaleString() : '—';
+  const srcLabel = (l.source || 'website').replace(/_/g, ' ').toUpperCase();
+  // Activix renders the first name light and the LAST name bold.
+  const nameParts = (l.name || 'Unnamed').trim().split(/\s+/);
+  const lastName = nameParts.length > 1 ? nameParts.pop() : '';
+  const firstName = nameParts.join(' ');
+  const rating = Number(l.rating) || 0;
+  const repSelect = (roleField, current) => `<select class="ax-rep-select" onchange="window.setLeadRep('${id}','${roleField}',this.value)">
+    <option value="" ${!current ? 'selected' : ''}>---</option>
+    ${reps.map(r => `<option value="${r}" ${r === current ? 'selected' : ''}>${r}</option>`).join('')}
+    <option value="__add__">${t('lead.addMember')}</option>
+  </select>`;
+
+  const I = (paths, w) => `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
+  const ICON_CHECK = I('<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/>');
+  const ICON_INFO = I('<circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12.01" y2="8"/>');
+  const ICON_PHONE = I('<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>');
+  const ICON_MAIL = I('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>');
+  const ICON_CHAT = I('<path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 8.5-8.5 8.38 8.38 0 0 1 8.5 8.5z"/>');
+  const ICON_VIDEO = I('<path d="m22 8-6 4 6 4V8z"/><rect x="2" y="6" width="14" height="12" rx="2"/>');
+  const ICON_LOCK = I('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>');
+  const ICON_GEAR = I('<circle cx="12" cy="12" r="3"/><path d="M12 5v2M12 17v2M5 12h2M17 12h2M7.5 7.5l1.4 1.4M15.1 15.1l1.4 1.4M7.5 16.5l1.4-1.4M15.1 8.9l1.4-1.4"/>');
+  const ICON_EYEOFF = I('<path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.5 13.5 0 0 0 2 12s3 8 10 8a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/>');
+  const ICON_SHARE = I('<path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>');
+  const ICON_REFRESH = I('<path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/>');
+  const ICON_FILTER = I('<polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3"/>');
+  const ICON_PLUS = I('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>');
+  const ICON_CALENDAR = I('<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>');
+  const ICON_PERSON = I('<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/>');
+  const ICON_MIC = I('<rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/>');
+  const ICON_CLIP = I('<path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>');
+  const ICON_TASKS = I('<rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/><path d="M9 12l2 2 4-4"/>', 1.5);
+  const ICON_ENVELOPES = I('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>', 1.5);
+  const ICON_NOTEBIG = I('<path d="M9 3h6a2 2 0 0 1 2 2v14l-3-2-2 2-2-2-2 2V5a2 2 0 0 1 2-2z"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/>', 1.5);
+  const ICON_CAR_BIG = `<svg viewBox="0 0 120 60" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:100%;"><path d="M18 40 l6-14 a6 6 0 0 1 5.5-3.5 h40 a6 6 0 0 1 5 2.7 L84 40"/><rect x="10" y="38" width="98" height="10" rx="4"/><circle cx="32" cy="49" r="6"/><circle cx="86" cy="49" r="6"/><path d="M52 23 v14"/></svg>`;
+  const stars = [1,2,3,4,5].map(n => `<span class="star ${n <= rating ? 'on' : ''}" onclick="window.setLeadRating('${id}',${n === rating ? 0 : n})">★</span>`).join('');
+  const fld = (label, value, opts = {}) => `
+    <div ${opts.full ? 'style="grid-column:1/-1;"' : ''}>
+      <div class="ax-label">${label}${opts.lock ? ICON_LOCK.replace('class="icon"','class="icon" style="width:10px;height:10px;"') : ''}</div>
+      <div class="ax-value ${value === '---' ? 'dim' : ''}">${value}</div>
+    </div>`;
+  const editFld = (label, field, value, opts = {}) => `
+    <div ${opts.full ? 'style="grid-column:1/-1;"' : ''}>
+      <div class="ax-label">${label}${opts.star ? ' <span style="color:#f5b942;">★</span>' : ''}${opts.verified ? ' <span style="color:var(--success);">✓</span>' : ''}</div>
+      <input type="${opts.type || 'text'}" class="ax-input" value="${(value || '').toString().replace(/"/g, '&quot;')}" placeholder="—" onchange="window.saveLeadContactField('${id}','${field}',this.value)">
+    </div>`;
+  // options = [[storedValue, displayLabel], …] — stored values stay language-independent.
+  const selFld = (label, field, current, options) => `
+    <div>
+      <div class="ax-label">${label}</div>
+      <select class="ax-input" onchange="window.saveLeadContactField('${id}','${field}',this.value)">
+        ${options.map(([v, lbl]) => `<option value="${v}" ${(current || '') === v ? 'selected' : ''}>${lbl}</option>`).join('')}
+      </select>
+    </div>`;
+  const secHead = (txt) => `<div style="grid-column:1/-1;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-top:1px solid var(--border);padding-top:14px;margin-top:6px;">${txt}</div>`;
+
+  // ── Stage milestones (m) drive both the panels below and the tab colors above,
+  //    matching Activix: green check on a tab = its key milestone box is checked. ──
+  const m = l.milestones || {};
+  const histLog = (l.historyLog || []).slice().reverse();
+  const fmtStamp = ts => new Date(ts).toLocaleString(LANG === 'en' ? 'en-CA' : 'fr-CA', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const lockSm = ICON_LOCK.replace('class="icon"', 'class="icon" style="width:10px;height:10px;"');
+  const ICON_STAR = I('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>');
+  const ICON_DOC = I('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>');
+  const ICON_TRASH = I('<path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/>');
+  const ICON_PENCIL = I('<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>');
+  const noteFileIcon = t => t === 'application/pdf' ? '📄' : t && t.startsWith('image/') ? '🖼️' : '📎';
+  const chk = (key, label, opts = {}) => `
+    <div>
+      <div class="ax-label">${label}${opts.lock ? lockSm : ''}</div>
+      <div style="display:flex;align-items:center;gap:7px;">
+        <input type="checkbox" class="ax-checkbox" data-label="${label}" ${m[key] ? 'checked' : ''} onchange="window.setLeadMilestone('${id}','${key}',this)">
+        <span class="ax-check-date">${m[key]?.at ? fmtStamp(m[key].at) : '---'}</span>
+      </div>
+    </div>`;
+  const mTxt = (key, label, ph) => `
+    <div>
+      <div class="ax-label">${label}</div>
+      <input type="text" class="ax-input" data-label="${label}" value="${(m[key] || '').toString().replace(/"/g, '&quot;')}" placeholder="${ph || '---'}" onchange="window.setLeadMilestone('${id}','${key}',this)">
+    </div>`;
+  const mDate = (key, label, opts = {}) => `
+    <div>
+      <div class="ax-label">${label}${opts.lock ? lockSm : ''}</div>
+      <input type="date" class="ax-input" data-label="${label}" value="${m[key] || ''}" onchange="window.setLeadMilestone('${id}','${key}',this)">
+    </div>`;
+  // options = [[storedValue, displayLabel], …]. The stored value is language-independent so
+  // switching FR↔EN never loses a saved selection.
+  const mSel = (key, label, options, opts = {}) => `
+    <div>
+      <div class="ax-label">${label}${opts.lock ? lockSm : ''}</div>
+      <select class="ax-input" data-label="${label}" onchange="window.setLeadMilestone('${id}','${key}',this)">
+        ${options.map(([v, lbl]) => `<option value="${v}" ${(m[key] || '') === v ? 'selected' : ''}>${lbl}</option>`).join('')}
+      </select>
+    </div>`;
+
+  // Per-stage panels — field lists copied from JP's real Activix (clicked through live).
+  const theVehicle = LANG === 'en' ? 'the vehicle' : 'le véhicule';
+  const vehicleWord = LANG === 'en' ? 'Vehicle' : 'Véhicule';
+  const presentationPanel = `
+    <div class="ax-panel-subtitle">${t('lead.dealerPres')}</div>
+    <div class="ax-check-grid">
+      ${chk('visite', t('lead.visite'), { lock: 1 })}
+      ${chk('suivi24h', t('lead.suivi24'))}
+      ${chk('beback', t('lead.beback'), { lock: 1 })}
+      ${mTxt('qualification', t('lead.qualification'), '---')}
+      ${chk('dealerTour', t('lead.dealerTour'))}
+      ${chk('takeover', t('lead.takeover'), { lock: 1 })}
+    </div>
+    <div class="ax-panel-subtitle">${t('lead.vehiclePres')}</div>
+    <div class="ax-check-grid">
+      ${chk('essai', t('lead.essai'), { lock: 1 })}
+    </div>`;
+  const salePanel = `
+    <div class="ax-panel-subtitle">${t('lead.salesInvoice')}</div>
+    <div class="ax-check-grid">
+      ${chk('factureCreee', t('lead.invCreated'))}
+      ${chk('factureEnvoyee', t('lead.invSent'))}
+      ${chk('factureSignee', t('lead.invSigned'))}
+      ${chk('vendu', t('lead.sold'), { lock: 1 })}
+    </div>
+    <div class="ax-panel-subtitle">${t('lead.clientDeposit')}</div>
+    <div class="ax-check-grid">
+      ${chk('depotRecu', t('lead.depositReceived'))}
+      ${chk('recuEnvoye', t('lead.receiptSent'))}
+    </div>
+    ${linkedCar && m.vendu && !linkedCar.sold && !linkedCar.delivered ? `<div style="margin-top:14px;"><button class="ax-btn-outline-blue" onclick="window.markLinkedCarSold('${id}')">${t('lead.markBtn')} ${linkedCar.stock || theVehicle} ${t('lead.markSoldInv')}</button></div>` : ''}
+    ${linkedCar && (linkedCar.sold || linkedCar.delivered) ? `<div style="margin-top:14px;font-size:12.5px;color:var(--success);">✓ ${vehicleWord} ${linkedCar.stock || ''} ${t('lead.markedSoldInv')}</div>` : ''}`;
+  const financingPanel = `
+    <div class="ax-panel-subtitle">${t('lead.creditApp')}</div>
+    <div class="ax-check-grid" style="grid-template-columns:repeat(3,1fr);">
+      ${mSel('approbationPreteur', t('lead.lenderApproval'), [['','---'], ['pending', t('lead.opt.pending')], ['approved', t('lead.opt.approved')], ['approvedCond', t('lead.opt.approvedCond')], ['declined', t('lead.opt.declined')]])}
+      ${mSel('institutionFinanciere', t('lead.finInstitution'), [['','---'], ...['Hyundai Finance','Desjardins','Banque Nationale','TD Auto Finance','RBC','BMO','Scotiabank','CIBC','iA Auto Finance'].map(b => [b, b]), ['other', t('lead.opt.other')]])}
+      ${chk('approbationClient', t('lead.clientApproval'))}
+    </div>`;
+  const deliveryPanel = `
+    <div class="ax-panel-subtitle">${t('lead.vehiclePrep')}</div>
+    <div class="ax-check-grid">
+      ${chk('venteEnAttente', t('lead.pendingSale'), { lock: 1 })}
+      ${chk('vehiculeIci', t('lead.vehicleHere'), { lock: 1 })}
+      ${mDate('aLivrerLe', t('lead.toDeliver'), { lock: 1 })}
+      ${mTxt('bonDeTravail', t('lead.workOrder'), '#')}
+      ${chk('inspecte', t('lead.inspected'), { lock: 1 })}
+      ${chk('ravitaille', t('lead.fueled'), { lock: 1 })}
+      ${chk('prepare', t('lead.prepped'), { lock: 1 })}
+      ${chk('livre', t('lead.delivered'), { lock: 1 })}
+      ${chk('enregistreLe', t('lead.registeredOn'), { lock: 1 })}
+      ${chk('dossier', t('lead.file'))}
+      ${chk('escompte', t('lead.discounted'), { lock: 1 })}
+    </div>
+    <div class="ax-panel-subtitle">${t('lead.clientComm')}</div>
+    <div class="ax-check-grid">
+      ${chk('adhesion', t('lead.optin'))}
+      ${chk('csi', t('lead.csi'), { lock: 1 })}
+    </div>
+    <div class="ax-panel-subtitle">${t('lead.customFields')}</div>
+    <div class="ax-check-grid">
+      ${chk('chance2', t('lead.chance2'))}
+      ${chk('chance3', t('lead.chance3'))}
+      ${mSel('garantie', t('lead.warranty'), [['','---'], ['none', t('lead.opt.none')], ['basic', t('lead.opt.basic')], ['extended', t('lead.opt.extended')]])}
+    </div>
+    ${linkedCar && m.livre && !linkedCar.delivered ? `<div style="margin-top:14px;"><button class="ax-btn-outline-blue" onclick="window.markLinkedCarDelivered('${id}')">${t('lead.markBtn')} ${linkedCar.stock || theVehicle} ${t('lead.markDeliveredInv')}</button></div>` : ''}
+    ${linkedCar && linkedCar.delivered ? `<div style="margin-top:14px;font-size:12.5px;color:var(--success);">✓ ${vehicleWord} ${linkedCar.stock || ''} ${t('lead.markedDeliveredInv')}</div>` : ''}`;
+
+  // Tab states, Activix-style: green = milestone reached (data-driven), orange = current stage.
+  const STAGE_DONE = {
+    submission: !!l.linkedCarId,
+    exchange: !!l.exchangeVehicle,
+    presentation: !!m.visite,
+    sale: !!m.vendu,
+    financing: !!m.approbationClient || m.approbationPreteur === 'approved',
+    delivery: !!m.livre,
+  };
+
+  // Preserve in-progress composer text across the full re-renders milestones trigger.
+  const prevNote = document.getElementById('leadNoteInput') ? document.getElementById('leadNoteInput').value : '';
+  const prevComm = document.getElementById('commText') ? document.getElementById('commText').value : '';
 
   view.innerHTML = `
-    <button class="btn btn-secondary" style="width:auto;padding:8px 12px;margin-bottom:14px;" onclick="window.backToWebLeadsList()">← Back to Leads</button>
+    <button class="ax-btn-outline" style="margin-bottom:12px;" onclick="window.backToWebLeadsList()">← ${t('lead.back')}</button>
 
-    <div class="dash-panel" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px;">
-      <div class="dash-avatar" style="width:52px;height:52px;font-size:16px;flex-shrink:0;">${custInitials(l.name || '?')}</div>
-      <div style="flex:1;min-width:200px;">
-        <div style="font-weight:700;font-size:17px;">${l.name || 'Unnamed'}</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:5px;display:flex;gap:14px;flex-wrap:wrap;">
-          <span>${l.phone ? formatPhone(l.phone) : 'No phone'}</span>
-          <span>${l.email || 'No email'}</span>
-          <span class="status-pill topost">${l.source || 'website'}</span>
+    <div class="ax-topstrip">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="ax-source-tag">${srcLabel} <span style="font-size:10px;">⌄</span></span>
+        ${l.phone || l.email ? `<span class="ax-pill-green">${ICON_CHECK} ${t('lead.reached')}</span>` : ''}
+      </div>
+      <div class="ax-head-icons">
+        <span class="ax-icon-sq" title="${t('lead.received')}: ${receivedStr}">${ICON_INFO}</span>
+        <span class="ax-icon-sq" title="${t('lead.options')}">${ICON_GEAR}</span>
+        <span class="ax-icon-sq" title="${t('lead.follow')}">${ICON_EYEOFF}</span>
+        <span class="ax-icon-sq" title="${t('lead.share')}">${ICON_SHARE}</span>
+      </div>
+    </div>
+
+    <div class="ax-card">
+      <div class="ax-card-body">
+        <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+          <div class="ax-avatar-box">${ICON_PERSON}<span class="ax-avatar-dot"></span></div>
+          <div class="ax-name">${firstName} <b>${lastName || ''}</b></div>
+          <div class="ax-header-icons">
+            <button title="${l.phone ? formatPhone(l.phone) : t('lead.noPhone')}" ${l.phone ? `onclick="location.href='tel:${l.phone}'"` : 'style="opacity:.4;cursor:default;"'}>${ICON_PHONE}</button>
+            <button title="${l.email || t('lead.noEmail')}" ${l.email ? `onclick="location.href='mailto:${l.email}'"` : 'style="opacity:.4;cursor:default;"'}>${ICON_MAIL}</button>
+            <button title="${t('lead.text')}" ${l.phone ? `onclick="location.href='sms:${l.phone}'"` : 'style="opacity:.4;cursor:default;"'}>${ICON_CHAT}</button>
+            <button title="${t('lead.video')}" style="opacity:.4;cursor:default;">${ICON_VIDEO}</button>
+            <button title="${t('lead.more')}">••• ${t('lead.more')}</button>
+          </div>
+        </div>
+        <div class="ax-reps">
+          <div><div class="ax-label">${t('lead.conseiller')}</div>${repSelect('conseiller', l.conseiller)}</div>
+          <div><div class="ax-label">${t('lead.agentBdc')}</div>${repSelect('agentBdc', l.agentBdc)}</div>
+          <div><div class="ax-label">${t('lead.secondConseiller')}</div>${repSelect('secondConseiller', l.secondConseiller)}</div>
+          <div><div class="ax-label">${t('lead.directeurFinancier')}</div>${repSelect('directeurFinancier', l.directeurFinancier)}</div>
         </div>
       </div>
     </div>
 
-    <div class="deal-stepper">
-      ${LEAD_STAGES.map((s, i) => `<div class="deal-step ${i < stageIdx ? 'done' : ''} ${i === stageIdx ? 'current' : ''}" onclick="window.setWebLeadStage('${id}','${s.key}')">
-        <div class="deal-step-fr">${s.fr}</div>
-        <div class="deal-step-en">${s.en}</div>
-      </div>`).join('')}
-    </div>
-
-    <div class="lead-info-row">
-      <div class="lead-info-card">
-        <div class="lead-info-card-title">Tâches et rendez-vous <span style="text-transform:none;">(Tasks &amp; Appointments)</span></div>
-        ${tasks.length ? tasks.map(t => `<div class="lead-log-item" style="cursor:pointer;" onclick="window.goToLeadTask('${t.id}')">${t.title}<div class="lead-log-meta">${t.date}${t.time ? ' · ' + t.time : ''}</div></div>`).join('') : `<div style="font-size:12px;color:var(--muted);">Aucune tâche planifiée (No tasks yet)</div>`}
-        <button class="btn btn-secondary" style="width:100%;margin-top:10px;font-size:12px;padding:8px;" onclick="window.addLeadTask('${id}')">+ Ajouter (Add)</button>
-      </div>
-      <div class="lead-info-card">
-        <div class="lead-info-card-title">Communications</div>
-        ${commsLog.length ? commsLog.map(c => `<div class="lead-log-item"><b>${c.type}</b> — ${c.text}<div class="lead-log-meta">${new Date(c.createdAt).toLocaleString()}</div></div>`).join('') : `<div style="font-size:12px;color:var(--muted);">Aucune communication (No communications yet)</div>`}
-        <div style="display:flex;gap:6px;margin-top:10px;">
-          <select id="commType" style="padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;">
-            <option value="call">📞 Call</option>
-            <option value="sms">💬 SMS</option>
-            <option value="email">✉️ Email</option>
-          </select>
-          <input id="commText" type="text" placeholder="Log a note…" style="flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;">
+    <div class="ax-summary-row">
+      <div class="ax-card" style="margin-bottom:0;">
+        <div class="ax-card-head"><h5 class="ax-card-title">${t('lead.tasks')}</h5></div>
+        <div class="ax-summary-body">${ICON_TASKS}
+          <span style="flex:1;">${tasks.length ? `${tasks.length} ${t('lead.taskCount')} ${tasks[0].title}` : t('lead.noTasksPlanned')}</span>
+          <button class="ax-btn-blue" onclick="window.addLeadTask('${id}')">${t('lead.add')}</button>
         </div>
-        <button class="btn btn-secondary" style="width:100%;margin-top:8px;font-size:12px;padding:8px;" onclick="window.addWebLeadComm('${id}')">+ Log</button>
       </div>
-      <div class="lead-info-card">
-        <div class="lead-info-card-title">Notes</div>
-        ${notesLog.length ? notesLog.map(n => `<div class="lead-log-item">${n.text}<div class="lead-log-meta">${new Date(n.createdAt).toLocaleString()}</div></div>`).join('') : `<div style="font-size:12px;color:var(--muted);">Aucune note (No notes yet)</div>`}
-        <textarea id="leadNoteInput" rows="2" placeholder="Ajoutez une note…" style="width:100%;margin-top:10px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;"></textarea>
-        <button class="btn btn-secondary" style="width:100%;margin-top:8px;font-size:12px;padding:8px;" onclick="window.addWebLeadNote('${id}')">+ Ajouter (Add)</button>
+      <div class="ax-card" style="margin-bottom:0;">
+        <div class="ax-card-head"><h5 class="ax-card-title">${t('comm.title')}</h5></div>
+        <div class="ax-summary-body">${ICON_ENVELOPES}
+          <span style="flex:1;">${commsLog.length ? `${commsLog.length} ${t('lead.commCount')}` : t('lead.noComms')}</span>
+        </div>
+      </div>
+      <div class="ax-card" style="margin-bottom:0;">
+        <div class="ax-card-head"><h5 class="ax-card-title">${t('lead.notes')}</h5></div>
+        <div class="ax-summary-body">${ICON_NOTEBIG}
+          <span style="flex:1;">${notesLog.length ? `${notesLog.length} ${t('lead.noteCount')}` : t('lead.noNotes')}</span>
+        </div>
       </div>
     </div>
 
-    <div class="card">
-      <div class="config-title">Navigateur d'offres <span style="font-weight:400;font-size:12px;color:var(--muted);">(Offer Browser)</span></div>
-      ${linkedCar ? `
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:10px;background:var(--surface2);border-radius:10px;">
-          <div>
-            <div style="font-weight:700;">${linkedCar.year || ''} ${linkedCar.make || ''} ${linkedCar.model || ''}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:3px;">Stock ${linkedCar.stock || '—'} · VIN ${linkedCar.vin || '—'} · ${linkedCar.exteriorColor || '—'} ext / ${linkedCar.interiorColor || '—'} int</div>
-            <div style="font-size:13px;color:var(--accent);font-weight:700;margin-top:4px;">$${linkedCar.price ? Number(linkedCar.price).toLocaleString() : '—'}</div>
+    <div class="ax-card" style="margin-top:16px;">
+      <div class="ax-card-head"><h5 class="ax-card-title">${t('lead.offerBrowser')}</h5></div>
+      <div class="ax-card-body">
+        <div class="deal-stepper">
+          ${LEAD_STAGES.map(s => `<div class="deal-step ${STAGE_DONE[s.key] ? 'done' : ''} ${s.key === stage ? 'current' : ''}" onclick="window.setWebLeadStage('${id}','${s.key}')">
+            <div class="deal-step-fr">${STAGE_DONE[s.key] ? ICON_CHECK : s.key === stage ? ICON_INFO : ''}${LANG === 'en' ? s.en : s.fr}</div>
+            <div class="deal-step-en">${LANG === 'en' ? s.fr : s.en}</div>
+          </div>`).join('')}
+        </div>
+        ${stage === 'exchange' ? `
+        <div style="font-weight:600;margin-bottom:14px;">${t('lead.tradeVehicle')}</div>
+        ${exchangeVehicle ? `
+        <div class="ax-vehicle-row">
+          <div class="ax-vehicle-bar"></div>
+          <div class="ax-vehicle-inner">
+            <div class="ax-vehicle-thumb">${ICON_CAR_BIG}</div>
+            <div style="min-width:170px;">
+              <div style="font-size:11px;color:var(--muted);">${exchangeVehicle.year || '—'} ${exchangeVehicle.make || ''}</div>
+              <div style="font-size:15px;font-weight:700;text-transform:uppercase;">${exchangeVehicle.model || '—'}</div>
+              <div style="margin:4px 0 8px;"><span class="ax-stock-badge">${exchangeVehicle.stock ? 'STOCK ' + exchangeVehicle.stock : (LANG === 'en' ? 'TRADE-IN' : 'ÉCHANGE')}</span></div>
+              <div class="ax-mono">${t('lead.vin')}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${exchangeVehicle.vin ? `<b>${exchangeVehicle.vin}</b>` : '---'}<br>${t('ex.odometer').split(' ')[0]}&nbsp;${exchangeVehicle.odometer ? `<b>${Number(exchangeVehicle.odometer).toLocaleString()} km</b>` : '---'}<br>${t('lead.extInt')}&nbsp;${exchangeVehicle.exteriorColor || exchangeVehicle.interiorColor ? `<b>${exchangeVehicle.exteriorColor || '—'} • ${exchangeVehicle.interiorColor || '—'}</b>` : '---'}</div>
+            </div>
+            <span style="flex:1;"></span>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <button class="ax-btn-outline-blue" onclick="window.openExchangeModal('${id}')">${t('lead.edit')}</button>
+              <button class="ax-btn-outline" title="${t('lead.removeTrade')}" onclick="window.removeExchangeVehicle('${id}')">✕</button>
+            </div>
           </div>
-          <div style="display:flex;gap:6px;">
-            <button class="btn btn-secondary" style="width:auto;padding:8px 12px;font-size:12px;" onclick="window.switchTab('inventory');window.filterCars('${(linkedCar.stock || '').replace(/'/g, "\\'")}')">Détails du véhicule</button>
-            <button class="btn-danger" style="padding:8px 10px;" onclick="window.unlinkCarFromWebLead('${id}')">✕</button>
-          </div>
-        </div>` : `
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <select id="leadCarPicker" style="flex:1;min-width:200px;padding:9px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;">
-            <option value="">— Select a vehicle —</option>
+        </div>
+        ${exchangeVehicle.comments ? `<div style="margin-top:10px;font-size:12.5px;color:var(--muted);">${exchangeVehicle.comments}</div>` : ''}
+        ` : `
+        <div class="ax-empty" style="padding:36px 10px;">
+          <div style="width:80px;color:var(--muted);opacity:.4;margin-bottom:8px;">${ICON_CAR_BIG}</div>
+          <div class="ax-empty-title">${t('lead.noTradeYet')}</div>
+          <div class="ax-empty-sub">${t('lead.addVehicleFirst')}</div>
+          <button class="ax-btn-blue" style="margin-top:12px;padding:9px 18px;" onclick="window.openExchangeModal('${id}')">${t('lead.addVehicle')}</button>
+        </div>`}
+        ` : stage === 'presentation' ? presentationPanel
+          : stage === 'sale' ? salePanel
+          : stage === 'financing' ? financingPanel
+          : stage === 'delivery' ? deliveryPanel
+          : `
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+          <span class="ax-count-box">${linkedCar ? 1 : 0}</span>
+          <span style="font-weight:600;">${t('lead.vehiclesWanted')}</span>
+          <span style="flex:1;"></span>
+          <button class="ax-btn-outline" title="${t('lead.onlyOne')}">${ICON_FILTER} ${t('lead.filterSort')}</button>
+          <button class="ax-btn-outline" onclick="window.toggleLeadCarPicker('${id}')">${ICON_PLUS} ${t('lead.addVehicle')}</button>
+        </div>
+        ${leadCarPickerOpen && !linkedCar ? `
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+          <select id="leadCarPicker" style="flex:1;min-width:200px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:3.5px;color:var(--text);font-size:13px;font-family:inherit;">
+            <option value="">${t('lead.chooseVehicle')}</option>
             ${availableCars.map(c => `<option value="${c.id}">${c.stock || ''} — ${c.year || ''} ${c.make || ''} ${c.model || ''}</option>`).join('')}
           </select>
-          <button class="btn btn-primary" style="width:auto;padding:9px 16px;font-size:13px;" onclick="window.linkCarToWebLead('${id}')">Link Vehicle</button>
-        </div>`}
+          <button class="ax-btn-blue" onclick="window.linkCarToWebLead('${id}')">${t('lead.linkVehicle')}</button>
+        </div>` : ''}
+        <div class="ax-vehicle-row">
+          <div class="ax-vehicle-bar"></div>
+          <div class="ax-vehicle-inner">
+            <div class="ax-vehicle-thumb">${ICON_CAR_BIG}</div>
+            <div style="min-width:170px;">
+              <div style="font-size:11px;color:var(--muted);">${linkedCar ? `${linkedCar.year || '—'} ${linkedCar.make || ''}` : t('lead.yearMake')}</div>
+              <div style="font-size:15px;font-weight:700;text-transform:uppercase;">${linkedCar ? (linkedCar.model || '—') : t('lead.model')}</div>
+              <div style="margin:4px 0 8px;"><span class="ax-stock-badge">${linkedCar?.stock ? 'STOCK ' + linkedCar.stock : 'STOCK TBD'}</span></div>
+              <div class="ax-mono">${t('lead.stockNo')}&nbsp;&nbsp;${linkedCar?.stock ? `<b>${linkedCar.stock}</b>` : '---'}<br>${t('lead.vin')}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${linkedCar?.vin ? `<b>${linkedCar.vin}</b>` : '---'}<br>${t('lead.extInt')}&nbsp;${linkedCar ? `<b>${linkedCar.exteriorColor || '—'} • ${linkedCar.interiorColor || '—'}</b>` : '---'}</div>
+            </div>
+            <span style="flex:1;"></span>
+            <div class="ax-fin-stats">
+              <div class="ax-fin-row"><span class="ax-fin-label">${t('lead.payment')}</span><span class="ax-fin-value">${linkedCar?.price ? '$' + Number(linkedCar.price).toLocaleString() : '$---'}</span></div>
+              <div class="ax-fin-row"><span class="ax-fin-label">${t('lead.rate')}</span><span class="ax-fin-value" style="color:var(--muted);">---</span></div>
+              <div class="ax-fin-row"><span class="ax-fin-label">${t('lead.term')}</span><span class="ax-fin-value" style="color:var(--muted);">---</span></div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <button class="ax-btn-blue" style="padding:8px 16px;font-size:13px;font-weight:600;${linkedCar ? '' : 'opacity:.5;'}" ${linkedCar ? `onclick="window.switchTab('inventory');window.filterCars('${(linkedCar.stock || '').replace(/'/g, "\\'")}')"` : `title="${t('lead.noVehicleLinked')}"`}>${t('lead.viewOffer')}</button>
+              <button class="ax-btn-outline-blue" style="${linkedCar ? '' : 'opacity:.5;'}" ${linkedCar ? `onclick="window.openEditCar(${Number(linkedCar.id)})"` : `title="${t('lead.noVehicleLinked')}"`}>${t('lead.vehicleDetails')}</button>
+              ${linkedCar ? `<div style="position:relative;">
+                <button class="ax-btn-outline" title="${t('lead.actions')}" onclick="window.toggleLeadCarMenu('${id}')">•••</button>
+                ${leadCarMenuOpen ? `<div class="ax-menu-pop">
+                  <div class="ax-menu-item" onclick="window.toggleLeadCarMenu('${id}');showToast('${t('lead.setMain')}')">${ICON_STAR} ${t('lead.setMain')}</div>
+                  <div class="ax-menu-item" onclick="window.markLinkedCarSold('${id}')">${ICON_DOC} ${t('lead.markSold')}</div>
+                  <div class="ax-menu-item danger" onclick="window.unlinkCarFromWebLead('${id}')">${ICON_TRASH} ${t('lead.deleteVehicle')}</div>
+                </div>` : ''}
+              </div>` : ''}
+            </div>
+          </div>
+        </div>
+        `}
+      </div>
     </div>
 
-    <div class="card" style="margin-top:14px;">
-      <div class="config-title">Information générale <span style="font-weight:400;font-size:12px;color:var(--muted);">(General Information)</span></div>
-      <div class="row">
-        <div class="input-group"><label>Source</label><div style="font-size:14px;padding:8px 0;">${l.source || 'website'}</div></div>
-        <div class="input-group"><label>Received</label><div style="font-size:14px;padding:8px 0;">${l.receivedAt?.toDate ? l.receivedAt.toDate().toLocaleString() : '—'}</div></div>
+    <div class="ax-2col">
+      <div class="ax-card" style="margin-bottom:0;">
+        <div class="ax-card-head"><h5 class="ax-card-title">${t('lead.generalInfo')}</h5></div>
+        <div class="ax-card-body">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div style="font-size:15px;font-weight:600;">${t('lead.oppDetails')}</div>
+            <div class="ax-tab-toggle">
+              <button class="${leadInfoTab === 'general' ? 'active' : ''}" onclick="window.setLeadInfoTab('${id}','general')">${t('lead.tabGeneral')}</button>
+              <button class="${leadInfoTab === 'contact' ? 'active' : ''}" onclick="window.setLeadInfoTab('${id}','contact')">${t('lead.tabContact')}</button>
+            </div>
+          </div>
+          ${leadInfoTab === 'general' ? `
+          <div class="ax-field-grid">
+            ${fld(t('lead.division'), t('lead.used') + ' <span style="font-size:10px;color:var(--muted);">⇅</span>')}
+            <div><div class="ax-label">${t('lead.rating')}</div><div class="ax-stars">${stars}</div></div>
+            ${fld(t('lead.provider'), srcLabel, { lock: true })}
+            ${fld(t('lead.clientNo'), '---')}
+            ${fld(t('lead.source'), (l.source || 'website') + ' <span style="font-size:10px;color:var(--muted);">⇅</span>')}
+            ${fld(t('lead.method'), t('lead.methodWeb'), { lock: true })}
+            ${fld(t('lead.form'), 'Lead Web')}
+            <div><div class="ax-label">${t('lead.notConsumerGen')} ${ICON_LOCK.replace('class="icon"','class="icon" style="width:10px;height:10px;"')}</div><input type="checkbox" class="ax-checkbox" disabled></div>
+            <div><div class="ax-label">${t('lead.dnm')}</div><input type="checkbox" class="ax-checkbox" ${l.doNotMarket ? 'checked' : ''} onchange="window.toggleLeadDNM('${id}', this.checked)"></div>
+            ${fld(t('lead.segment'), '---', { lock: true })}
+            ${fld(t('lead.budget'), '---')}
+            ${fld(t('lead.purchaseDelay'), '---')}
+            ${fld(t('lead.comments'), l.message ? l.message : '---', { full: true })}
+            ${fld(t('lead.split'), '---')}
+          </div>` : `
+          <div class="ax-field-grid">
+            ${selFld(t('lead.civilite'), 'civilite', l.civilite, [['','---'], ...['M.','Mme','Dr','Me'].map(v => [v, v])])}
+            ${selFld(t('lead.langue'), 'langue', l.langue || 'fr', [['fr', t('lead.opt.french')], ['en', t('lead.opt.english')]])}
+            ${editFld(t('lead.prenom'), 'prenom', l.prenom !== undefined ? l.prenom : firstName)}
+            ${selFld(t('lead.genre'), 'genre', l.genre, [['','---'], ['male', t('lead.opt.male')], ['female', t('lead.opt.female')], ['other', t('lead.opt.other')]])}
+            ${editFld(t('lead.nom'), 'nom', l.nom !== undefined ? l.nom : lastName)}
+            ${editFld(t('lead.dob'), 'dateNaissance', l.dateNaissance, { type: 'date' })}
+            ${selFld(t('lead.civilite2'), 'civilite2', l.civilite2, [['','---'], ...['M.','Mme','Dr','Me'].map(v => [v, v])])}
+            ${editFld(t('lead.company'), 'entreprise', l.entreprise)}
+            ${editFld(t('lead.contact2'), 'contact2', l.contact2)}
+            ${selFld(t('lead.mainContact'), 'contactPrincipal', l.contactPrincipal || 'fullName', [['fullName', t('lead.fullName')], ['company', t('lead.company')]])}
+
+            ${secHead(t('lead.homeContact'))}${secHead(t('lead.workContact'))}
+            ${editFld(t('lead.homePhone'), 'phone', l.phone, { type: 'tel', star: !!l.phone })}
+            ${editFld(t('lead.workPhone'), 'telTravail', l.telTravail, { type: 'tel' })}
+            ${editFld(t('lead.mobile'), 'phone2', l.phone2, { type: 'tel' })}
+            ${editFld(t('lead.workEmail'), 'courrielTravail', l.courrielTravail, { type: 'email' })}
+            ${editFld(t('lead.homeEmail'), 'email', l.email, { type: 'email', star: !!l.email, verified: !!l.email })}
+            <div></div>
+
+            ${secHead(t('lead.address'))}
+            ${editFld(t('lead.addr'), 'address', l.address)}
+            ${editFld(t('lead.city'), 'city', l.city)}
+            ${selFld(t('lead.province'), 'province', l.province || 'QC', [['QC','Québec'], ['ON','Ontario'], ['NB','Nouveau-Brunswick / New Brunswick'], ['NS','Nouvelle-Écosse / Nova Scotia'], ['MB','Manitoba'], ['BC','Colombie-Britannique / British Columbia'], ['AB','Alberta'], ['SK','Saskatchewan'], ['NL','Terre-Neuve / Newfoundland'], ['PE','Île-du-Prince-Édouard / PEI'], ['NT','Territoires du Nord-Ouest / NWT'], ['YT','Yukon'], ['NU','Nunavut']])}
+            ${selFld(t('lead.country'), 'pays', l.pays || 'CA', [['CA','Canada'], ['US', LANG === 'en' ? 'United States' : 'États-Unis'], ['other', t('lead.opt.other')]])}
+            ${editFld(t('lead.postal'), 'postalCode', l.postalCode)}
+          </div>`}
+        </div>
       </div>
-      ${l.message ? `<div class="input-group"><label>Original message</label><div style="font-size:13px;padding:10px;background:var(--surface2);border-radius:8px;">${l.message}</div></div>` : ''}
+
+      <div class="ax-card" style="margin-bottom:0;">
+        <div class="ax-card-head"><h5 class="ax-card-title">${t('lead.notes')}</h5>
+          <div class="ax-head-icons"><span class="ax-icon-sq" title="${t('lead.refresh')}">${ICON_REFRESH}</span><span class="ax-icon-sq">${ICON_FILTER}</span></div>
+        </div>
+        <div class="ax-card-body">
+          <div class="ax-composer">
+            <div class="ax-composer-avatar">${custInitials(l.conseiller || 'JP')}</div>
+            <div style="flex:1;">
+              <textarea id="leadNoteInput" placeholder="${t('lead.notePh')}"></textarea>
+              <input type="file" id="noteFileInput" accept="application/pdf,text/plain,text/csv,image/png,image/jpeg,image/gif,image/webp" multiple style="display:none;" onchange="window.onNoteFileSelected(this, '${id}')">
+              ${pendingNoteFiles.length ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">${pendingNoteFiles.map(f => `<span class="note-file-chip">${noteFileIcon(f.type)} ${f.name} <span style="cursor:pointer;color:var(--danger);margin-left:2px;" onclick="window.removePendingNoteFile('${f.id}','${id}')">✕</span></span>`).join('')}</div>` : ''}
+              <div class="ax-composer-tools" style="position:relative;">
+                <span class="ax-icon-sq" style="position:relative;" title="${t('lead.tagColleague')}" onclick="window.toggleNoteTagPicker()">${ICON_PERSON}<span id="noteTagCount" class="note-tag-badge" style="display:${noteTags.length ? 'flex' : 'none'};">${noteTags.length}</span></span>
+                <span class="ax-icon-sq" title="${t('lead.voiceNote')}">${ICON_MIC}</span>
+                <span class="ax-icon-sq" title="${t('lead.attachFile')}" onclick="window.pickNoteFile()">${ICON_CLIP}</span>
+                <span style="flex:1;"></span>
+                <button class="ax-btn-outline" onclick="window.addWebLeadNote('${id}')">${t('lead.save')}</button>
+                <div id="noteTagPicker" class="ax-tagpicker" style="display:none;">
+                  ${reps.length ? reps.map(r => `<label><input type="checkbox" class="ax-checkbox" ${noteTags.includes(r) ? 'checked' : ''} onchange="window.toggleNoteTag('${r.replace(/'/g, "\\'")}', this.checked)"> ${r}</label>`).join('') : `<div style="padding:8px;font-size:12px;color:var(--muted);">${t('lead.noColleagues')}</div>`}
+                </div>
+              </div>
+            </div>
+          </div>
+          ${notesLog.length ? `<div style="margin-top:14px;">${notesLog.map(n => editingNoteId === n.id ? `
+            <div class="ax-log-item">
+              <textarea id="editNote-${n.id}" class="ax-input" style="min-height:56px;resize:vertical;">${(n.text || '').replace(/</g, '&lt;')}</textarea>
+              <div style="display:flex;gap:6px;margin-top:8px;justify-content:flex-end;">
+                <button class="ax-btn-outline" onclick="window.cancelEditNote('${id}')">${t('lead.cancel')}</button>
+                <button class="ax-btn-blue" onclick="window.saveEditNote('${id}','${n.id}')">${t('lead.saveBtn')}</button>
+              </div>
+            </div>` : `
+            <div class="ax-log-item" style="display:flex;gap:10px;align-items:flex-start;">
+              <div style="flex:1;min-width:0;">
+                ${n.text || ''}
+                ${n.attachments && n.attachments.length ? '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">' + n.attachments.map(a => `<span class="note-file-chip" style="cursor:pointer;" onclick="window.openNoteAttachment('${id}','${n.id}','${a.id}')">${noteFileIcon(a.type)} ${a.name}</span>`).join('') + '</div>' : ''}
+                <div class="ax-log-meta">${new Date(n.createdAt).toLocaleString()}${n.editedAt ? ' · ' + t('lead.edited') : ''}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                ${n.tags && n.tags.length ? `<span class="note-tag-indicator" title="${t('lead.tagged')}: ${n.tags.join(', ')}">${ICON_PERSON}<span>${n.tags.length}</span></span>` : ''}
+                <span class="ax-note-action" title="${t('lead.edit')}" onclick="window.startEditNote('${id}','${n.id}')">${ICON_PENCIL}</span>
+                <span class="ax-note-action danger" title="${t('lead.delete')}" onclick="window.deleteWebLeadNote('${id}','${n.id}')">${ICON_TRASH}</span>
+              </div>
+            </div>`).join('')}</div>` : `
+          <div class="ax-empty">${ICON_NOTEBIG}
+            <div class="ax-empty-title">${t('lead.noNotes')}</div>
+            <div class="ax-empty-sub">${t('lead.noNotesLinked')}</div>
+            <button class="ax-btn-outline" style="margin-top:8px;" onclick="document.getElementById('leadNoteInput').focus()">${t('lead.add')}</button>
+          </div>`}
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;" class="ax-bottom-grid">
+      <div class="ax-card" style="margin-bottom:0;">
+        <div class="ax-card-head"><h5 class="ax-card-title">${t('lead.tasks')}</h5>
+          <div class="ax-head-icons"><span class="ax-icon-sq">${ICON_CALENDAR}</span><span class="ax-icon-sq" title="${t('lead.refresh')}">${ICON_REFRESH}</span><span class="ax-icon-sq">${ICON_FILTER}</span><span class="ax-icon-sq" onclick="window.addLeadTask('${id}')" title="${t('lead.add')}">${ICON_PLUS}</span></div>
+        </div>
+        <div class="ax-card-body">
+          ${tasks.length ? tasks.map(tk => `<div class="ax-log-item" style="cursor:pointer;" onclick="window.goToLeadTask('${tk.id}')">${tk.title}<div class="ax-log-meta">${tk.date}${tk.time ? ' · ' + tk.time : ''}</div></div>`).join('') : `
+          <div class="ax-empty">${ICON_TASKS}
+            <div class="ax-empty-title">${t('lead.noActivity')}</div>
+            <div class="ax-empty-sub">${t('lead.noTasksLinked')}</div>
+            <button class="ax-btn-outline" style="margin-top:8px;" onclick="window.addLeadTask('${id}')">${t('lead.add')}</button>
+          </div>`}
+        </div>
+      </div>
+      <div class="ax-card" style="margin-bottom:0;">
+        <div class="ax-card-head"><h5 class="ax-card-title">${t('comm.title')}</h5>
+          <div class="ax-head-icons"><span class="ax-icon-sq" title="${t('lead.refresh')}">${ICON_REFRESH}</span><span class="ax-icon-sq">${ICON_FILTER}</span><span class="ax-icon-sq" onclick="document.getElementById('commText').focus()" title="${t('lead.logComm')}">${ICON_PLUS}</span></div>
+        </div>
+        <div class="ax-card-body">
+          ${commsLog.length ? commsLog.map(c => {
+            const sent = (c.direction || 'sent') === 'sent';
+            return `<div class="email-log-item">
+              <div class="email-dir ${sent ? 'sent' : 'received'}">${sent ? '↗' : '↙'}</div>
+              <div style="flex:1;min-width:0;">
+                <div style="display:flex;justify-content:space-between;gap:8px;">
+                  <span style="font-weight:600;font-size:13px;">${c.subject || (sent ? t('comm.sent') : t('comm.received'))}</span>
+                  <span class="ax-log-meta" style="white-space:nowrap;">${new Date(c.createdAt).toLocaleString()}</span>
+                </div>
+                <div style="font-size:12.5px;color:var(--muted);margin-top:2px;">${c.text || ''}</div>
+              </div>
+            </div>`;
+          }).join('') : `
+          <div class="ax-empty">${ICON_ENVELOPES}
+            <div class="ax-empty-title">${t('comm.none')}</div>
+            <div class="ax-empty-sub">${t('lead.noEmailsLinked')}</div>
+          </div>`}
+          <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px;">
+            <div style="display:flex;gap:6px;margin-bottom:6px;">
+              <select id="commDir" style="width:110px;flex-shrink:0;padding:8px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:3.5px;color:var(--text);font-size:12.5px;font-family:inherit;">
+                <option value="sent">↗ ${t('comm.sent')}</option>
+                <option value="received">↙ ${t('comm.received')}</option>
+              </select>
+              <input id="commSubject" type="text" placeholder="${t('comm.subject')}" style="flex:1;min-width:0;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:3.5px;color:var(--text);font-size:12.5px;font-family:inherit;">
+            </div>
+            <div style="display:flex;gap:6px;">
+              <input id="commText" type="text" placeholder="${t('comm.logEmail')}…" style="flex:1;min-width:0;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:3.5px;color:var(--text);font-size:12.5px;font-family:inherit;">
+              <button class="ax-btn-blue" onclick="window.addWebLeadComm('${id}')">Log</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ax-card" style="margin-top:16px;">
+      <div class="ax-card-head"><h5 class="ax-card-title">${t('lead.history')}</h5>
+        <div class="ax-head-icons"><span class="ax-icon-sq" title="${t('lead.refresh')}">${ICON_REFRESH}</span></div>
+      </div>
+      <div class="ax-card-body">
+        ${histLog.length ? histLog.slice(0, 30).map(h => `<div class="ax-log-item"><b>${h.by}</b> ${h.text}<div class="ax-log-meta">${fmtStamp(h.at)}</div></div>`).join('') : `
+        <div class="ax-empty" style="padding:20px 10px;">
+          <div class="ax-empty-title" style="color:var(--muted);">${t('lead.noChanges')}</div>
+          <div class="ax-empty-sub">${t('lead.changesHere')}</div>
+        </div>`}
+      </div>
     </div>
   `;
+
+  // Restore composer text wiped by the re-render (milestone clicks re-render the whole sheet).
+  const noteEl = document.getElementById('leadNoteInput');
+  if (noteEl && prevNote) noteEl.value = prevNote;
+  const commEl = document.getElementById('commText');
+  if (commEl && prevComm) commEl.value = prevComm;
 }
 const DEMO_WEB_LEADS = [
   { name: 'Martin Rousseau', phone: '8195551042', email: 'm.rousseau@gmail.com', message: 'Interested in the 2024 Hyundai Kona — is it still available? Looking to trade in a 2018 Elantra.', source: 'website' },
@@ -1702,9 +2972,9 @@ window.setTheme = function(pref) {
   applyTheme(pref);
 };
 systemThemeQuery.addEventListener('change', () => {
-  if ((localStorage.getItem(THEME_KEY) || 'light') === 'system') applyTheme('system');
+  if ((localStorage.getItem(THEME_KEY) || 'dark') === 'system') applyTheme('system');
 });
-applyTheme(localStorage.getItem(THEME_KEY) || 'light');
+applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
 
 window.setSettingsPanel = function(name) {
   document.querySelectorAll('.settings-nav-item').forEach(el => el.classList.toggle('active', el.dataset.panel === name));
@@ -1712,56 +2982,366 @@ window.setSettingsPanel = function(name) {
   if (name === 'leadsetup') renderLeadWebLink();
 };
 
-// ============ SCHEDULE (month-grid calendar, local-only) ============
+// ============ i18n (EN / FR) ============
+const I18N = {
+  fr: {
+    'nav.dashboard':'Tableau de bord','nav.inventory':'Inventaire','nav.leads':'Textos de masse','nav.leadweb':'Lead Web',
+    'nav.customers':'Clients','nav.schedule':'Calendrier','nav.emails':'Courriels','nav.inbox':'Boîte de réception',
+    'nav.analytics':'Analytique','nav.setup':'Réglages','nav.lock':'Verrouiller la navigation',
+    'toolbar.searchPh':'Rechercher voitures, leads, clients…','toolbar.newClient':'Nouveau client',
+    'cal.title':'Calendrier','cal.new':'Nouvel événement','cal.today':"Aujourd'hui",'cal.month':'Mois','cal.week':'Semaine','cal.day':'Jour',
+    'cal.view.all':'Toutes les vues','cal.view.deliveries':'Livraisons','cal.view.myDeliveries':'Mes livraisons','cal.view.myTasks':'Mes tâches','cal.view.appointments':'Rendez-vous',
+    'cal.noEvents':'Aucun événement','cal.total':'Total',
+    'set.language':'Langue','set.appearance':'Apparence','set.lang.desc':"Choisissez la langue de l'application.",
+    'comm.title':'Communications','comm.sent':'Envoyé','comm.received':'Reçu','comm.subject':'Sujet','comm.logEmail':'Consigner un courriel','comm.none':'Aucune communication',
+    'weekday.sun':'Dim','weekday.mon':'Lun','weekday.tue':'Mar','weekday.wed':'Mer','weekday.thu':'Jeu','weekday.fri':'Ven','weekday.sat':'Sam',
+    'months':['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'],
+    // ── Lead client sheet ──
+    'lead.back':'Retour aux leads','lead.reached':'Rejoint','lead.received':'Reçu','lead.options':'Options','lead.follow':'Suivre','lead.share':'Partager',
+    'lead.noPhone':'Aucun téléphone','lead.noEmail':'Aucun courriel','lead.text':'Texto','lead.video':'Vidéoconférence','lead.more':'Plus',
+    'lead.conseiller':'Conseiller','lead.agentBdc':'Agent BDC','lead.secondConseiller':'Second conseiller','lead.directeurFinancier':'Directeur financier',
+    'lead.addMember':'+ Ajouter…','lead.promptMember':"Nom du nouveau membre de l'équipe :",
+    'lead.tasks':'Tâches et rendez-vous','lead.noTasksPlanned':'Aucune tâche planifiée','lead.taskCount':'tâche(s) — prochaine:','lead.add':'Ajouter',
+    'lead.noComms':'Aucune communication','lead.commCount':'communication(s)','lead.notes':'Notes','lead.noNotes':'Aucune note','lead.noteCount':'note(s)',
+    'lead.offerBrowser':"Navigateur d'offres",'lead.vehiclesWanted':'Véhicules recherchés','lead.filterSort':'Filtrer & Trier','lead.addVehicle':'Ajouter un véhicule',
+    'lead.chooseVehicle':"— Choisir un véhicule de l'inventaire —",'lead.linkVehicle':'Lier le véhicule','lead.yearMake':'Année Marque','lead.model':'Modèle',
+    'lead.stockNo':'N° Stock','lead.vin':'NIV','lead.extInt':'Ext • Int','lead.payment':'Paiement','lead.rate':'Taux','lead.term':'Terme',
+    'lead.viewOffer':"Voir l'offre",'lead.vehicleDetails':'Détails du véhicule','lead.setMain':'Définir comme véhicule principal','lead.markSold':'Marquer comme Vendu',
+    'lead.deleteVehicle':'Supprimer le véhicule','lead.noVehicleLinked':'Aucun véhicule lié','lead.actions':'Actions','lead.onlyOne':"Un seul véhicule par lead pour l'instant",
+    'lead.tradeVehicle':"Véhicule d'échange",'lead.noTradeYet':"Pas encore d'échange",'lead.addVehicleFirst':"Ajoutez d'abord un véhicule pour commencer",
+    'lead.edit':'Modifier','lead.removeTrade':"Retirer le véhicule d'échange",
+    'lead.dealerPres':'Présentation du concessionnaire','lead.visite':'Visite','lead.suivi24':'Suivi 24 heures','lead.beback':'Be-back','lead.qualification':'Qualification',
+    'lead.dealerTour':'Dealer tour','lead.takeover':'Takeover','lead.vehiclePres':'Présentation du véhicule','lead.essai':'Essai routier',
+    'lead.salesInvoice':'Facture de vente','lead.invCreated':'Facture de vente créée','lead.invSent':'Envoyée au client','lead.invSigned':'Signée par le client','lead.sold':'Vendu',
+    'lead.clientDeposit':'Dépôt du client','lead.depositReceived':'Dépôt reçu','lead.receiptSent':'Reçu envoyé',
+    'lead.markSoldInv':'vendu dans l\'inventaire','lead.markedSoldInv':'marqué vendu dans l\'inventaire','lead.markBtn':'Marquer',
+    'lead.creditApp':'Demande de crédit','lead.lenderApproval':'Approbation du prêteur','lead.finInstitution':'Institution financière','lead.clientApproval':'Approbation du client',
+    'lead.opt.pending':'En attente','lead.opt.approved':'Approuvé','lead.opt.approvedCond':'Approuvé conditionnel','lead.opt.declined':'Refusé',
+    'lead.vehiclePrep':'Préparation du véhicule','lead.pendingSale':'Vente en attente','lead.vehicleHere':'Véhicule ici le','lead.toDeliver':'À livrer le','lead.workOrder':'Bon de travail',
+    'lead.inspected':'Inspecté','lead.fueled':'Ravitaillé','lead.prepped':'Préparé','lead.delivered':'Livré','lead.registeredOn':'Enregistré le','lead.file':'Dossier','lead.discounted':'Escompté',
+    'lead.clientComm':'Communication avec le client','lead.optin':'Adhésion','lead.csi':'CSI','lead.customFields':'Champs personnalisés',
+    'lead.chance2':'2 ième chance','lead.chance3':'3 ième chance','lead.warranty':'Garantie','lead.opt.none':'Aucune','lead.opt.basic':'De base','lead.opt.extended':'Prolongée',
+    'lead.markDeliveredInv':'livré dans l\'inventaire','lead.markedDeliveredInv':'marqué livré dans l\'inventaire',
+    'lead.generalInfo':'Information générale','lead.oppDetails':"Détails de l'opportunité",'lead.tabGeneral':'Général','lead.tabContact':'Contact',
+    'lead.division':'Division','lead.used':'Occasion','lead.rating':'Évaluation','lead.provider':'Fournisseur','lead.clientNo':'# de client','lead.source':'Source',
+    'lead.method':'Méthode','lead.methodWeb':'Web','lead.form':'Formulaire','lead.notConsumerGen':'Non généré par le consommateur','lead.dnm':'Do not market',
+    'lead.segment':'Segment','lead.budget':'Budget','lead.purchaseDelay':"Délai d'intention d'achat",'lead.comments':'Commentaires','lead.split':'Split',
+    'lead.civilite':'Civilité','lead.langue':'Langue','lead.prenom':'Prénom','lead.genre':'Genre','lead.nom':'Nom','lead.dob':'Date de naissance',
+    'lead.civilite2':'Civilité (2e contact)','lead.company':"Nom d'entreprise",'lead.contact2':'2e contact','lead.mainContact':'Contact principal','lead.fullName':'Nom complet',
+    'lead.homeContact':'🏠 Contact maison','lead.workContact':'💼 Contact travail','lead.homePhone':'Téléphone maison','lead.workPhone':'Téléphone travail',
+    'lead.mobile':'Cellulaire','lead.workEmail':'Courriel travail','lead.homeEmail':'Courriel maison','lead.address':'📍 Adresse','lead.addr':'Adresse',
+    'lead.city':'Ville','lead.province':'Province','lead.country':'Pays','lead.postal':'Code postal',
+    'lead.opt.male':'Homme','lead.opt.female':'Femme','lead.opt.other':'Autre','lead.opt.french':'Français','lead.opt.english':'Anglais',
+    'lead.notePh':'Ajoutez une note ou déposez un fichier ici','lead.tagColleague':'Taguer un collègue','lead.voiceNote':'Note vocale (bientôt)',
+    'lead.attachFile':'Joindre un fichier (PDF, texte, image)','lead.save':'Sauvegarder','lead.noColleagues':"Aucun collègue dans l'équipe — ajoutez des noms via les menus Conseiller ci-haut.",
+    'lead.noNotesLinked':"Il n'y a aucune note reliée à ce lead.",'lead.tagged':'Tagué','lead.delete':'Supprimer','lead.cancel':'Annuler','lead.saveBtn':'Enregistrer','lead.edited':'modifié',
+    'lead.noActivity':'Aucune activité','lead.noTasksLinked':"Il n'y a aucune tâche reliée à ce lead.",'lead.noEmailsLinked':"Il n'y a aucun courriel relié à ce lead.",
+    'lead.logComm':'Consigner une communication','lead.refresh':'Rafraîchir','lead.history':'Historique des modifications','lead.noChanges':'Aucune modification',
+    'lead.changesHere':'Les changements faits sur ce lead apparaîtront ici.','lead.originalMsg':'Message original',
+    'task.modalTitle':'Ajouter une tâche ou rendez-vous','task.type':'Type','task.noSelection':'Aucune sélection','task.title':'Titre','task.titlePh':'Optionnel — le type par défaut',
+    'task.date':'Date','task.time':'Heure','task.notes':'Notes','task.cancel':'Annuler','task.save':'Enregistrer',
+    'ex.modalTitle':"Véhicule d'échange",'ex.vin':'NIV','ex.stock':'Stock #','ex.year':'Année','ex.make':'Marque','ex.model':'Modèle','ex.trim':'Version',
+    'ex.odometer':'Odomètre (km)','ex.transmission':'Transmission','ex.extColor':'Couleur extérieure','ex.intColor':'Couleur intérieure','ex.comments':'Commentaires',
+    'ex.auto':'Automatique','ex.manual':'Manuelle',
+    // ── Lead Web list ──
+    'lx.leads':'Leads','lx.waiting':'Attentes','lx.attempts':'Tentatives','lx.reached':'Rejoints','lx.tentative':'Tentative',
+    'lx.avgResponse':'Temps moyen de première réponse','lx.visits':'Visites','lx.sales':'Ventes','lx.delivered':'Véhicules livrés',
+    'lx.charts':'Graphiques','lx.leadsBy':'Leads par','lx.clear':'Effacer','lx.filter':'Filtrer…','lx.noData':'Aucune donnée',
+    'lx.status':'Statut','lx.result':'Résultat','lx.make':'Marque','lx.rv':'RV','lx.testDrive':'Essai','lx.followup':'Suivi',
+    'lx.new':'Neuf','lx.certified':'Certifié','lx.active':'Actif','lx.noMatch':'Aucun lead ne correspond aux filtres',
+    'lx.noLeads':'Aucun lead pour le moment — partagez votre lien de capture pour commencer.',
+  },
+  en: {
+    'nav.dashboard':'Dashboard','nav.inventory':'Inventory','nav.leads':'Mass Texting','nav.leadweb':'Lead Web',
+    'nav.customers':'Customers','nav.schedule':'Calendar','nav.emails':'Emails','nav.inbox':'Inbox',
+    'nav.analytics':'Analytics','nav.setup':'Settings','nav.lock':'Lock navigation',
+    'toolbar.searchPh':'Search cars, leads, customers…','toolbar.newClient':'New Client',
+    'cal.title':'Calendar','cal.new':'New Event','cal.today':'Today','cal.month':'Month','cal.week':'Week','cal.day':'Day',
+    'cal.view.all':'All views','cal.view.deliveries':'Deliveries','cal.view.myDeliveries':'My deliveries','cal.view.myTasks':'My tasks','cal.view.appointments':'Appointments',
+    'cal.noEvents':'No events','cal.total':'Total',
+    'set.language':'Language','set.appearance':'Appearance','set.lang.desc':'Choose the app language.',
+    'comm.title':'Communications','comm.sent':'Sent','comm.received':'Received','comm.subject':'Subject','comm.logEmail':'Log an email','comm.none':'No communications',
+    'weekday.sun':'Sun','weekday.mon':'Mon','weekday.tue':'Tue','weekday.wed':'Wed','weekday.thu':'Thu','weekday.fri':'Fri','weekday.sat':'Sat',
+    'months':['January','February','March','April','May','June','July','August','September','October','November','December'],
+    // ── Lead client sheet ──
+    'lead.back':'Back to Leads','lead.reached':'Reached','lead.received':'Received','lead.options':'Options','lead.follow':'Follow','lead.share':'Share',
+    'lead.noPhone':'No phone','lead.noEmail':'No email','lead.text':'Text','lead.video':'Video call','lead.more':'More',
+    'lead.conseiller':'Sales rep','lead.agentBdc':'BDC agent','lead.secondConseiller':'Second rep','lead.directeurFinancier':'Finance manager',
+    'lead.addMember':'+ Add…','lead.promptMember':'Name of the new team member:',
+    'lead.tasks':'Tasks & appointments','lead.noTasksPlanned':'No task scheduled','lead.taskCount':'task(s) — next:','lead.add':'Add',
+    'lead.noComms':'No communications','lead.commCount':'communication(s)','lead.notes':'Notes','lead.noNotes':'No notes','lead.noteCount':'note(s)',
+    'lead.offerBrowser':'Offer browser','lead.vehiclesWanted':'Vehicles wanted','lead.filterSort':'Filter & Sort','lead.addVehicle':'Add a vehicle',
+    'lead.chooseVehicle':'— Choose a vehicle from inventory —','lead.linkVehicle':'Link vehicle','lead.yearMake':'Year Make','lead.model':'Model',
+    'lead.stockNo':'Stock #','lead.vin':'VIN','lead.extInt':'Ext • Int','lead.payment':'Payment','lead.rate':'Rate','lead.term':'Term',
+    'lead.viewOffer':'View offer','lead.vehicleDetails':'Vehicle details','lead.setMain':'Set as main vehicle','lead.markSold':'Mark as Sold',
+    'lead.deleteVehicle':'Remove vehicle','lead.noVehicleLinked':'No vehicle linked','lead.actions':'Actions','lead.onlyOne':'One vehicle per lead for now',
+    'lead.tradeVehicle':'Trade-in vehicle','lead.noTradeYet':'No trade-in yet','lead.addVehicleFirst':'Add a vehicle first to get started',
+    'lead.edit':'Edit','lead.removeTrade':'Remove trade-in vehicle',
+    'lead.dealerPres':'Dealership presentation','lead.visite':'Visit','lead.suivi24':'24-hour follow-up','lead.beback':'Be-back','lead.qualification':'Qualification',
+    'lead.dealerTour':'Dealer tour','lead.takeover':'Takeover','lead.vehiclePres':'Vehicle presentation','lead.essai':'Test drive',
+    'lead.salesInvoice':'Sales invoice','lead.invCreated':'Sales invoice created','lead.invSent':'Sent to client','lead.invSigned':'Signed by client','lead.sold':'Sold',
+    'lead.clientDeposit':'Client deposit','lead.depositReceived':'Deposit received','lead.receiptSent':'Receipt sent',
+    'lead.markSoldInv':'sold in inventory','lead.markedSoldInv':'marked sold in inventory','lead.markBtn':'Mark',
+    'lead.creditApp':'Credit application','lead.lenderApproval':'Lender approval','lead.finInstitution':'Financial institution','lead.clientApproval':'Client approval',
+    'lead.opt.pending':'Pending','lead.opt.approved':'Approved','lead.opt.approvedCond':'Conditionally approved','lead.opt.declined':'Declined',
+    'lead.vehiclePrep':'Vehicle preparation','lead.pendingSale':'Pending sale','lead.vehicleHere':'Vehicle here on','lead.toDeliver':'To deliver on','lead.workOrder':'Work order',
+    'lead.inspected':'Inspected','lead.fueled':'Fueled','lead.prepped':'Prepped','lead.delivered':'Delivered','lead.registeredOn':'Registered on','lead.file':'File','lead.discounted':'Discounted',
+    'lead.clientComm':'Client communication','lead.optin':'Opt-in','lead.csi':'CSI','lead.customFields':'Custom fields',
+    'lead.chance2':'2nd chance','lead.chance3':'3rd chance','lead.warranty':'Warranty','lead.opt.none':'None','lead.opt.basic':'Basic','lead.opt.extended':'Extended',
+    'lead.markDeliveredInv':'delivered in inventory','lead.markedDeliveredInv':'marked delivered in inventory',
+    'lead.generalInfo':'General information','lead.oppDetails':'Opportunity details','lead.tabGeneral':'General','lead.tabContact':'Contact',
+    'lead.division':'Division','lead.used':'Used','lead.rating':'Rating','lead.provider':'Provider','lead.clientNo':'Client #','lead.source':'Source',
+    'lead.method':'Method','lead.methodWeb':'Web','lead.form':'Form','lead.notConsumerGen':'Not consumer-generated','lead.dnm':'Do not market',
+    'lead.segment':'Segment','lead.budget':'Budget','lead.purchaseDelay':'Purchase intent timeframe','lead.comments':'Comments','lead.split':'Split',
+    'lead.civilite':'Title','lead.langue':'Language','lead.prenom':'First name','lead.genre':'Gender','lead.nom':'Last name','lead.dob':'Date of birth',
+    'lead.civilite2':'Title (2nd contact)','lead.company':'Company name','lead.contact2':'2nd contact','lead.mainContact':'Main contact','lead.fullName':'Full name',
+    'lead.homeContact':'🏠 Home contact','lead.workContact':'💼 Work contact','lead.homePhone':'Home phone','lead.workPhone':'Work phone',
+    'lead.mobile':'Mobile','lead.workEmail':'Work email','lead.homeEmail':'Home email','lead.address':'📍 Address','lead.addr':'Address',
+    'lead.city':'City','lead.province':'Province','lead.country':'Country','lead.postal':'Postal code',
+    'lead.opt.male':'Male','lead.opt.female':'Female','lead.opt.other':'Other','lead.opt.french':'French','lead.opt.english':'English',
+    'lead.notePh':'Add a note or drop a file here','lead.tagColleague':'Tag a colleague','lead.voiceNote':'Voice note (soon)',
+    'lead.attachFile':'Attach a file (PDF, text, image)','lead.save':'Save','lead.noColleagues':'No colleagues on the team — add names from the Sales rep menus above.',
+    'lead.noNotesLinked':'There are no notes linked to this lead.','lead.tagged':'Tagged','lead.delete':'Delete','lead.cancel':'Cancel','lead.saveBtn':'Save','lead.edited':'edited',
+    'lead.noActivity':'No activity','lead.noTasksLinked':'There are no tasks linked to this lead.','lead.noEmailsLinked':'There are no emails linked to this lead.',
+    'lead.logComm':'Log a communication','lead.refresh':'Refresh','lead.history':'Change history','lead.noChanges':'No changes',
+    'lead.changesHere':'Changes made to this lead will appear here.','lead.originalMsg':'Original message',
+    'task.modalTitle':'Add a task or appointment','task.type':'Type','task.noSelection':'No selection','task.title':'Title','task.titlePh':'Optional — defaults to the type',
+    'task.date':'Date','task.time':'Time','task.notes':'Notes','task.cancel':'Cancel','task.save':'Save',
+    'ex.modalTitle':'Trade-in vehicle','ex.vin':'VIN','ex.stock':'Stock #','ex.year':'Year','ex.make':'Make','ex.model':'Model','ex.trim':'Trim',
+    'ex.odometer':'Odometer (km)','ex.transmission':'Transmission','ex.extColor':'Exterior colour','ex.intColor':'Interior colour','ex.comments':'Comments',
+    'ex.auto':'Automatic','ex.manual':'Manual',
+    // ── Lead Web list ──
+    'lx.leads':'Leads','lx.waiting':'Waiting','lx.attempts':'Attempts','lx.reached':'Reached','lx.tentative':'Attempted',
+    'lx.avgResponse':'Average first response time','lx.visits':'Visits','lx.sales':'Sales','lx.delivered':'Vehicles delivered',
+    'lx.charts':'Charts','lx.leadsBy':'Leads by','lx.clear':'Clear','lx.filter':'Filter…','lx.noData':'No data',
+    'lx.status':'Status','lx.result':'Result','lx.make':'Make','lx.rv':'Appt','lx.testDrive':'Test drive','lx.followup':'Follow-up',
+    'lx.new':'New','lx.certified':'Certified','lx.active':'Active','lx.noMatch':'No lead matches the filters',
+    'lx.noLeads':'No leads yet — share your capture link to start receiving them.',
+  },
+};
+let LANG = localStorage.getItem('pm_lang') || 'fr';
+function t(key) { return (I18N[LANG] && I18N[LANG][key] !== undefined) ? I18N[LANG][key] : (I18N.en[key] !== undefined ? I18N.en[key] : key); }
+function applyStaticI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.setAttribute('placeholder', t(el.getAttribute('data-i18n-ph'))); });
+}
+window.setLang = function(lang) {
+  LANG = lang; localStorage.setItem('pm_lang', lang);
+  renderSidebar();
+  applyStaticI18n();
+  document.querySelectorAll('.lang-option').forEach(el => el.classList.toggle('active', el.dataset.lang === lang));
+  // re-render the currently visible dynamic view
+  const cur = document.querySelector('.sidebar-nav-item.active');
+  if (cur) window.switchTab(cur.dataset.page);
+};
+
+// ============ SCHEDULE (month-grid + week + day calendar, local-only) ============
 let calendarEvents = JSON.parse(localStorage.getItem('pm_calendar') || '[]');
 function saveCalendarEvents() { localStorage.setItem('pm_calendar', JSON.stringify(calendarEvents)); }
-let calViewDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+let calViewDate = new Date();
+let calViewMode = 'month';   // 'month' | 'week' | 'day'
+let calFilter = 'all';       // all | deliveries | myDeliveries | myTasks | appointments
 let editingEventId = null;
 let pendingEventLeadId = null; // set by window.addLeadTask right after opening a fresh New Event form
 function pad2(n) { return String(n).padStart(2, '0'); }
 function dateKey(y, m, d) { return `${y}-${pad2(m + 1)}-${pad2(d)}`; }
 
+// ── Task/appointment popup (Activix-style) — pops in place instead of navigating to Calendar.
+// Writes straight into the same calendarEvents store the Calendar page reads, so it shows up there too.
+let taskModalLeadId = null;
+window.openTaskModal = function(leadId) {
+  taskModalLeadId = leadId || null;
+  const sel = document.getElementById('taskTypeSelect');
+  sel.innerHTML = `<option value="">${t('task.noSelection')}</option>` + TASK_TYPES.map(tt => `<option value="${tt.key}">${taskTypeLabel(tt)}</option>`).join('');
+  sel.value = '';
+  document.getElementById('taskTitleInput').value = '';
+  const today = new Date();
+  document.getElementById('taskDateInput').value = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+  document.getElementById('taskTimeInput').value = '';
+  document.getElementById('taskNotesInput').value = '';
+  document.getElementById('taskModalOverlay').style.display = 'flex';
+};
+window.closeTaskModal = function() {
+  document.getElementById('taskModalOverlay').style.display = 'none';
+  taskModalLeadId = null;
+};
+window.saveTaskModal = function() {
+  const typeKey = document.getElementById('taskTypeSelect').value;
+  if (!typeKey) { showToast('⚠️ Choisissez un type!'); return; }
+  const date = document.getElementById('taskDateInput').value;
+  if (!date) { showToast('⚠️ Date requise!'); return; }
+  const typeInfo = TASK_TYPES.find(tt => tt.key === typeKey);
+  const title = document.getElementById('taskTitleInput').value.trim() || taskTypeLabel(typeInfo);
+  const fields = {
+    title, date,
+    time: document.getElementById('taskTimeInput').value,
+    type: typeInfo.bucket,
+    taskType: typeKey,
+    notes: document.getElementById('taskNotesInput').value.trim(),
+    leadId: taskModalLeadId || null,
+    owner: calCurrentUser(),
+  };
+  calendarEvents.push(Object.assign({ id: 'ev' + Date.now() }, fields));
+  saveCalendarEvents();
+  const leadId = taskModalLeadId;
+  window.closeTaskModal();
+  if (document.getElementById('tab-schedule').style.display !== 'none') renderCalendar();
+  if (leadId) renderWebLeadDetail(leadId);
+  showToast('✅ Tâche ajoutée !');
+};
+
+// ── Trade-in vehicle (Échange stage) ────────────────────────────────────────
+let exchangeModalLeadId = null;
+window.openExchangeModal = function(leadId) {
+  exchangeModalLeadId = leadId;
+  const l = webLeads.find(x => x.id === leadId);
+  const ex = (l && l.exchangeVehicle) || {};
+  document.getElementById('exVinInput').value = ex.vin || '';
+  document.getElementById('exStockInput').value = ex.stock || '';
+  document.getElementById('exYearInput').value = ex.year || '';
+  document.getElementById('exMakeInput').value = ex.make || '';
+  document.getElementById('exModelInput').value = ex.model || '';
+  document.getElementById('exTrimInput').value = ex.trim || '';
+  document.getElementById('exOdometerInput').value = ex.odometer || '';
+  document.getElementById('exTransmissionInput').value = ex.transmission || '';
+  document.getElementById('exExtColorInput').value = ex.exteriorColor || '';
+  document.getElementById('exIntColorInput').value = ex.interiorColor || '';
+  document.getElementById('exCommentsInput').value = ex.comments || '';
+  document.getElementById('exchangeModalOverlay').style.display = 'flex';
+};
+window.closeExchangeModal = function() {
+  document.getElementById('exchangeModalOverlay').style.display = 'none';
+  exchangeModalLeadId = null;
+};
+window.saveExchangeModal = function() {
+  const exchangeVehicle = {
+    vin: document.getElementById('exVinInput').value.trim().toUpperCase(),
+    stock: document.getElementById('exStockInput').value.trim(),
+    year: document.getElementById('exYearInput').value.trim(),
+    make: document.getElementById('exMakeInput').value.trim(),
+    model: document.getElementById('exModelInput').value.trim(),
+    trim: document.getElementById('exTrimInput').value.trim(),
+    odometer: document.getElementById('exOdometerInput').value.trim(),
+    transmission: document.getElementById('exTransmissionInput').value,
+    exteriorColor: document.getElementById('exExtColorInput').value.trim(),
+    interiorColor: document.getElementById('exIntColorInput').value.trim(),
+    comments: document.getElementById('exCommentsInput').value.trim(),
+  };
+  updateWebLead(exchangeModalLeadId, { exchangeVehicle });
+  const leadId = exchangeModalLeadId;
+  logLeadHistory(leadId, `a enregistré un véhicule d'échange (${[exchangeVehicle.year, exchangeVehicle.make, exchangeVehicle.model].filter(Boolean).join(' ') || 'sans détails'})`);
+  window.closeExchangeModal();
+  renderWebLeadDetail(leadId);
+  showToast("✅ Véhicule d'échange enregistré !");
+};
+window.removeExchangeVehicle = function(id) {
+  updateWebLead(id, { exchangeVehicle: null });
+  logLeadHistory(id, "a retiré le véhicule d'échange");
+  renderWebLeadDetail(id);
+};
+
+function calCurrentUser() { return (typeof currentUser !== 'undefined' && currentUser && currentUser.displayName) || 'Moi'; }
+function calFilteredEvents() {
+  const me = calCurrentUser();
+  return calendarEvents.filter(e => {
+    if (calFilter === 'deliveries') return e.type === 'delivery';
+    if (calFilter === 'appointments') return e.type === 'appointment';
+    if (calFilter === 'myDeliveries') return e.type === 'delivery' && (e.owner || me) === me;
+    if (calFilter === 'myTasks') return e.type === 'task' && (e.owner || me) === me;
+    return true;
+  });
+}
+function calEventChip(e) {
+  return `<div class="cal-event type-${e.type}" onclick="event.stopPropagation();window.openEditEvent('${e.id}')" title="${(e.time ? e.time + ' ' : '') + (e.title || '').replace(/"/g,'&quot;')}">${e.time ? e.time + ' ' : ''}${e.title || ''}</div>`;
+}
 function renderCalendar() {
-  const grid = document.getElementById('calGrid');
-  if (!grid) return;
-  const y = calViewDate.getFullYear(), m = calViewDate.getMonth();
-  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  document.getElementById('calMonthLabel').textContent = monthNames[m] + ' ' + y;
-  const startDow = new Date(y, m, 1).getDay();
-  const daysInMonth = new Date(y, m + 1, 0).getDate();
-  const daysInPrevMonth = new Date(y, m, 0).getDate();
+  const body = document.getElementById('calBody');
+  if (!body) return;
+  // sync toolbar state
+  document.querySelectorAll('.cal-view-toggle button').forEach(b => b.classList.toggle('active', b.dataset.mode === calViewMode));
+  const sel = document.getElementById('calFilterSelect');
+  if (sel && sel.options.length === 0) {
+    ['all','deliveries','myDeliveries','myTasks','appointments'].forEach(v => {
+      const o = document.createElement('option'); o.value = v;
+      o.textContent = t('cal.view.' + (v === 'all' ? 'all' : v));
+      sel.appendChild(o);
+    });
+  }
+  if (sel) { [...sel.options].forEach(o => o.textContent = t('cal.view.' + (o.value === 'all' ? 'all' : o.value))); sel.value = calFilter; }
+  const evs = calFilteredEvents();
+  document.getElementById('calTotal').textContent = evs.length;
+  const months = I18N[LANG].months;
   const today = new Date();
   const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
-  const totalCells = Math.ceil((startDow + daysInMonth) / 7) * 7;
-  const cells = [];
-  for (let i = 0; i < totalCells; i++) {
-    let cellD, cellM = m, otherMonth = false;
-    if (i < startDow) { cellD = daysInPrevMonth - startDow + 1 + i; cellM = m - 1; otherMonth = true; }
-    else if (i >= startDow + daysInMonth) { cellD = i - startDow - daysInMonth + 1; cellM = m + 1; otherMonth = true; }
-    else { cellD = i - startDow + 1; }
-    const normDate = new Date(y, cellM, cellD);
-    const key = dateKey(normDate.getFullYear(), normDate.getMonth(), normDate.getDate());
-    const dayEvents = calendarEvents.filter(e => e.date === key).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
-    cells.push(`<div class="cal-day ${otherMonth ? 'other-month' : ''} ${key === todayKey ? 'today' : ''}" onclick="window.openNewEvent('${key}')">
-      <div class="cal-day-num">${normDate.getDate()}</div>
-      ${dayEvents.map(e => `<div class="cal-event type-${e.type}" onclick="event.stopPropagation();window.openEditEvent('${e.id}')" title="${(e.time ? e.time + ' ' : '') + e.title.replace(/"/g,'&quot;')}">${e.time ? e.time + ' ' : ''}${e.title}</div>`).join('')}
-    </div>`);
-  }
-  grid.innerHTML = cells.join('');
-}
 
+  if (calViewMode === 'month') {
+    const y = calViewDate.getFullYear(), m = calViewDate.getMonth();
+    document.getElementById('calMonthLabel').textContent = months[m] + ' ' + y;
+    const startDow = new Date(y, m, 1).getDay();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const daysInPrevMonth = new Date(y, m, 0).getDate();
+    const totalCells = Math.ceil((startDow + daysInMonth) / 7) * 7;
+    const dows = ['sun','mon','tue','wed','thu','fri','sat'].map(d => `<div>${t('weekday.' + d)}</div>`).join('');
+    let cells = '';
+    for (let i = 0; i < totalCells; i++) {
+      let cellD, cellM = m, otherMonth = false;
+      if (i < startDow) { cellD = daysInPrevMonth - startDow + 1 + i; cellM = m - 1; otherMonth = true; }
+      else if (i >= startDow + daysInMonth) { cellD = i - startDow - daysInMonth + 1; cellM = m + 1; otherMonth = true; }
+      else { cellD = i - startDow + 1; }
+      const nd = new Date(y, cellM, cellD);
+      const key = dateKey(nd.getFullYear(), nd.getMonth(), nd.getDate());
+      const dayEvents = evs.filter(e => e.date === key).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+      cells += `<div class="cal-day ${otherMonth ? 'other-month' : ''} ${key === todayKey ? 'today' : ''}" onclick="window.openNewEvent('${key}')">
+        <div class="cal-day-num">${nd.getDate()}</div>${dayEvents.map(calEventChip).join('')}</div>`;
+    }
+    body.innerHTML = `<div class="cal-grid-wrap"><div class="cal-weekdays">${dows}</div><div class="cal-grid">${cells}</div></div>`;
+  } else if (calViewMode === 'week') {
+    const ws = new Date(calViewDate); ws.setDate(ws.getDate() - ws.getDay());
+    const we = new Date(ws); we.setDate(we.getDate() + 6);
+    document.getElementById('calMonthLabel').textContent = `${ws.getDate()} ${months[ws.getMonth()].slice(0,3)} – ${we.getDate()} ${months[we.getMonth()].slice(0,3)} ${we.getFullYear()}`;
+    const dowKeys = ['sun','mon','tue','wed','thu','fri','sat'];
+    let cols = '';
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(ws); d.setDate(ws.getDate() + i);
+      const key = dateKey(d.getFullYear(), d.getMonth(), d.getDate());
+      const dayEvents = evs.filter(e => e.date === key).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+      cols += `<div class="cal-week-col">
+        <div class="cal-week-head ${key === todayKey ? 'today' : ''}" onclick="window.calOpenDay('${key}')">
+          <div class="cal-week-dow">${t('weekday.' + dowKeys[i])}</div><div class="cal-week-date">${d.getDate()}</div>
+        </div>
+        <div class="cal-week-body" onclick="window.openNewEvent('${key}')">${dayEvents.map(calEventChip).join('') || ''}</div>
+      </div>`;
+    }
+    body.innerHTML = `<div class="cal-week">${cols}</div>`;
+  } else { // day
+    const d = new Date(calViewDate);
+    const key = dateKey(d.getFullYear(), d.getMonth(), d.getDate());
+    const dowKeys = ['sun','mon','tue','wed','thu','fri','sat'];
+    document.getElementById('calMonthLabel').textContent = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+    const dayEvents = evs.filter(e => e.date === key).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+    body.innerHTML = `<div class="cal-day-view">
+      <div class="cal-day-head">${t('weekday.' + dowKeys[d.getDay()])} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}</div>
+      <div class="cal-day-list">${dayEvents.length ? dayEvents.map(e => `<div class="cal-day-row" onclick="window.openEditEvent('${e.id}')">
+        <div class="cal-day-time">${e.time || '—'}</div><div class="cal-day-bar type-${e.type}"></div>
+        <div style="flex:1;"><div style="font-weight:600;">${e.title || ''}</div>${e.notes ? `<div style="font-size:12px;color:var(--muted);">${e.notes}</div>` : ''}</div>
+      </div>`).join('') : `<div class="cal-empty-cal">${t('cal.noEvents')}</div>`}
+      <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="window.openNewEvent('${key}')">+ ${t('cal.new')}</button></div></div>`;
+  }
+}
+window.calSetView = function(mode) { calViewMode = mode; renderCalendar(); };
+window.calSetFilter = function(f) { calFilter = f; renderCalendar(); };
+window.calOpenDay = function(key) { const [y,m,d] = key.split('-').map(Number); calViewDate = new Date(y, m-1, d); calViewMode = 'day'; renderCalendar(); };
 window.calNavigate = function(delta) {
-  calViewDate = new Date(calViewDate.getFullYear(), calViewDate.getMonth() + delta, 1);
+  if (calViewMode === 'month') calViewDate = new Date(calViewDate.getFullYear(), calViewDate.getMonth() + delta, Math.min(calViewDate.getDate(), 28));
+  else if (calViewMode === 'week') calViewDate = new Date(calViewDate.getTime() + delta * 7 * 86400000);
+  else calViewDate = new Date(calViewDate.getTime() + delta * 86400000);
   renderCalendar();
 };
-window.calGoToday = function() {
-  calViewDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-  renderCalendar();
-};
+window.calGoToday = function() { calViewDate = new Date(); renderCalendar(); };
 window.openNewEvent = function(dateKeyStr) {
   editingEventId = null;
   pendingEventLeadId = null; // reset — window.addLeadTask sets this right after calling openNewEvent
-  document.getElementById('eventFormTitle').textContent = 'New Event';
+  document.getElementById('eventFormTitle').textContent = t('cal.new');
   document.getElementById('evTitle').value = '';
   const today = new Date();
   document.getElementById('evDate').value = dateKeyStr || dateKey(today.getFullYear(), today.getMonth(), today.getDate());
@@ -1775,7 +3355,7 @@ window.openEditEvent = function(id) {
   const ev = calendarEvents.find(e => e.id === id);
   if (!ev) return;
   editingEventId = id;
-  document.getElementById('eventFormTitle').textContent = 'Edit Event';
+  document.getElementById('eventFormTitle').textContent = LANG === 'fr' ? "Modifier l'événement" : 'Edit Event';
   document.getElementById('evTitle').value = ev.title;
   document.getElementById('evDate').value = ev.date;
   document.getElementById('evTime').value = ev.time || '';
@@ -1802,12 +3382,12 @@ window.saveEvent = function() {
     const ev = calendarEvents.find(e => e.id === editingEventId);
     if (ev) Object.assign(ev, fields);
   } else {
-    calendarEvents.push(Object.assign({ id: 'ev' + Date.now(), leadId: pendingEventLeadId || null }, fields));
+    calendarEvents.push(Object.assign({ id: 'ev' + Date.now(), leadId: pendingEventLeadId || null, owner: calCurrentUser() }, fields));
   }
   saveCalendarEvents();
   window.closeEventForm();
   renderCalendar();
-  showToast('✅ Event saved!');
+  showToast('✅ Événement enregistré !');
 };
 window.deleteEvent = function() {
   if (!editingEventId) return;
@@ -2612,7 +4192,7 @@ const NAV_MAIN = [
   { id: 'leads', label: 'Mass Texting', icon: '<path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.4 8.5 8.5 0 0 1-4-1L3 20l1.1-5.5A8.38 8.38 0 0 1 3.5 11 8.38 8.38 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/>' },
   { id: 'leadweb', label: 'Lead Web', icon: '<circle cx="12" cy="12" r="9"/><path d="M2.5 12h19"/><path d="M12 2.5a15.5 15.5 0 0 1 0 19"/><path d="M12 2.5a15.5 15.5 0 0 0 0 19"/>' },
   { id: 'customers', label: 'Customers', icon: '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14c2.5.3 4.5 2.3 4.5 6"/>' },
-  { id: 'schedule', label: 'Schedule', icon: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M8 3v4"/><path d="M16 3v4"/>' },
+  { id: 'schedule', label: 'Calendar', icon: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M8 3v4"/><path d="M16 3v4"/>' },
   { id: 'emails', label: 'Emails', icon: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>' },
   { id: 'inbox', label: 'Inbox', icon: '<path d="M4 12h4l2 3h4l2-3h4"/><rect x="3" y="5" width="18" height="14" rx="2"/>' },
 ];
@@ -2623,13 +4203,19 @@ const NAV_MANAGE = [
 function navItemHtml(item) {
   return `<div class="sidebar-nav-item" data-page="${item.id}" onclick="window.switchTab('${item.id}');window.closeSidebar();">
     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${item.icon}</svg>
-    <span class="nav-label">${item.label}</span>
+    <span class="nav-label">${t('nav.' + item.id)}</span>
   </div>`;
 }
 function renderSidebar() {
   document.getElementById('sidebarNavMain').innerHTML = NAV_MAIN.map(navItemHtml).join('');
   document.getElementById('sidebarNavManage').innerHTML = NAV_MANAGE.map(navItemHtml).join('');
 }
+// Nav lock — pins the hover rail open (Activix's "Verrouiller la navigation"), remembered per device.
+window.toggleNavLock = function() {
+  const locked = !document.body.classList.contains('nav-locked');
+  document.body.classList.toggle('nav-locked', locked);
+  localStorage.setItem('pm_nav_locked', locked ? '1' : '0');
+};
 window.openSidebar = function() {
   document.getElementById('desktopSidebar').classList.add('open');
   document.getElementById('sidebarBackdrop').classList.add('open');
@@ -3317,7 +4903,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.13.0';
+const CURRENT_VERSION = '3.23.0';
 
 async function autoCheckVersion(silent = true) {
   try {
@@ -3736,8 +5322,140 @@ function renderLeads() {
     </div>`).join('');
 }
 
+// ============ GLOBAL SEARCH + QUICK-ADD (visible on every tab) ============
+const GS_ICON_CAR = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11"/><rect x="3" y="11" width="18" height="6" rx="2"/><circle cx="7.5" cy="18" r="1.5"/><circle cx="16.5" cy="18" r="1.5"/></svg>';
+const GS_ICON_PERSON = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>';
+const GS_ICON_GLOBE = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg>';
+window.handleGlobalSearch = function(q) {
+  const box = document.getElementById('globalSearchResults');
+  const query = (q || '').trim().toLowerCase();
+  if (!query) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  const results = [];
+  cars.forEach(c => {
+    const hay = [c.stock, c.vin, c.make, c.model].filter(Boolean).join(' ').toLowerCase();
+    if (hay.includes(query)) results.push({ type: 'car', id: c.id, icon: GS_ICON_CAR, title: `${c.year || ''} ${c.make || ''} ${c.model || ''}`.trim() || c.stock || 'Car', sub: `Stock ${c.stock || '—'}` });
+  });
+  customers.forEach(c => {
+    const hay = [c.name, c.phone, c.email].filter(Boolean).join(' ').toLowerCase();
+    if (hay.includes(query)) results.push({ type: 'customer', id: c.id, icon: GS_ICON_PERSON, title: c.name || 'Customer', sub: c.phone ? formatPhone(c.phone) : (c.email || '') });
+  });
+  leads.forEach(l => {
+    const hay = [l.name, l.phone, l.email].filter(Boolean).join(' ').toLowerCase();
+    if (hay.includes(query)) results.push({ type: 'lead', id: l.id, icon: GS_ICON_PERSON, title: l.name || 'Unnamed lead', sub: (l.phone ? formatPhone(l.phone) : (l.email || '')) + ' · Mass Texting' });
+  });
+  webLeads.forEach(l => {
+    const hay = [l.name, l.phone, l.email].filter(Boolean).join(' ').toLowerCase();
+    if (hay.includes(query)) results.push({ type: 'webLead', id: l.id, icon: GS_ICON_GLOBE, title: l.name || 'Unnamed lead', sub: (l.phone ? formatPhone(l.phone) : (l.email || '')) + ' · Lead Web' });
+  });
+  box.style.display = 'block';
+  if (!results.length) { box.innerHTML = '<div class="global-search-empty">No matches</div>'; return; }
+  box.innerHTML = results.slice(0, 20).map(r => `
+    <div class="global-search-item" onclick="window.goToGlobalResult('${r.type}','${r.id}')">
+      <div class="global-search-item-icon">${r.icon}</div>
+      <div class="global-search-item-main"><div class="global-search-item-title">${r.title}</div><div class="global-search-item-sub">${r.sub}</div></div>
+    </div>`).join('');
+};
+window.goToGlobalResult = function(type, id) {
+  document.getElementById('globalSearchInput').value = '';
+  document.getElementById('globalSearchResults').style.display = 'none';
+  if (type === 'car') {
+    const car = cars.find(c => String(c.id) === String(id));
+    window.switchTab('inventory');
+    window.switchInvTab(car?.delivered ? 'delivered' : car?.sold ? 'sold' : 'active');
+    window.filterCars(car?.stock || '');
+    const search = document.getElementById('carSearch');
+    if (search) search.value = car?.stock || '';
+  } else if (type === 'customer') {
+    window.switchTab('customers');
+    window.openCustomerDetail(id);
+  } else if (type === 'lead') {
+    window.switchTab('leads');
+  } else if (type === 'webLead') {
+    window.switchTab('leadweb');
+    window.openWebLeadDetail(id);
+  }
+};
+document.addEventListener('click', (e) => {
+  const wrap = document.querySelector('.global-search-wrap');
+  const box = document.getElementById('globalSearchResults');
+  if (wrap && box && !wrap.contains(e.target)) box.style.display = 'none';
+});
+window.openGlobalNewClient = function() {
+  window.switchTab('customers');
+  window.openNewCustomer();
+};
+
+// Notification bell — two real sources: (a) new Lead Web leads nobody's touched, and (b) note
+// tag events (when a colleague is tagged in a note). It's a single-user log, not a cross-user
+// push (there's no multi-user backend), but it's the same "who was tagged" record Activix shows.
+let appNotifications = JSON.parse(localStorage.getItem('pm_notifications') || '[]');
+function saveNotifications() {
+  if (appNotifications.length > 60) appNotifications = appNotifications.slice(-60);
+  localStorage.setItem('pm_notifications', JSON.stringify(appNotifications));
+}
+function pushTagNotification(leadId, leadName, tags, text) {
+  appNotifications.push({ id: 'nt' + Date.now(), type: 'note_tag', leadId, leadName: leadName || 'lead', tags, text: (text || '').slice(0, 80), at: Date.now(), read: false });
+  saveNotifications();
+  window.renderNotifBadge();
+}
+function computeNewLeadNotifications() {
+  return webLeads.filter(l => (l.stage || 'submission') === 'submission' && !(l.notesLog && l.notesLog.length) && !(l.commsLog && l.commsLog.length));
+}
+window.renderNotifBadge = function() {
+  const badge = document.getElementById('notifBadge');
+  if (!badge) return;
+  const n = computeNewLeadNotifications().length + appNotifications.filter(x => !x.read).length;
+  badge.style.display = n ? 'flex' : 'none';
+  badge.textContent = n > 9 ? '9+' : String(n);
+};
+window.markAllNotifsRead = function() {
+  appNotifications = appNotifications.map(x => ({ ...x, read: true }));
+  saveNotifications();
+  window.renderNotifBadge();
+  window.toggleNotifPanel(); window.toggleNotifPanel();
+};
+window.openTagNotification = function(nid) {
+  const n = appNotifications.find(x => x.id === nid);
+  if (!n) return;
+  n.read = true; saveNotifications();
+  document.getElementById('notifPanel').style.display = 'none';
+  window.renderNotifBadge();
+  window.goToGlobalResult('webLead', n.leadId);
+};
+window.toggleNotifPanel = function() {
+  const panel = document.getElementById('notifPanel');
+  if (panel.style.display === 'block') { panel.style.display = 'none'; return; }
+  const leads = computeNewLeadNotifications();
+  const tagNotifs = appNotifications.slice().reverse();
+  let html = '';
+  if (tagNotifs.length) {
+    html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);"><span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);">Mentions</span><span style="font-size:11px;color:#3e8dbc;cursor:pointer;" onclick="window.markAllNotifsRead()">Tout marquer lu</span></div>`;
+    html += tagNotifs.map(n => `<div class="global-search-item" style="${n.read ? '' : 'background:rgba(62,141,188,0.06);'}" onclick="window.openTagNotification('${n.id}')">
+      <div class="global-search-item-icon">${GS_ICON_PERSON}</div>
+      <div class="global-search-item-main"><div class="global-search-item-title">${n.tags.map(t => '@' + t).join(', ')} · ${n.leadName}</div><div class="global-search-item-sub">${n.text || 'Vous a tagué dans une note'} · ${new Date(n.at).toLocaleString()}</div></div>
+    </div>`).join('');
+  }
+  if (leads.length) {
+    html += `<div style="padding:8px 12px;border-bottom:1px solid var(--border);border-top:1px solid var(--border);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);">Nouveaux leads</div>`;
+    html += leads.map(l => `<div class="global-search-item" onclick="window.goToGlobalResult('webLead','${l.id}');window.toggleNotifPanel();">
+        <div class="global-search-item-icon">${GS_ICON_GLOBE}</div>
+        <div class="global-search-item-main"><div class="global-search-item-title">${l.name || 'Unnamed lead'}</div><div class="global-search-item-sub">Nouveau lead — pas encore contacté</div></div>
+      </div>`).join('');
+  }
+  panel.innerHTML = html || `<div class="global-search-empty">Aucune notification</div>`;
+  panel.style.display = 'block';
+};
+document.addEventListener('click', (e) => {
+  const wrap = document.querySelector('.notif-wrap');
+  const panel = document.getElementById('notifPanel');
+  if (wrap && panel && !wrap.contains(e.target)) panel.style.display = 'none';
+});
+
 // ============ INIT ============
+if (localStorage.getItem('pm_nav_locked') === '1') document.body.classList.add('nav-locked');
 renderSidebar();
+applyStaticI18n();
+document.querySelectorAll('.lang-option').forEach(el => el.classList.toggle('active', el.dataset.lang === LANG));
 renderOptionsMenu();
 applyColumnVisibility();
 window.switchTab('inventory');
