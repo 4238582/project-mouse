@@ -44,18 +44,23 @@ echo        Desktop shortcut created with chibi mouse icon!
 echo.
 
 echo  [4/5] Adding to Start Menu...
-if not exist "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Project Mouse" ^
-  mkdir "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Project Mouse"
 powershell -NoProfile -Command ^
+  "$smDir = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Project Mouse';" ^
+  "New-Item -ItemType Directory -Force -Path $smDir | Out-Null;" ^
   "$ico = '%INSTALL_DIR%\ProjectMouse.ico';" ^
   "$ws = New-Object -ComObject WScript.Shell;" ^
-  "$s = $ws.CreateShortcut('%APPDATA%\Microsoft\Windows\Start Menu\Programs\Project Mouse\Project Mouse.lnk');" ^
-  "$s.TargetPath = 'C:\Program Files\Google\Chrome\Application\chrome.exe';" ^
+  "$s = $ws.CreateShortcut((Join-Path $smDir 'Project Mouse.lnk'));" ^
+  "$s.TargetPath = (Get-Command chrome.exe -ErrorAction SilentlyContinue).Source;" ^
+  "if (-not $s.TargetPath) { $s.TargetPath = 'C:\Program Files\Google\Chrome\Application\chrome.exe' };" ^
   "$s.Arguments = '--app=""file:///%INSTALL_DIR:\=/%/index.html"" --window-size=430,900';" ^
   "$s.IconLocation = $ico + ',0';" ^
   "$s.Description = 'Project Mouse - Car Photo Manager';" ^
   "$s.Save()"
-echo        Start Menu entry added!
+if exist "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Project Mouse\Project Mouse.lnk" (
+  echo        Start Menu entry added!
+) else (
+  echo        WARNING: Start Menu shortcut failed - Desktop icon still works fine.
+)
 echo.
 
 echo  [5/5] Finalizing...
