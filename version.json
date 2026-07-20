@@ -1,5 +1,5 @@
 {
-  "version": "3.23.0",
-  "releaseDate": "2026-07-16",
-  "changelog": "Sidebar now behaves like Activix's: it collapses to a slim 70px icon rail and slides open to 256px when you mouse over it, using Activix's exact timing (0.3s). The expanded rail overlays the page instead of pushing it, so nothing reflows while you hover. Labels fade in with it. Added Activix's 'Verrouiller la navigation' (Lock navigation) control at the bottom — click it to pin the menu open permanently (that mode does push the content over), and the choice is remembered per device. Mobile still uses the hamburger drawer."
+  "version": "3.35.0",
+  "releaseDate": "2026-07-19",
+  "changelog": "Trade-In redesign: the whole section now uses Snake's Hustle's own look instead of borrowed styling — app-native cards and colors (adapts to Light/Dark theme now!), green accent, pill-style tabs and buttons, reworded French labels, renamed statuses (Terminée / relance, Brouillon, Reprise), the filter panel moved to the left of the evaluation list, dashboard cards reordered (Inventaire first), quick actions became compact chips, and the greyed-out placeholder tiles are gone. Same features, same flow — just its own identity."
 }

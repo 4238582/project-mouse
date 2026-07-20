@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="300" viewBox="0 0 440 300" fill="none" stroke="#aebfd6" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round">
+  <!-- body + roof -->
+  <path d="M60 250 L60 132 C60 110 70 96 90 89 C101 62 124 48 156 45 L284 45 C316 48 339 62 350 89 C370 96 380 110 380 132 L380 250"/>
+  <!-- rear glass -->
+  <path d="M114 88 C132 64 156 55 186 54 L254 54 C284 55 308 64 326 88 Z"/>
+  <!-- decklid line -->
+  <path d="M84 138 L356 138" stroke-width="1.6"/>
+  <!-- taillights (wrap corners) -->
+  <path d="M88 118 L176 118 L176 148 L96 148 C90 145 88 134 88 118 Z"/>
+  <path d="M352 118 L264 118 L264 148 L344 148 C350 145 352 134 352 118 Z"/>
+  <line x1="102" y1="127" x2="166" y2="127" stroke-width="1.3"/>
+  <line x1="102" y1="138" x2="166" y2="138" stroke-width="1.3"/>
+  <line x1="274" y1="127" x2="338" y2="127" stroke-width="1.3"/>
+  <line x1="274" y1="138" x2="338" y2="138" stroke-width="1.3"/>
+  <!-- emblem + trunk handle + plate -->
+  <circle cx="220" cy="122" r="7"/>
+  <line x1="196" y1="140" x2="244" y2="140" stroke-width="2"/>
+  <path d="M180 160 L260 160 L260 186 L180 186 Z"/>
+  <!-- bumper + dual exhaust -->
+  <path d="M84 204 L356 204 L348 244 L92 244 Z" stroke-width="1.6"/>
+  <path d="M120 244 l30 0 l0 8 l-30 0 Z"/>
+  <path d="M290 244 l30 0 l0 8 l-30 0 Z"/>
+  <!-- rear tires peeking -->
+  <path d="M60 250 a30 30 0 0 0 44 0" />
+  <path d="M336 250 a30 30 0 0 0 44 0" />
+</svg>

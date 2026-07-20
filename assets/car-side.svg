@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="620" height="240" viewBox="0 0 620 240" fill="none" stroke="#aebfd6" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round">
+  <!-- body silhouette -->
+  <path d="M34 158 C34 140 44 133 62 131 L120 128 C138 118 156 107 178 101 C202 80 232 71 268 70 L380 70 C416 70 438 80 452 101 L518 116 C560 124 586 133 592 150 C594 160 592 167 586 172"/>
+  <!-- rockers + wheel arches -->
+  <path d="M34 158 L34 186 L138 186"/>
+  <path d="M138 186 a54 54 0 0 1 108 0"/>
+  <path d="M246 186 L398 186"/>
+  <path d="M398 186 a54 54 0 0 1 108 0"/>
+  <path d="M506 186 L586 186 L586 172"/>
+  <!-- greenhouse -->
+  <path d="M210 98 C226 84 246 76 270 75 L352 75 L352 100 L224 100 Z"/>
+  <path d="M360 75 L380 75 C404 75 422 84 434 100 L360 100 Z"/>
+  <line x1="356" y1="75" x2="356" y2="100"/>
+  <!-- beltline, door seams, handles, side crease -->
+  <path d="M138 132 L586 142" stroke-width="1.5"/>
+  <line x1="292" y1="100" x2="292" y2="182" stroke-width="1.5"/>
+  <line x1="358" y1="100" x2="358" y2="184" stroke-width="1.5"/>
+  <line x1="244" y1="118" x2="270" y2="118" stroke-width="2.4"/>
+  <line x1="312" y1="116" x2="338" y2="116" stroke-width="2.4"/>
+  <path d="M110 164 C210 158 400 158 570 164" stroke-width="1.2"/>
+  <!-- front wheel -->
+  <g>
+    <circle cx="192" cy="188" r="36"/>
+    <circle cx="192" cy="188" r="21"/>
+    <circle cx="192" cy="188" r="5"/>
+    <line x1="171" y1="188" x2="213" y2="188"/>
+    <line x1="192" y1="167" x2="192" y2="209"/>
+    <line x1="177.2" y1="173.2" x2="206.8" y2="202.8"/>
+    <line x1="206.8" y1="173.2" x2="177.2" y2="202.8"/>
+  </g>
+  <!-- rear wheel -->
+  <g>
+    <circle cx="452" cy="188" r="36"/>
+    <circle cx="452" cy="188" r="21"/>
+    <circle cx="452" cy="188" r="5"/>
+    <line x1="431" y1="188" x2="473" y2="188"/>
+    <line x1="452" y1="167" x2="452" y2="209"/>
+    <line x1="437.2" y1="173.2" x2="466.8" y2="202.8"/>
+    <line x1="466.8" y1="173.2" x2="437.2" y2="202.8"/>
+  </g>
+</svg>

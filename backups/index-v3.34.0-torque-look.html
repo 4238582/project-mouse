@@ -629,120 +629,115 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .options-dropdown-item:hover { background: var(--surface2); }
 .options-dropdown-item input { accent-color: var(--accent); }
 
-/* ===== TRADE-IN — Snake's Hustle evaluation module ===== */
+/* ===== TRADE-IN (Torque clone — computed styles pulled live from dealer.torquemanagement.ca) ===== */
 .sidebar-divider { height: 1px; background: rgba(255,255,255,0.14); margin: 10px 6px; flex-shrink: 0; }
-.tq-page { color: var(--text); }
-.tq-crumb { font-size: 12.5px; color: var(--muted); margin-bottom: 6px; display: flex; align-items: center; gap: 7px; }
+.tq-page { background: #0f172a; border-radius: 12px; padding: 18px 20px 28px; color: #e2e8f0; font-family: 'Inter', -apple-system, sans-serif; margin: -6px; }
+.tq-crumb { font-size: 12.5px; color: #64748b; margin-bottom: 6px; display: flex; align-items: center; gap: 7px; }
 .tq-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
 .tq-title { font-size: 28px; font-weight: 700; color: #fff; }
-.tq-btn { border: none; border-radius: 999px; padding: 9px 18px; font-size: 13.5px; font-weight: 600; color: #fff; cursor: pointer; font-family: inherit; }
-.tq-btn.grey { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
-.tq-btn.orange { background: transparent; color: #d97706; border: 1.5px solid #d97706; }
-.tq-btn.teal { background: #16a34a; color: #fff; }
+.tq-btn { border: none; border-radius: 6px; padding: 9px 16px; font-size: 13.5px; font-weight: 600; color: #fff; cursor: pointer; font-family: inherit; }
+.tq-btn.grey { background: #475569; }
+.tq-btn.orange { background: #f97316; }
+.tq-btn.teal { background: #14b8a6; color: #04211d; }
 .tq-btn:hover { filter: brightness(1.1); }
 .tq-tiles { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
-.tq-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 999px; display: inline-flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer; padding: 10px 18px; }
-.tq-tile:hover { border-color: #16a34a; color: #16a34a; }
-.tq-tile .icon { width: 18px; height: 18px; }
-
+.tq-tile { width: 118px; height: 118px; background: #1e293b; border: 2px solid transparent; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; padding: 8px; }
+.tq-tile:hover { border-color: #14b8a6; }
+.tq-tile .icon { width: 30px; height: 30px; }
+.tq-tile.off { color: #475569; cursor: default; pointer-events: none; }
 .tq-dash-grid { display: grid; grid-template-columns: 1fr 1fr 300px; gap: 14px; align-items: start; }
-.tq-dash-grid > .tq-card:nth-child(1) { order: 2; }
-.tq-dash-grid > .tq-card:nth-child(2) { order: 1; }
-.tq-dash-grid > div:nth-child(3) { order: 3; }
 @media (max-width: 1100px) { .tq-dash-grid { grid-template-columns: 1fr; } }
-.tq-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+.tq-card { background: #1e293b; border-radius: 6px; padding: 16px; }
 .tq-card-title { display: flex; align-items: center; gap: 9px; font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 14px; }
-.tq-bluebox, .tq-purplebox { border-radius: 12px; padding: 12px 14px; color: #fff; cursor: pointer; flex: 1; }
-.tq-bluebox { background: #b45309; }
-.tq-purplebox { background: #15803d; }
+.tq-bluebox, .tq-purplebox { border-radius: 6px; padding: 12px 14px; color: #fff; cursor: pointer; flex: 1; }
+.tq-bluebox { background: #075985; }
+.tq-purplebox { background: #7e22ce; }
 .tq-boxlbl { font-size: 13px; opacity: 0.95; }
 .tq-boxnum { font-size: 22px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
-.tq-substat { background: var(--surface2); border-radius: 12px; padding: 14px; margin-top: 12px; }
-.tq-substat-title { font-size: 13px; color: var(--muted); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+.tq-substat { background: #0f172a; border-radius: 6px; padding: 14px; margin-top: 12px; }
+.tq-substat-title { font-size: 13px; color: #cbd5e1; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
 .tq-statgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.tq-stat { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 8px 0; }
-.tq-stat-lbl { font-size: 12px; color: var(--muted); }
+.tq-stat { border-top: 1px solid #334155; border-bottom: 1px solid #334155; padding: 8px 0; }
+.tq-stat-lbl { font-size: 12px; color: #cbd5e1; }
 .tq-stat-num { font-size: 22px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px; }
-.tq-invbox { background: var(--surface2); border-radius: 12px; padding: 12px 14px; display: inline-block; min-width: 190px; }
+.tq-invbox { background: #334155; border-radius: 6px; padding: 12px 14px; display: inline-block; min-width: 190px; }
 .tq-up { color: #22c55e; } .tq-down { color: #ef4444; }
-.tq-notif { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 10px; font-size: 12.5px; }
+.tq-notif { background: #1e293b; border-radius: 6px; padding: 12px; margin-bottom: 10px; font-size: 12.5px; }
 .tq-notif b { display: flex; align-items: center; gap: 6px; color: #fff; margin: 4px 0; }
-.tq-notif-date { color: var(--muted); font-weight: 700; }
-.tq-notif-body { color: var(--muted); line-height: 1.45; word-break: break-word; }
+.tq-notif-date { color: #94a3b8; font-weight: 700; }
+.tq-notif-body { color: #cbd5e1; line-height: 1.45; word-break: break-word; }
 /* list page */
-.tq-tabs { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-.tq-tab { display: flex; align-items: center; gap: 7px; padding: 7px 14px; font-size: 13px; color: var(--muted); cursor: pointer; background: var(--surface2); border-radius: 999px; white-space: nowrap; }
-.tq-tab.active { color: #fff; background: #16a34a; }
-.tq-count { background: var(--surface); color: var(--muted); border-radius: 999px; font-size: 11.5px; font-weight: 700; padding: 1px 8px; }
-.tq-tab.active .tq-count { background: rgba(255,255,255,0.25); color: #fff; }
-.tq-list-wrap { display: grid; grid-template-columns: 280px 1fr; gap: 14px; align-items: start; }
-.tq-list-wrap > .tq-card:first-child { order: 2; }
-.tq-list-wrap > .tq-card:last-child { order: 1; }
+.tq-tabs { display: flex; gap: 20px; border-bottom: 1px solid #334155; margin-bottom: 12px; flex-wrap: wrap; }
+.tq-tab { display: flex; align-items: center; gap: 7px; padding: 9px 2px; font-size: 13.5px; color: #cbd5e1; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+.tq-tab.active { color: #14b8a6; border-bottom-color: #14b8a6; }
+.tq-count { background: #334155; color: #fff; border-radius: 999px; font-size: 11.5px; font-weight: 700; padding: 1px 8px; }
+.tq-tab.active .tq-count { background: #14b8a6; color: #04211d; }
+.tq-list-wrap { display: grid; grid-template-columns: 1fr 290px; gap: 14px; align-items: start; }
 @media (max-width: 1100px) { .tq-list-wrap { grid-template-columns: 1fr; } }
 .tq-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.tq-table th { background: var(--surface2); color: var(--muted); text-align: left; font-size: 12.5px; padding: 10px 12px; cursor: pointer; }
-.tq-table td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
-.tq-table tr:hover td { background: var(--surface2); }
+.tq-table th { background: #293548; color: #cbd5e1; text-align: left; font-size: 11.5px; letter-spacing: 0.5px; padding: 10px 12px; text-transform: uppercase; cursor: pointer; }
+.tq-table td { padding: 12px; border-bottom: 1px solid #293548; vertical-align: top; }
+.tq-table tr:hover td { background: rgba(51,65,85,0.35); }
 .tq-veh-model { font-weight: 700; color: #fff; }
-.tq-veh-sub { color: var(--muted); font-size: 12px; line-height: 1.5; }
-.tq-client-name { color: #16a34a; font-weight: 600; }
+.tq-veh-sub { color: #94a3b8; font-size: 12px; line-height: 1.5; }
+.tq-client-name { color: #2dd4bf; font-weight: 600; }
 .tq-icons { display: flex; gap: 6px; align-items: center; }
-.tq-pill-check { background: rgba(217,119,6,0.15); color: #d97706; border-radius: 999px; padding: 4px 16px; font-weight: 700; cursor: pointer; border: none; font-size: 12px; }
+.tq-pill-check { background: #e9d5ff; color: #7e22ce; border-radius: 999px; padding: 4px 16px; font-weight: 700; cursor: pointer; border: none; font-size: 12px; }
 .tq-pill-thumb { background: #dcfce7; color: #16a34a; border-radius: 999px; padding: 4px 16px; font-weight: 700; cursor: pointer; border: none; font-size: 12px; }
 .tq-sq { width: 30px; height: 30px; border-radius: 6px; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
-.tq-sq.dark { background: var(--surface2); color: var(--text); }
-.tq-sq.teal { background: #16a34a; color: #fff; }
+.tq-sq.dark { background: #334155; color: #e2e8f0; }
+.tq-sq.teal { background: #14b8a6; color: #04211d; }
 .tq-sq .icon { width: 15px; height: 15px; }
-.tq-foot { display: flex; justify-content: space-between; align-items: center; padding: 12px; color: var(--muted); font-size: 12.5px; }
-.tq-pgbtn { background: var(--surface2); border: none; color: var(--muted); border-radius: 8px; min-width: 30px; height: 30px; cursor: pointer; margin-left: 4px; font-size: 12.5px; }
-.tq-pgbtn.on { background: #16a34a; color: #fff; font-weight: 700; }
+.tq-foot { display: flex; justify-content: space-between; align-items: center; padding: 12px; color: #64748b; font-size: 12.5px; }
+.tq-pgbtn { background: #334155; border: none; color: #cbd5e1; border-radius: 6px; min-width: 30px; height: 30px; cursor: pointer; margin-left: 4px; font-size: 12.5px; }
+.tq-pgbtn.on { background: #14b8a6; color: #04211d; font-weight: 700; }
 .tq-filter-title { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
 /* form */
-.tq-lbl { display: block; font-size: 12.5px; color: var(--muted); margin: 0 0 5px; font-weight: 500; }
-.tq-input, .tq-select, .tq-area { width: 100%; box-sizing: border-box; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); padding: 9px 12px; font-size: 13.5px; font-family: inherit; outline: none; }
-.tq-input:focus, .tq-select:focus, .tq-area:focus { border-color: #16a34a; }
+.tq-lbl { display: block; font-size: 12.5px; color: #cbd5e1; margin: 0 0 5px; font-weight: 500; }
+.tq-input, .tq-select, .tq-area { width: 100%; box-sizing: border-box; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #fff; padding: 9px 12px; font-size: 13.5px; font-family: inherit; outline: none; }
+.tq-input:focus, .tq-select:focus, .tq-area:focus { border-color: #14b8a6; }
 .tq-invalid { border-color: #ef4444 !important; }
 .tq-err { color: #ef4444; font-size: 12px; margin-top: 3px; display: none; }
 .tq-area { min-height: 84px; resize: vertical; }
 .tq-form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
 @media (max-width: 900px) { .tq-form-grid { grid-template-columns: 1fr; } }
-.tq-sec { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 16px; }
+.tq-sec { background: #1e293b; border-radius: 6px; padding: 18px; margin-bottom: 16px; }
 .tq-sec-title { font-size: 16.5px; font-weight: 700; color: #fff; }
-.tq-sec-sub { font-size: 12.5px; color: var(--muted); margin: 4px 0 16px; }
+.tq-sec-sub { font-size: 12.5px; color: #94a3b8; margin: 4px 0 16px; }
 .tq-radio-row { display: flex; gap: 10px; align-items: center; padding-top: 8px; }
-.tq-radio-row label { display: flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 600; color: var(--muted); cursor: pointer; padding: 8px 16px; border-radius: 999px; border: 1.5px solid var(--border); background: var(--surface2); transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease; }
-.tq-radio-row label:hover { border-color: var(--muted); }
-.tq-radio-row input { accent-color: #16a34a; width: 15px; height: 15px; pointer-events: none; }
-.tq-radio-row label:has(input:checked) { border-color: #16a34a; background: rgba(22,163,74,0.16); color: #16a34a; }
+.tq-radio-row label { display: flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 600; color: #cbd5e1; cursor: pointer; padding: 8px 16px; border-radius: 8px; border: 1.5px solid #334155; background: #0f172a; transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease; }
+.tq-radio-row label:hover { border-color: #475569; }
+.tq-radio-row input { accent-color: #14b8a6; width: 15px; height: 15px; pointer-events: none; }
+.tq-radio-row label:has(input:checked) { border-color: #14b8a6; background: rgba(20,184,166,0.16); color: #2dd4bf; }
 .tq-radio-row.tq-warn-oui label:has(input[value="oui"]:checked) { border-color: #ef4444; background: rgba(239,68,68,0.14); color: #f87171; }
 .tq-opts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 14px; }
 @media (max-width: 900px) { .tq-opts { grid-template-columns: 1fr 1fr; } }
-.tq-opts label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text); cursor: pointer; }
-.tq-opts input { accent-color: #16a34a; width: 15px; height: 15px; }
+.tq-opts label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #e2e8f0; cursor: pointer; }
+.tq-opts input { accent-color: #14b8a6; width: 15px; height: 15px; }
 .tq-form-wrap { display: grid; grid-template-columns: 230px 1fr; gap: 18px; align-items: start; }
 @media (max-width: 900px) { .tq-form-wrap { grid-template-columns: 1fr; } }
 .tq-stepper { position: sticky; top: 70px; font-size: 13.5px; }
-.tq-step { display: flex; align-items: center; gap: 9px; padding: 6px 0; color: var(--muted); cursor: pointer; }
-.tq-step.on { color: #16a34a; }
-.tq-step-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
-.tq-step.on .tq-step-dot { background: #16a34a; }
+.tq-step { display: flex; align-items: center; gap: 9px; padding: 6px 0; color: #cbd5e1; cursor: pointer; }
+.tq-step.on { color: #2dd4bf; }
+.tq-step-dot { width: 9px; height: 9px; border-radius: 50%; background: #475569; flex-shrink: 0; }
+.tq-step.on .tq-step-dot { background: #14b8a6; }
 .tq-step.sub { padding-left: 22px; font-size: 12.5px; }
 .tq-step.sub .tq-step-dot { width: 7px; height: 7px; }
 .tq-cond-bar { max-width: 490px; }
-.tq-cond-lbls { display: flex; background: var(--surface2); border-radius: 8px 8px 0 0; overflow: hidden; }
-.tq-cond-lbls span { flex: 1; text-align: center; font-size: 11.5px; font-weight: 700; color: var(--muted); letter-spacing: 1px; padding: 5px 0; }
+.tq-cond-lbls { display: flex; background: #cbd5e1; border-radius: 4px 4px 0 0; overflow: hidden; }
+.tq-cond-lbls span { flex: 1; text-align: center; font-size: 11.5px; font-weight: 700; color: #334155; letter-spacing: 1px; padding: 5px 0; }
 .tq-cond-colors { display: flex; height: 44px; border-radius: 0 0 4px 4px; overflow: hidden; }
 .tq-cond-colors span { flex: 1; }
-.tq-cond-range { width: 100%; accent-color: #16a34a; margin-top: 8px; }
+.tq-cond-range { width: 100%; accent-color: #14b8a6; margin-top: 8px; }
 .tq-vin-row { display: flex; gap: 0; }
-.tq-vin-row .tq-input { border-radius: 10px 0 0 10px; }
-.tq-vin-row .tq-btn { border-radius: 0 10px 10px 0; white-space: nowrap; }
+.tq-vin-row .tq-input { border-radius: 6px 0 0 6px; }
+.tq-vin-row .tq-btn { border-radius: 0 6px 6px 0; white-space: nowrap; }
 /* fluidity */
 .tq-tile, .tq-btn, .tq-sq, .tq-pill-check, .tq-pill-thumb, .tq-pgbtn, .tq-bluebox, .tq-purplebox { transition: transform 0.12s ease, filter 0.15s ease, border-color 0.15s ease, background 0.15s ease; }
 .tq-tile:hover, .tq-bluebox:hover, .tq-purplebox:hover { transform: translateY(-2px); }
 .tq-btn:active, .tq-sq:active, .tq-tile:active { transform: scale(0.96); }
 .tq-input, .tq-select, .tq-area { transition: border-color 0.15s ease, box-shadow 0.15s ease; }
-.tq-input:focus, .tq-select:focus, .tq-area:focus { box-shadow: 0 0 0 3px rgba(22,163,74,0.15); }
+.tq-input:focus, .tq-select:focus, .tq-area:focus { box-shadow: 0 0 0 3px rgba(20,184,166,0.18); }
 .tq-table tr { transition: background 0.12s ease; }
 .tq-page { animation: tqFadeIn 0.22s ease; }
 @keyframes tqFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
@@ -750,8 +745,8 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .tq-step-dot { transition: background 0.15s ease, transform 0.15s ease; }
 .tq-step.on .tq-step-dot { transform: scale(1.25); }
 .tq-cond-lbl-live { display: inline-block; margin-top: 6px; font-size: 13px; font-weight: 700; padding: 3px 12px; border-radius: 999px; color: #04211d; transition: background 0.2s ease; }
-.tq-vin-count { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
-.tq-vin-count.ok { color: #16a34a; font-weight: 700; }
+.tq-vin-count { font-size: 11.5px; color: #64748b; margin-top: 4px; }
+.tq-vin-count.ok { color: #14b8a6; font-weight: 700; }
 .tq-draft-note { font-size: 12px; color: #f97316; margin-top: 6px; display: none; }
 /* account menu (top-right) */
 .acct-wrap { position: relative; }
@@ -766,7 +761,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .acct-head .nm { font-size: 14px; font-weight: 700; color: var(--text); }
 .acct-head .rl { font-size: 12px; color: var(--muted); margin-top: 2px; display: flex; align-items: center; gap: 6px; }
 .acct-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 7px; border-radius: 999px; }
-.acct-badge.dir { background: rgba(22,163,74,0.16); color: #16a34a; }
+.acct-badge.dir { background: rgba(20,184,166,0.16); color: #14b8a6; }
 .acct-badge.sales { background: rgba(37,99,235,0.14); color: var(--accent); }
 .acct-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; font-size: 13.5px; color: var(--text); cursor: pointer; border: none; background: transparent; width: 100%; text-align: left; }
 .acct-item:hover { background: var(--surface2); }
@@ -775,38 +770,38 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .acct-item .dot { width: 9px; height: 9px; border-radius: 50%; }
 .acct-sep { height: 1px; background: var(--border); margin: 6px 4px; }
 .acct-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: 6px 12px 3px; }
-.tq-photo-drop { border: 2px dashed var(--border); border-radius: 8px; min-height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #16a34a; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: border-color 0.15s ease, background 0.15s ease; }
-.tq-photo-drop:hover { border-color: #16a34a; background: rgba(22,163,74,0.06); }
+.tq-photo-drop { border: 2px dashed #475569; border-radius: 8px; min-height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #2dd4bf; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: border-color 0.15s ease, background 0.15s ease; }
+.tq-photo-drop:hover { border-color: #14b8a6; background: rgba(20,184,166,0.06); }
 .tq-photo-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-.tq-photo-thumb { position: relative; width: 64px; height: 64px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
+.tq-photo-thumb { position: relative; width: 64px; height: 64px; border-radius: 6px; overflow: hidden; border: 1px solid #334155; }
 .tq-photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.tq-photo-thumb .rm { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%; background: rgba(16,22,19,0.85); color: #ef4444; border: none; cursor: pointer; font-size: 11px; line-height: 1; display: flex; align-items: center; justify-content: center; }
+.tq-photo-thumb .rm { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%; background: rgba(15,23,42,0.85); color: #ef4444; border: none; cursor: pointer; font-size: 11px; line-height: 1; display: flex; align-items: center; justify-content: center; }
 .tq-icon-field { display: flex; align-items: center; gap: 16px; }
-.tq-icon-field > .icon { width: 46px; height: 46px; color: var(--muted); flex-shrink: 0; }
+.tq-icon-field > .icon { width: 46px; height: 46px; color: #475569; flex-shrink: 0; }
 .tq-tire-split { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
 .tq-tire-col { padding: 4px 22px; }
-.tq-tire-col:first-child { padding-left: 0; border-right: 1px solid var(--border); }
+.tq-tire-col:first-child { padding-left: 0; border-right: 1px solid #334155; }
 .tq-tire-col:last-child { padding-right: 0; }
-.tq-veh-hint { font-size: 13px; color: var(--muted); background: var(--surface2); border: 1px dashed var(--border); border-radius: 12px; padding: 14px 16px; text-align: center; }
-.tq-linkbtn { background: none; border: none; color: #16a34a; font: inherit; cursor: pointer; text-decoration: underline; padding: 0; }
+.tq-veh-hint { font-size: 13px; color: #94a3b8; background: #0f172a; border: 1px dashed #334155; border-radius: 8px; padding: 14px 16px; text-align: center; }
+.tq-linkbtn { background: none; border: none; color: #2dd4bf; font: inherit; cursor: pointer; text-decoration: underline; padding: 0; }
 .tq-tire-hdr { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 12px; }
-.tq-tire-ico { width: 34px; height: 34px; color: var(--muted); flex-shrink: 0; }
+.tq-tire-ico { width: 34px; height: 34px; color: #64748b; flex-shrink: 0; }
 .tq-damage { display: flex; gap: 12px; align-items: stretch; }
-.tq-damage-tools { display: flex; flex-direction: column; gap: 10px; background: #161d1a; border-radius: 12px; padding: 10px; flex-shrink: 0; }
-.tq-damage-tool { width: 44px; height: 44px; border-radius: 10px; border: none; background: #26332c; color: #c2d0c6; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s ease, transform 0.1s ease; }
+.tq-damage-tools { display: flex; flex-direction: column; gap: 10px; background: #0f172a; border-radius: 8px; padding: 10px; flex-shrink: 0; }
+.tq-damage-tool { width: 44px; height: 44px; border-radius: 8px; border: none; background: #334155; color: #cbd5e1; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s ease, transform 0.1s ease; }
 .tq-damage-tool .icon { width: 18px; height: 18px; }
 .tq-damage-tool:hover { filter: brightness(1.18); }
 .tq-damage-tool:active { transform: scale(0.93); }
-.tq-damage-tool.active { background: #16a34a; color: #fff; }
+.tq-damage-tool.active { background: #14b8a6; color: #04211d; }
 .tq-damage-tool.danger:hover { background: #ef4444; color: #fff; }
-.tq-damage-stage { flex: 1; background: #161d1a; border-radius: 12px; padding: 12px 14px; min-width: 0; }
-.tq-damage-viewname { font-size: 13px; color: #b9c6bd; font-weight: 600; margin-bottom: 8px; }
+.tq-damage-stage { flex: 1; background: #0f172a; border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.tq-damage-viewname { font-size: 13px; color: #cbd5e1; font-weight: 600; margin-bottom: 8px; }
 #evDamageCanvas { width: 100%; max-width: 640px; height: auto; aspect-ratio: 640 / 300; display: block; margin: 0 auto; cursor: crosshair; touch-action: none; border-radius: 6px; }
 .tq-damage-dots { display: flex; gap: 7px; justify-content: center; margin-top: 10px; }
-.tq-damage-dot { width: 9px; height: 9px; border-radius: 50%; background: #31403a; cursor: pointer; transition: background 0.15s ease; }
-.tq-damage-dot.on { background: #16a34a; }
+.tq-damage-dot { width: 9px; height: 9px; border-radius: 50%; background: #334155; cursor: pointer; transition: background 0.15s ease; }
+.tq-damage-dot.on { background: #14b8a6; }
 .tq-damage-dot.has { box-shadow: 0 0 0 2px rgba(239,68,68,0.5); }
-.tq-damage-arts { text-align: center; margin-top: 8px; font-size: 12px; color: var(--muted); }
+.tq-damage-arts { text-align: center; margin-top: 8px; font-size: 12px; color: #64748b; }
 .tq-artpanel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .tq-artpanel-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px; text-align: center; }
 .tq-artpanel-item .lbl { font-size: 12.5px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
@@ -815,7 +810,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
 .tq-artpanel-thumb .ph { color: var(--muted); font-size: 11px; }
 .tq-artpanel-item .btn { width: 100%; padding: 7px; font-size: 12px; }
 @media (max-width: 700px) { .tq-damage { flex-direction: column; } .tq-damage-tools { flex-direction: row; justify-content: center; } }
-@media (max-width: 700px) { .tq-tire-split { grid-template-columns: 1fr; } .tq-tire-col:first-child { border-right: none; border-bottom: 1px solid var(--border); padding: 0 0 16px; margin-bottom: 16px; } .tq-tire-col:last-child { padding: 0; } }
+@media (max-width: 700px) { .tq-tire-split { grid-template-columns: 1fr; } .tq-tire-col:first-child { border-right: none; border-bottom: 1px solid #334155; padding: 0 0 16px; margin-bottom: 16px; } .tq-tire-col:last-child { padding: 0; } }
 </style>
 </head>
 <body>
@@ -1377,57 +1372,60 @@ input:focus, textarea:focus { border-color: var(--accent); }
     <div id="webLeadDetailView" style="display:none;"></div>
   </div>
 
-  <!-- TRADE-IN — TABLEAU DE BORD -->
+  <!-- TRADE-IN — TABLEAU DE BORD (Torque clone) -->
   <div id="tab-tradein" style="display:none;">
     <div class="tq-page">
       <div class="tq-crumb"><svg class="icon" style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg> › Trade-In › Tableau de bord</div>
       <div class="tq-head"><div class="tq-title">Tableau de bord</div></div>
       <div class="tq-tiles">
-        <div class="tq-tile" onclick="window.switchTab('evalnew')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2"/><path d="M9 12l2 2 4-4"/></svg>Nouvelle évaluation</div>
-        <div class="tq-tile" onclick="window.switchTab('evallist')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2"/><path d="M9 10h6M9 14h6M9 18h4"/></svg>Mes évaluations</div>
-        <div class="tq-tile" onclick="window.switchTab('inventory')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11"/><rect x="3" y="11" width="18" height="6" rx="2"/><circle cx="7.5" cy="18" r="1.5"/><circle cx="16.5" cy="18" r="1.5"/></svg>Voir l'inventaire</div>
+        <div class="tq-tile" onclick="window.switchTab('evalnew')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2"/><path d="M9 12l2 2 4-4"/></svg>Nouvelle Évaluation</div>
+        <div class="tq-tile" onclick="window.switchTab('evallist')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2"/><path d="M9 10h6M9 14h6M9 18h4"/></svg>Liste des évaluations</div>
+        <div class="tq-tile" onclick="window.switchTab('inventory')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11"/><rect x="3" y="11" width="18" height="6" rx="2"/><circle cx="7.5" cy="18" r="1.5"/><circle cx="16.5" cy="18" r="1.5"/></svg>Consulter l'inventaire</div>
+        <div class="tq-tile off"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Analyse de marché</div>
+        <div class="tq-tile off"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/></svg>Nouveau Lead</div>
+        <div class="tq-tile off"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/></svg>Nouvelle Vente</div>
       </div>
       <div class="tq-dash-grid">
         <div class="tq-card">
           <div class="tq-card-title"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2"/><path d="M9 12l2 2 4-4"/></svg> Évaluations</div>
           <div style="display:flex;gap:12px;">
             <div class="tq-bluebox" onclick="window.tqGoList('attente')"><div class="tq-boxlbl">En attente</div><div class="tq-boxnum"><span id="tqEnAttente">0</span><span>→</span></div></div>
-            <div class="tq-purplebox" onclick="window.tqGoList('complete')"><div class="tq-boxlbl">Terminées / relance</div><div class="tq-boxnum"><span id="tqComplete">0</span><span>→</span></div></div>
+            <div class="tq-purplebox" onclick="window.tqGoList('complete')"><div class="tq-boxlbl">Complété / relance</div><div class="tq-boxnum"><span id="tqComplete">0</span><span>→</span></div></div>
           </div>
           <div class="tq-substat">
-            <div class="tq-substat-title">Reprises du mois <span style="color:var(--muted);font-size:12px;">Mois en cours</span></div>
+            <div class="tq-substat-title">Statistiques de reprises <span style="color:#94a3b8;font-size:12px;">Mois en cours</span></div>
             <div class="tq-statgrid">
-              <div class="tq-stat"><div class="tq-stat-lbl">Reprises</div><div class="tq-stat-num" id="tqRepris">0</div></div>
-              <div class="tq-stat"><div class="tq-stat-lbl">Reprises Hyundai</div><div class="tq-stat-num" id="tqReprisHy">0</div></div>
-              <div class="tq-stat"><div class="tq-stat-lbl">Taux de reprise</div><div class="tq-stat-num" id="tqReprisPct">0%</div></div>
-              <div class="tq-stat"><div class="tq-stat-lbl">Taux Hyundai</div><div class="tq-stat-num" id="tqReprisHyPct">0%</div></div>
+              <div class="tq-stat"><div class="tq-stat-lbl">Véhicules repris</div><div class="tq-stat-num" id="tqRepris">0</div></div>
+              <div class="tq-stat"><div class="tq-stat-lbl">Véhicules repris Hyundai</div><div class="tq-stat-num" id="tqReprisHy">0</div></div>
+              <div class="tq-stat"><div class="tq-stat-lbl">% de reprise</div><div class="tq-stat-num" id="tqReprisPct">0%</div></div>
+              <div class="tq-stat"><div class="tq-stat-lbl">% de reprise Hyundai</div><div class="tq-stat-num" id="tqReprisHyPct">0%</div></div>
             </div>
           </div>
         </div>
         <div class="tq-card">
           <div class="tq-card-title"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11"/><rect x="3" y="11" width="18" height="6" rx="2"/><circle cx="7.5" cy="18" r="1.5"/><circle cx="16.5" cy="18" r="1.5"/></svg> Inventaire</div>
-          <div class="tq-invbox"><div class="tq-boxlbl" style="color:var(--muted);">Véhicules en stock</div><div class="tq-stat-num"><span id="tqInvCount">0</span> <span class="tq-up">⬆</span></div></div>
+          <div class="tq-invbox"><div class="tq-boxlbl" style="color:#cbd5e1;">Véhicules en inventaire</div><div class="tq-stat-num"><span id="tqInvCount">0</span> <span class="tq-up">⬆</span></div></div>
           <div class="tq-substat">
-            <div class="tq-substat-title">Aperçu de l'inventaire</div>
+            <div class="tq-substat-title">Statistiques de l'inventaire actuel</div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-              <div class="tq-stat"><div class="tq-stat-lbl">Pas encore annoncés</div><div class="tq-stat-num"><span id="tqNonAnn">0</span> <span class="tq-down">👎</span></div></div>
-              <div class="tq-stat"><div class="tq-stat-lbl">Photos à compléter</div><div class="tq-stat-num"><span id="tqTenPhotos">0</span> <span class="tq-up">👍</span></div></div>
-              <div class="tq-stat"><div class="tq-stat-lbl">Prix inchangé 21 j+</div><div class="tq-stat-num"><span id="tqOldPrice">0</span> <span class="tq-down">👎</span></div></div>
+              <div class="tq-stat"><div class="tq-stat-lbl">Non-annoncés</div><div class="tq-stat-num"><span id="tqNonAnn">0</span> <span class="tq-down">👎</span></div></div>
+              <div class="tq-stat"><div class="tq-stat-lbl">10 photos et -</div><div class="tq-stat-num"><span id="tqTenPhotos">0</span> <span class="tq-up">👍</span></div></div>
+              <div class="tq-stat"><div class="tq-stat-lbl">Prix + de 21 jours</div><div class="tq-stat-num"><span id="tqOldPrice">0</span> <span class="tq-down">👎</span></div></div>
             </div>
           </div>
         </div>
         <div>
-          <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:10px;">Activité récente</div>
+          <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:10px;">Dernières notifications</div>
           <div id="tqNotifs"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- TRADE-IN — LISTE DES ÉVALUATIONS -->
+  <!-- TRADE-IN — LISTE DES ÉVALUATIONS (Torque clone) -->
   <div id="tab-evallist" style="display:none;">
     <div class="tq-page">
-      <div class="tq-crumb"><svg class="icon" style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg> › Trade-In › Mes évaluations</div>
+      <div class="tq-crumb"><svg class="icon" style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg> › Gestion des véhicules › Évaluations › Liste des évaluations</div>
       <div class="tq-head">
         <div class="tq-title">Liste des évaluations</div>
         <div style="display:flex;gap:8px;">
@@ -1440,21 +1438,21 @@ input:focus, textarea:focus { border-color: var(--accent); }
         <div class="tq-card" style="padding:0;overflow:hidden;">
           <div style="overflow-x:auto;">
             <table class="tq-table">
-              <thead><tr><th>Date</th><th>Client</th><th>Véhicule</th><th>Valeur</th><th>Statut</th></tr></thead>
+              <thead><tr><th>Date</th><th>Véhicule</th><th>Client</th><th>Valeurs</th><th>Statut</th></tr></thead>
               <tbody id="tqBody"></tbody>
             </table>
           </div>
           <div class="tq-foot"><span id="tqFootTxt">Résultats 0 à 0 de 0 résultats</span><span id="tqPager"></span></div>
         </div>
         <div class="tq-card">
-          <div class="tq-filter-title">Recherche et filtres <button class="tq-sq teal" title="Réinitialiser" onclick="window.tqResetFilters()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg></button></div>
-          <label class="tq-lbl">NIV</label><input class="tq-input" id="tqFVin" oninput="window.tqSetFilter()" style="margin-bottom:12px;">
-          <label class="tq-lbl">Client</label><input class="tq-input" id="tqFName" oninput="window.tqSetFilter()" style="margin-bottom:12px;">
-          <label class="tq-lbl">Téléphone</label><input class="tq-input" id="tqFPhone" oninput="window.tqSetFilter()" style="margin-bottom:12px;">
-          <label class="tq-lbl">Marque</label><input class="tq-input" id="tqFMake" oninput="window.tqSetFilter()" style="margin-bottom:12px;">
-          <label class="tq-lbl">Statut</label>
+          <div class="tq-filter-title">Filtrer les évaluations <button class="tq-sq teal" title="Réinitialiser" onclick="window.tqResetFilters()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg></button></div>
+          <label class="tq-lbl">Recherche par NIV</label><input class="tq-input" id="tqFVin" oninput="window.tqSetFilter()" style="margin-bottom:12px;">
+          <label class="tq-lbl">Nom ou prénom du client</label><input class="tq-input" id="tqFName" oninput="window.tqSetFilter()" style="margin-bottom:12px;">
+          <label class="tq-lbl">Téléphone du client</label><input class="tq-input" id="tqFPhone" oninput="window.tqSetFilter()" style="margin-bottom:12px;">
+          <label class="tq-lbl">Marques</label><input class="tq-input" id="tqFMake" oninput="window.tqSetFilter()" style="margin-bottom:12px;">
+          <label class="tq-lbl">Statut de l'évaluation</label>
           <select class="tq-select" id="tqFStatut" onchange="window.tqSetFilter()" style="margin-bottom:14px;">
-            <option value="">—</option><option value="attente">En attente</option><option value="complete">Terminée / relance</option><option value="incomplete">Brouillon</option><option value="repris">Reprise</option>
+            <option value="">—</option><option value="attente">En attente</option><option value="complete">Complété / Relance</option><option value="incomplete">Fiche incomplète</option><option value="repris">Repris</option>
           </select>
           <button class="tq-btn grey" style="width:100%;" onclick="window.tqResetFilters()">Réinitialiser</button>
         </div>
@@ -1462,16 +1460,16 @@ input:focus, textarea:focus { border-color: var(--accent); }
     </div>
   </div>
 
-  <!-- TRADE-IN — NOUVELLE ÉVALUATION -->
+  <!-- TRADE-IN — NOUVELLE ÉVALUATION (Torque clone) -->
   <div id="tab-evalnew" style="display:none;">
     <div class="tq-page">
-      <div class="tq-crumb"><svg class="icon" style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg> › Trade-In › Nouvelle évaluation</div>
+      <div class="tq-crumb"><svg class="icon" style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg> › Gestion des véhicules › Évaluations › Nouvelle évaluation</div>
       <div class="tq-head">
         <div class="tq-title" id="tqFormTitle">Nouvelle évaluation</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="tq-btn grey" onclick="window.tqCancelEval()">Abandonner</button>
-          <button class="tq-btn orange" onclick="window.tqSaveEval('draft')">Garder en brouillon</button>
-          <button class="tq-btn teal" onclick="window.tqSaveEval('full')">Terminer l'évaluation</button>
+          <button class="tq-btn grey" onclick="window.tqCancelEval()">Annuler l'évaluation</button>
+          <button class="tq-btn orange" onclick="window.tqSaveEval('draft')">Sauvegarder le brouillon et quitter</button>
+          <button class="tq-btn teal" onclick="window.tqSaveEval('full')">Sauvegarder et quitter</button>
         </div>
       </div>
       <div class="tq-form-wrap">
@@ -1483,13 +1481,13 @@ input:focus, textarea:focus { border-color: var(--accent); }
           <div class="tq-step sub" data-sec="tqSecComm" onclick="window.tqGoSec('tqSecComm')"><span class="tq-step-dot"></span>Commentaires</div>
           <div class="tq-step" data-sec="tqSecEtat" onclick="window.tqGoSec('tqSecEtat')"><span class="tq-step-dot"></span>État du véhicule</div>
           <div class="tq-step" data-sec="tqSecGar" onclick="window.tqGoSec('tqSecGar')"><span class="tq-step-dot"></span>Garanties et protections</div>
-          <div class="tq-step" data-sec="tqSecVal" onclick="window.tqGoSec('tqSecVal')"><span class="tq-step-dot"></span>Valeur de reprise</div>
+          <div class="tq-step" data-sec="tqSecVal" onclick="window.tqGoSec('tqSecVal')"><span class="tq-step-dot"></span>Valeurs & statut</div>
           <div class="tq-draft-note" id="tqDraftNote">📝 Brouillon restauré automatiquement</div>
         </div>
         <div>
           <div class="tq-sec" id="tqSecClient">
             <div class="tq-sec-title">Informations du client</div>
-            <div class="tq-sec-sub">Les coordonnées du client et le contexte de la transaction</div>
+            <div class="tq-sec-sub">Indiquer les informations du client pour dresser un portrait de la transaction à effectuer</div>
             <div class="tq-form-grid">
               <div><label class="tq-lbl">Prénom *</label><input class="tq-input" id="evPrenom"><div class="tq-err" id="evPrenomErr">Ce champ est obligatoire</div></div>
               <div><label class="tq-lbl">Nom</label><input class="tq-input" id="evNom"></div>
@@ -1497,7 +1495,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
                 <select class="tq-select" id="evTransac"><option value=""></option><option>Échange</option><option>Achat</option><option>Rachat de location</option><option>Vente seulement</option></select></div>
               <div><label class="tq-lbl">Téléphone *</label><input class="tq-input" id="evTel" type="tel" onblur="window.tqFmtTel(this)"><div class="tq-err" id="evTelErr">Ce champ est obligatoire</div></div>
               <div><label class="tq-lbl">Courriel</label><input class="tq-input" id="evCourriel"></div>
-              <div><label class="tq-lbl">Reste-t-il un solde à payer?</label>
+              <div><label class="tq-lbl">Y-a-t-il un solde dû sur ce véhicule?</label>
                 <div class="tq-radio-row"><label><input type="radio" name="evSolde" value="oui"> Oui</label><label><input type="radio" name="evSolde" value="non"> Non</label></div></div>
               <div><label class="tq-lbl">Client intéressé à neuf ou usagé ? *</label>
                 <select class="tq-select" id="evNeufUsage"><option value=""></option><option>Neuf</option><option>Usagé</option><option>Vente seulement</option></select><div class="tq-err" id="evNeufUsageErr">Ce champ est obligatoire</div></div>
@@ -1510,9 +1508,9 @@ input:focus, textarea:focus { border-color: var(--accent); }
           </div>
           <div class="tq-sec" id="tqSecVeh">
             <div class="tq-sec-title">Informations du véhicule</div>
-            <div class="tq-sec-sub">Entrez le NIV et décodez-le : la fiche du véhicule se remplit toute seule</div>
+            <div class="tq-sec-sub">Inscrivez le numéro d'identification du véhicule et décodez le pour remplir automatiquement les champs disponibles en rapport à ce véhicule</div>
             <div style="display:grid;grid-template-columns:250px 1fr;gap:14px;margin-bottom:14px;align-items:end;">
-              <div><label class="tq-lbl">Véhicule vu en personne? *</label>
+              <div><label class="tq-lbl">Est-ce que vous avez vu le véhicule? *</label>
                 <div class="tq-radio-row"><label><input type="radio" name="evVu" value="oui"> Oui</label><label><input type="radio" name="evVu" value="non"> Non</label></div></div>
               <div><label class="tq-lbl">Numéro d'identification du véhicule</label>
                 <div class="tq-vin-row"><input class="tq-input" id="evVin" placeholder="Inscrire un NIV" autocapitalize="characters" maxlength="17" oninput="window.tqVinInput(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();window.tqDecodeVin();}"><button class="tq-btn teal" onclick="window.tqDecodeVin()">🔎 Décoder</button></div>
@@ -1535,7 +1533,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
               <div><label class="tq-lbl">Carburant *</label>
                 <select class="tq-select" id="evCarburant"><option value=""></option><option>Essence</option><option>Diesel</option><option>Hybride</option><option>Hybride branchable</option><option>Électrique</option></select></div>
               <div><label class="tq-lbl">Odomètre *</label>
-                <div style="position:relative;"><input class="tq-input" id="evKm" type="number" style="padding-right:44px;"><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;">Km</span></div></div>
+                <div style="position:relative;"><input class="tq-input" id="evKm" type="number" style="padding-right:44px;"><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:13px;">Km</span></div></div>
               <div><label class="tq-lbl">Nombre de clés *</label><input class="tq-input" id="evNbCles" type="number" min="0" max="9"></div>
               <div><label class="tq-lbl">Couleur extérieure</label><input class="tq-input" id="evCouleur"></div>
               <div><label class="tq-lbl">Couleur intérieure</label><input class="tq-input" id="evCouleurInt"></div>
@@ -1556,21 +1554,21 @@ input:focus, textarea:focus { border-color: var(--accent); }
             </div>
           </div>
           <div class="tq-sec" id="tqSecOpts">
-            <div class="tq-sec-title">Équipements du véhicule</div>
+            <div class="tq-sec-title">Les options présentes sur le véhicule</div>
             <div class="tq-sec-sub"></div>
             <div class="tq-opts" id="evOptsGrid"></div>
             <div style="margin-top:14px;display:flex;align-items:center;gap:10px;">
-              <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;"><input type="checkbox" id="evCamion" style="accent-color:#16a34a;width:15px;height:15px;"> C'est un camion</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#e2e8f0;cursor:pointer;"><input type="checkbox" id="evCamion" style="accent-color:#14b8a6;width:15px;height:15px;"> C'est un camion</label>
             </div>
           </div>
           <div class="tq-sec" id="tqSecComm">
             <div class="tq-sec-title">Commentaires</div>
-            <div class="tq-sec-sub">Autres remarques utiles sur le véhicule</div>
+            <div class="tq-sec-sub">Inscrivez tout autre commentaire que vous jugez pertinent en lien avec le véhicule</div>
             <textarea class="tq-area" id="evComments"></textarea>
           </div>
           <div class="tq-sec" id="tqSecEtat">
             <div class="tq-sec-title">État général du véhicule</div>
-            <div class="tq-sec-sub">Évaluez l'état général du véhicule</div>
+            <div class="tq-sec-sub">Remplissez les indicateurs de l'état général du véhicule</div>
             <div class="tq-cond-bar">
               <div class="tq-cond-lbls"><span>MAUVAIS</span><span>NORMAL</span><span>BON</span><span>EXCELLENT</span></div>
               <div class="tq-cond-colors"><span style="background:#c9702e;"></span><span style="background:#c9a227;"></span><span style="background:#84cc16;"></span><span style="background:#22c55e;"></span></div>
@@ -1580,16 +1578,16 @@ input:focus, textarea:focus { border-color: var(--accent); }
           </div>
           <div class="tq-sec">
             <div class="tq-sec-title">État du pare-brise</div>
-            <div class="tq-sec-sub">L'état actuel du pare-brise</div>
+            <div class="tq-sec-sub">Indiquez les informations sur l'état actuel du pare-brise</div>
             <div class="tq-icon-field">
-              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11"/><rect x="3" y="11" width="18" height="6" rx="2"/><circle cx="7.5" cy="18" r="1.5"/><circle cx="16.5" cy="18" r="1.5"/><path d="M6.5 8h11" stroke="#16a34a"/></svg>
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11"/><rect x="3" y="11" width="18" height="6" rx="2"/><circle cx="7.5" cy="18" r="1.5"/><circle cx="16.5" cy="18" r="1.5"/><path d="M6.5 8h11" stroke="#14b8a6"/></svg>
               <div style="flex:1;"><label class="tq-lbl">État du pare-brise</label>
                 <select class="tq-select" id="evPareBrise"><option value=""></option><option>Parfait</option><option>À réparer</option><option>Éclat réparé</option><option>À changer</option><option>Aucun</option></select></div>
             </div>
           </div>
           <div class="tq-sec">
             <div class="tq-sec-title">État des pneus</div>
-            <div class="tq-sec-sub">L'état des pneus été et hiver</div>
+            <div class="tq-sec-sub">Indiquez les informations sur l'état actuel des pneus du véhicule</div>
             <div class="tq-tire-split">
               <div class="tq-tire-col">
                 <div class="tq-tire-hdr">Pneus d'été</div>
@@ -1624,7 +1622,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
           </div>
           <div class="tq-sec">
             <div class="tq-sec-title">État de la carrosserie</div>
-            <div class="tq-sec-sub">L'état de la carrosserie et les dommages</div>
+            <div class="tq-sec-sub">Indiquez les informations sur l'état de la carrosserie</div>
             <div class="tq-form-grid" style="margin-bottom:16px;">
               <div><label class="tq-lbl">Type de carrosserie</label>
                 <select class="tq-select" id="evCarrosserieType"><option value=""></option><option>Camionette</option><option>Convertible</option><option>Fourgonette</option><option>Hatchback</option><option>Mini-fourgonette</option><option>Sedan</option><option>VUS</option></select></div>
@@ -1639,7 +1637,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
                 <button type="button" class="tq-damage-tool danger" title="Tout effacer cette vue" onclick="window.tqClearDamage()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg></button>
               </div>
               <div class="tq-damage-stage">
-                <div class="tq-damage-viewname"><span id="tqDamageViewName">Côté conducteur</span> <span style="color:#7e8f85;font-weight:400;">— cliquez-glissez sur le véhicule pour marquer les dommages</span></div>
+                <div class="tq-damage-viewname"><span id="tqDamageViewName">Côté conducteur</span> <span style="color:#64748b;font-weight:400;">— cliquez-glissez sur le véhicule pour marquer les dommages</span></div>
                 <canvas id="evDamageCanvas" width="640" height="300"></canvas>
                 <div class="tq-damage-dots" id="tqDamageDots"></div>
                 <div class="tq-damage-arts" id="tqDamageArtsDirector">
@@ -1654,12 +1652,12 @@ input:focus, textarea:focus { border-color: var(--accent); }
           </div>
           <div class="tq-sec" id="tqSecGar">
             <div class="tq-sec-title">Garanties et protections</div>
-            <div class="tq-sec-sub">Garantie encore active sur le véhicule, s'il y a lieu</div>
+            <div class="tq-sec-sub">Indiquez les informations si il y a une garantie active sur le véhicule</div>
             <div class="tq-form-grid">
               <div><label class="tq-lbl">Durée de la garantie</label><input class="tq-input" id="evGarDuree" placeholder="ex. 5 ans / 100 000 km"></div>
               <div><label class="tq-lbl">Kilométrage maximum de la garantie (Km)</label><input class="tq-input" id="evGarKm" type="number"></div>
             </div>
-            <div style="font-weight:700;color:var(--text);margin:8px 0 10px;font-size:14px;">Produits d'assurances</div>
+            <div style="font-weight:700;color:#fff;margin:8px 0 10px;font-size:14px;">Produits d'assurances</div>
             <div class="tq-opts" id="evAssGrid"></div>
             <label class="tq-lbl" style="margin-top:14px;">Autres produits d'assurances</label><textarea class="tq-area" id="evAssAutres" style="min-height:56px;"></textarea>
           </div>
@@ -4783,7 +4781,7 @@ window.addEventListener('message', function(e) {
   }, 300);
 });
 
-// ============ TRADE-IN (evaluation module) ============
+// ============ TRADE-IN (Torque clone) ============
 let evals = JSON.parse(localStorage.getItem('pm_evals') || '[]');
 function saveEvals() { localStorage.setItem('pm_evals', JSON.stringify(evals)); }
 // Account role — only a director may set/change a trade-in value. Stored per device.
@@ -4966,7 +4964,7 @@ window.tqResetArtSlot = function(key) {
 let tqDamage = [[], [], [], []];   // per view: array of strokes; each stroke = [[x,y],...]
 let tqDamageV = 0, tqDamageTool = 'pen', tqDrawing = false, tqStroke = null;
 function tqCarOutline(ctx, view) {
-  ctx.strokeStyle = '#a9bfae'; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.strokeStyle = '#9fb3cc'; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   const P = (d, w) => { if (w) ctx.lineWidth = w; ctx.stroke(new Path2D(d)); ctx.lineWidth = 2; };
   const circle = (cx, cy, r) => `M ${cx-r} ${cy} a ${r} ${r} 0 1 0 ${2*r} 0 a ${r} ${r} 0 1 0 ${-2*r} 0`;
   // realistic wheel: tire, rim, hub, spokes
@@ -5000,7 +4998,7 @@ function tqCarOutline(ctx, view) {
     P('M250 142 l26 0', 2.2); P('M320 140 l26 0', 2.2);         // door handles
     // subtle lower body crease
     P('M120 178 C220 172 420 172 590 178', 1.2);
-    ctx.fillStyle = '#161d1a';
+    ctx.fillStyle = '#0f172a';
     rim(fw, wy, wr); rim(rw, wy, wr);
     ctx.restore();
   } else if (view === 2) {
@@ -5019,7 +5017,7 @@ function tqCarOutline(ctx, view) {
     // lower bumper + fog lights
     P('M150 220 L490 220 L484 236 L156 236 Z', 1.5);
     P(circle(196, 228, 7)); P(circle(444, 228, 7));
-    ctx.fillStyle = '#161d1a'; rim(150, 226, 22); rim(490, 226, 22);
+    ctx.fillStyle = '#0f172a'; rim(150, 226, 22); rim(490, 226, 22);
   } else {
     // REAR view — trunk, backlight, wraparound taillights, bumper, plate, exhaust
     P('M120 236 L120 176 C120 158 128 146 146 140 C156 118 176 106 204 103 L436 103 C464 106 484 118 494 140 C512 146 520 158 520 176 L520 236');
@@ -5036,7 +5034,7 @@ function tqCarOutline(ctx, view) {
     // bumper + dual exhaust
     P('M150 216 L490 216 L484 236 L156 236 Z', 1.5);
     P('M196 236 l24 0 l0 5 l-24 0 Z'); P('M420 236 l24 0 l0 5 l-24 0 Z');
-    ctx.fillStyle = '#161d1a'; rim(150, 226, 22); rim(490, 226, 22);
+    ctx.fillStyle = '#0f172a'; rim(150, 226, 22); rim(490, 226, 22);
   }
   ctx.lineWidth = 2;
 }
@@ -5087,7 +5085,7 @@ window.tqClearDamage = function() { tqDamage[tqDamageV] = []; tqRenderDamage(); 
 })();
 tqRenderDamage();
 
-const TQ_STATUTS = { attente:'En attente', complete:'Terminée / relance', incomplete:'Brouillon', repris:'Reprise' };
+const TQ_STATUTS = { attente:'En attente', complete:'Complété / Relance', incomplete:'Fiche incomplète', repris:'Repris' };
 function tqFmtDate(ms) { return new Date(ms).toLocaleDateString('fr-CA', { day:'numeric', month:'short', year:'numeric' }); }
 
 // ── Dashboard ──
@@ -5108,7 +5106,7 @@ function renderTradein() {
   set('tqNonAnn', active.filter(c => c.published === false).length);
   set('tqTenPhotos', active.filter(c => (c.photos || []).length <= 10).length);
   set('tqOldPrice', active.filter(c => (effDays(c) || 0) > 21).length);
-  // Activité récente — most recently touched evaluations
+  // Dernières notifications — most recently touched evaluations, Torque-style wording
   const recent = evals.slice().sort((a,b) => (b.updatedAt||b.createdAt) - (a.updatedAt||a.createdAt)).slice(0, 4);
   document.getElementById('tqNotifs').innerHTML = recent.length ? recent.map(e => `
     <div class="tq-notif" onclick="window.tqEditEval(${e.id})" style="cursor:pointer;">
@@ -5142,7 +5140,7 @@ window.tqSetTab = function(s) { tqTabFilter = s; tqPage = 1; renderEvalList(); }
 window.tqSetPage = function(p) { tqPage = p; tqRenderRows(); };
 
 function renderEvalList() {
-  const TABS = [['', 'Toutes'], ['attente', 'En attente'], ['complete', 'Terminée / relance'], ['repris', 'Reprises'], ['incomplete', 'Brouillons']];
+  const TABS = [['', 'Toutes'], ['complete', 'Complété / Relance'], ['attente', 'En attente'], ['incomplete', 'Fiche incomplète'], ['repris', 'Repris']];
   document.getElementById('tqTabs').innerHTML = TABS.map(([k, lbl]) => {
     const n = k ? evals.filter(e => e.statut === k).length : evals.length;
     return `<div class="tq-tab ${tqTabFilter === k ? 'active' : ''}" onclick="window.tqSetTab('${k}')">${lbl} <span class="tq-count">${n}</span></div>`;
@@ -5157,16 +5155,16 @@ function tqRenderRows() {
   const slice = rows.slice((tqPage - 1) * TQ_PER_PAGE, tqPage * TQ_PER_PAGE);
   document.getElementById('tqBody').innerHTML = slice.length ? slice.map(e => `
     <tr onclick="window.tqEditEval(${e.id})" style="cursor:pointer;">
-      <td style="white-space:nowrap;color:var(--muted);">${tqFmtDate(e.createdAt)}</td>
+      <td style="white-space:nowrap;color:#cbd5e1;">${tqFmtDate(e.createdAt)}</td>
       <td>
-        <div class="tq-veh-model">${e.modele || '—'} <span style="color:var(--muted);font-weight:400;">${e.annee || ''}</span></div>
+        <div class="tq-veh-model">${e.modele || '—'} <span style="color:#94a3b8;font-weight:400;">${e.annee || ''}</span></div>
         <div class="tq-veh-sub">${e.version ? e.version + '<br>' : ''}${e.km ? Number(e.km).toLocaleString('fr-CA') + ' KM<br>' : ''}${e.vin || ''}</div>
       </td>
       <td>
         <div class="tq-client-name">${[e.prenom, e.nom].filter(Boolean).join(' ') || '—'}</div>
         <div class="tq-veh-sub">${e.tel ? '+ ' + e.tel + '<br>' : ''}${[e.provenance, e.typeClient].filter(Boolean).join(' / ')}</div>
       </td>
-      <td style="white-space:nowrap;color:var(--text);">${e.valeur ? 'Client: ' + Number(e.valeur).toLocaleString('fr-CA') + '$' : ''}</td>
+      <td style="white-space:nowrap;color:#e2e8f0;">${e.valeur ? 'Client: ' + Number(e.valeur).toLocaleString('fr-CA') + '$' : ''}</td>
       <td onclick="event.stopPropagation();">
         <div class="tq-icons">
           ${e.statut === 'repris'
@@ -5177,9 +5175,9 @@ function tqRenderRows() {
           <button class="tq-sq dark" title="Supprimer" onclick="window.tqDeleteEval(${e.id})"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg></button>
         </div>
       </td>
-    </tr>`).join('') : `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--muted);">Aucune évaluation — cliquez « Nouvelle évaluation » pour commencer.</td></tr>`;
+    </tr>`).join('') : `<tr><td colspan="5" style="text-align:center;padding:40px;color:#64748b;">Aucune évaluation — cliquez « Nouvelle évaluation » pour commencer.</td></tr>`;
   const from = rows.length ? (tqPage - 1) * TQ_PER_PAGE + 1 : 0;
-  document.getElementById('tqFootTxt').textContent = `${from}–${Math.min(tqPage * TQ_PER_PAGE, rows.length)} sur ${rows.length} évaluations`;
+  document.getElementById('tqFootTxt').textContent = `Résultats ${from} à ${Math.min(tqPage * TQ_PER_PAGE, rows.length)} de ${rows.length} résultats`;
   let pg = `<button class="tq-pgbtn" onclick="window.tqSetPage(1)">«</button><button class="tq-pgbtn" onclick="window.tqSetPage(${Math.max(1, tqPage-1)})">‹</button>`;
   for (let p = 1; p <= pages; p++) pg += `<button class="tq-pgbtn ${p === tqPage ? 'on' : ''}" onclick="window.tqSetPage(${p})">${p}</button>`;
   pg += `<button class="tq-pgbtn" onclick="window.tqSetPage(${Math.min(pages, tqPage+1)})">›</button><button class="tq-pgbtn" onclick="window.tqSetPage(${pages})">»</button>`;
@@ -5268,7 +5266,7 @@ window.tqEditEval = function(id) {
 };
 window.tqCancelEval = function() { localStorage.removeItem('pm_eval_draft'); window.tqClearForm(); window.switchTab('evallist'); };
 window.tqSaveEval = function(mode) {
-  // Required-field validation with red borders — draft skips it
+  // Required-field validation, Torque-style red borders — draft skips it
   let ok = true;
   if (mode === 'full') {
     [['evPrenom','evPrenomErr'],['evTel','evTelErr'],['evNeufUsage','evNeufUsageErr'],['evProvenance','evProvenanceErr'],['evTypeClient','evTypeClientErr']].forEach(([fid, eid]) => {
@@ -5408,7 +5406,7 @@ window.tqOpenForm = function() {
     note.style.display = 'block'; setTimeout(() => note.style.display = 'none', 5000);
   } catch(_){}
 };
-// VIN decode via NHTSA vPIC (free, CORS-enabled) — fills the whole vehicle grid
+// VIN decode via NHTSA vPIC (free, CORS-enabled) — fills the whole vehicle grid like Torque
 let tqLastDecodedVin = '';
 window.tqDecodeVin = async function() {
   const vin = document.getElementById('evVin').value.trim().toUpperCase();
@@ -5555,7 +5553,7 @@ const NAV_MANAGE = [
   { id: 'analytics', label: 'Analytics', icon: '<line x1="6" y1="20" x2="6" y2="12"/><line x1="12" y1="20" x2="12" y2="6"/><line x1="18" y1="20" x2="18" y2="14"/>' },
   { id: 'setup', label: 'Settings', icon: '<circle cx="12" cy="12" r="3"/><path d="M12 5v2M12 17v2M5 12h2M17 12h2M7.5 7.5l1.4 1.4M15.1 15.1l1.4 1.4M7.5 16.5l1.4-1.4M15.1 8.9l1.4-1.4"/>' },
 ];
-// Trade-in zone — sits between two divider bars in the sidebar.
+// Trade-in zone (Torque clone) — sits between two divider bars in the sidebar.
 const NAV_TRADEIN = [
   { id: 'tradein', label: 'Trade-In', icon: '<path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>' },
   { id: 'evalnew', label: 'Nouvelle évaluation', icon: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2"/><path d="M12 10v6M9 13h6"/>' },
@@ -6270,7 +6268,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.35.0';
+const CURRENT_VERSION = '3.34.0';
 
 async function autoCheckVersion(silent = true) {
   try {

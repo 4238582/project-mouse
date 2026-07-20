@@ -1,0 +1,5 @@
+{
+  "version": "3.34.0",
+  "releaseDate": "2026-07-19",
+  "changelog": "Lead Web client sheet (Échange stage): the generic car icon is now replaced by your uploaded Trade-In car artwork wherever it appears (Vehicles wanted, trade-in vehicle card, empty state) — no more plain silhouette. Also added '📋 Charger depuis une évaluation' — pick an existing Trade-In evaluation and its VIN/year/make/model/km/colors/transmission/comments auto-fill the lead's trade-in vehicle instantly, no retyping for the client."
+}
