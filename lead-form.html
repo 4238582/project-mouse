@@ -71,10 +71,11 @@ button:disabled { opacity: 0.6; cursor: default; }
 <script>
 const params = new URLSearchParams(location.search);
 const uid = params.get('uid');
+const org = params.get('org'); // organization (team) links carry org= instead of uid=
 const FUNCTION_URL = 'https://us-central1-project-mouse-b7b28.cloudfunctions.net/receiveWebLead';
 
 const formState = document.getElementById('formState');
-if (!uid) {
+if (!uid && !org) {
   formState.innerHTML = '<div class="missing-uid">This link is missing its destination — ask the dealership for a fresh link.</div>';
 } else {
   document.getElementById('leadForm').addEventListener('submit', async (e) => {
@@ -88,7 +89,7 @@ if (!uid) {
       err.style.display = 'block';
       return;
     }
-    data.uid = uid;
+    if (org) data.org = org; else data.uid = uid;
     data.source = 'website';
     btn.disabled = true; btn.textContent = 'SENDING…';
     try {

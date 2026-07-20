@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Solo users: each account owns its own tree (original behavior) ──
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ── Organizations (dealership teams sharing one data pool) ──
+    // Membership is mirrored from the Accounts Hub into orgs/{orgId}/meta/members
+    // by a director's session: { emails: { "person@x.com": "director"|"salesman" } }.
+    // Org ids are hub-issued UUIDs (unguessable); only listed members get in.
+    match /orgs/{orgId} {
+      function roster() {
+        return get(/databases/$(database)/documents/orgs/$(orgId)/meta/members);
+      }
+      function isMember() {
+        return request.auth != null
+          && request.auth.token.email != null
+          && roster().data.emails[request.auth.token.email] != null;
+      }
+      function isDirector() {
+        return request.auth != null
+          && request.auth.token.email != null
+          && roster().data.emails[request.auth.token.email] == 'director';
+      }
+
+      match /meta/members {
+        allow read: if isMember();
+        // Bootstrap: the first write may create the roster, but only if the
+        // writer lists THEMSELVES as director. After that, directors only.
+        allow create: if request.auth != null
+          && request.auth.token.email != null
+          && request.resource.data.emails[request.auth.token.email] == 'director';
+        allow update, delete: if isDirector();
+      }
+
+      match /data/{docId} {
+        allow read, write: if isMember();
+      }
+      match /webLeads/{leadId} {
+        allow read, write: if isMember();
+      }
+    }
+  }
+}

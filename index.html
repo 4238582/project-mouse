@@ -2017,6 +2017,37 @@ let cloudUnsub = null;
 let applyingRemote = false;
 let pushTimer = null;
 
+// ── Organization mode (Accounts Hub) ─────────────────────────────────────────
+// If the hub says this email belongs to an organization (dealership team), ALL
+// cloud data lives under orgs/{orgId}/… shared by every member, and the member's
+// role (director|salesman) comes from the hub instead of the local toggle.
+// Solo users (no org) keep the original users/{uid}/… paths — fully backward compatible.
+let hubMembership = null; // { org_id, org_name, role } | null
+async function fetchHubMembership(email) {
+  try {
+    const { data, error } = await hub.rpc('get_membership', { p_email: email, p_product: 'snakes-hustle' });
+    if (error || !Array.isArray(data) || !data.length) return null;
+    return data[0];
+  } catch (e) { return null; }
+}
+function dataRoot() { return hubMembership ? ['orgs', hubMembership.org_id] : ['users', currentUser.uid]; }
+function invDocRef() { const [c, id] = dataRoot(); return doc(db, c, id, 'data', 'inventory'); }
+function webLeadsColRef() { const [c, id] = dataRoot(); return collection(db, c, id, 'webLeads'); }
+function webLeadDocRef(leadId) { const [c, id] = dataRoot(); return doc(db, c, id, 'webLeads', leadId); }
+function storageBasePath() { const [c, id] = dataRoot(); return `${c}/${id}`; }
+// Directors mirror the org roster into Firestore (orgs/{id}/meta/members) so the
+// security rules can gate org data by member email without calling the hub.
+async function mirrorOrgMembers() {
+  if (!hubMembership || hubMembership.role !== 'director' || !currentUser) return;
+  try {
+    const { data } = await hub.rpc('get_org_members', { p_email: currentUser.email, p_product: 'snakes-hustle' });
+    if (!Array.isArray(data) || !data.length) return;
+    const emails = {};
+    data.forEach(m => { if (m.email) emails[m.email] = m.role; });
+    await setDoc(doc(db, 'orgs', hubMembership.org_id, 'meta', 'members'), { emails, updatedAt: new Date().toISOString() });
+  } catch (e) { console.warn('Org roster mirror failed:', e.message); }
+}
+
 function showAuthGate(state, email) {
   document.getElementById('authGateChecking').style.display = state === 'checking' ? 'block' : 'none';
   document.getElementById('authGateSignin').style.display = state === 'signin' ? 'block' : 'none';
@@ -2033,6 +2064,7 @@ function hideAuthGate() {
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     currentUser = null;
+    hubMembership = null;
     stopCloudSync();
     stopWebLeadsSync();
     showAuthGate('signin');
@@ -2049,6 +2081,13 @@ onAuthStateChanged(auth, async (user) => {
 
   hideAuthGate();
   currentUser = user;
+  // Org membership (dealership team) — decides shared-vs-solo data paths + enforced role
+  hubMembership = await fetchHubMembership(user.email);
+  if (hubMembership) {
+    tqRole = hubMembership.role === 'director' ? 'director' : 'salesman';
+    try { tqApplyRole(); renderAcctAvatar(); } catch (e) {}
+    await mirrorOrgMembers(); // directors keep the Firestore roster mirror fresh for the rules
+  }
   // If Snake imported a car before auth was ready, push it now
   if (window._pendingSnakePush) {
     window._pendingSnakePush = false;
@@ -2084,7 +2123,7 @@ onAuthStateChanged(auth, async (user) => {
 // ===== REAL-TIME AUTO SYNC =====
 function startCloudSync() {
   if(!currentUser || cloudUnsub) return;
-  const ref = doc(db, 'users', currentUser.uid, 'data', 'inventory');
+  const ref = invDocRef();
   // onSnapshot fires instantly whenever the cloud data changes — on ANY device
   cloudUnsub = onSnapshot(ref, (snap) => {
     if(snap.metadata.hasPendingWrites) return;
@@ -2198,7 +2237,7 @@ let webLeads = [];
 let webLeadsUnsub = null;
 function startWebLeadsSync() {
   if (!currentUser || webLeadsUnsub) return;
-  const q = query(collection(db, 'users', currentUser.uid, 'webLeads'), orderBy('receivedAt', 'desc'));
+  const q = query(webLeadsColRef(), orderBy('receivedAt', 'desc'));
   webLeadsUnsub = onSnapshot(q, (snap) => {
     webLeads = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderWebLeads();
@@ -2462,7 +2501,7 @@ window.addWebLeadToTexting = function(id) {
 };
 window.deleteWebLead = async function(id) {
   if (!currentUser) return;
-  try { await deleteDoc(doc(db, 'users', currentUser.uid, 'webLeads', id)); }
+  try { await deleteDoc(webLeadDocRef(id)); }
   catch (e) { showToast('⚠️ Could not delete: ' + e.message); }
 };
 
@@ -2473,7 +2512,7 @@ function updateWebLead(id, fields) {
   const l = webLeads.find(x => x.id === id);
   if (l) Object.assign(l, fields);
   if (currentUser) {
-    updateDoc(doc(db, 'users', currentUser.uid, 'webLeads', id), fields)
+    updateDoc(webLeadDocRef(id), fields)
       .catch(e => showToast('⚠️ Sync failed: ' + e.message));
   }
 }
@@ -2626,7 +2665,7 @@ window.addWebLeadNote = function(id) {
   const l = webLeads.find(x => x.id === id);
   const notesLog = (l && l.notesLog ? l.notesLog : []).concat([entry]);
   updateWebLead(id, { notesLog });
-  if (currentUser) updateDoc(doc(db, 'users', currentUser.uid, 'webLeads', id), { notesLog: arrayUnion(entry) }).catch(() => {});
+  if (currentUser) updateDoc(webLeadDocRef(id), { notesLog: arrayUnion(entry) }).catch(() => {});
   if (noteTags.length) pushTagNotification(id, l && l.name, [...noteTags], text);
   logLeadHistory(id, noteTags.length ? `a ajouté une note (tagué: ${noteTags.join(', ')})` : 'a ajouté une note');
   input.value = '';
@@ -2642,7 +2681,7 @@ window.saveEditNote = function(leadId, noteId) {
   const l = webLeads.find(x => x.id === leadId);
   const notesLog = (l.notesLog || []).map(n => n.id === noteId ? { ...n, text: ta.value.trim(), editedAt: Date.now() } : n);
   updateWebLead(leadId, { notesLog });
-  if (currentUser) updateDoc(doc(db, 'users', currentUser.uid, 'webLeads', leadId), { notesLog }).catch(() => {});
+  if (currentUser) updateDoc(webLeadDocRef(leadId), { notesLog }).catch(() => {});
   logLeadHistory(leadId, 'a modifié une note');
   editingNoteId = null;
   renderWebLeadDetail(leadId);
@@ -2652,7 +2691,7 @@ window.deleteWebLeadNote = function(leadId, noteId) {
   const l = webLeads.find(x => x.id === leadId);
   const notesLog = (l.notesLog || []).filter(n => n.id !== noteId);
   updateWebLead(leadId, { notesLog });
-  if (currentUser) updateDoc(doc(db, 'users', currentUser.uid, 'webLeads', leadId), { notesLog }).catch(() => {});
+  if (currentUser) updateDoc(webLeadDocRef(leadId), { notesLog }).catch(() => {});
   logLeadHistory(leadId, 'a supprimé une note');
   renderWebLeadDetail(leadId);
 };
@@ -2665,7 +2704,7 @@ window.addWebLeadComm = function(id) {
   const l = webLeads.find(x => x.id === id);
   const commsLog = (l && l.commsLog ? l.commsLog : []).concat([entry]);
   updateWebLead(id, { commsLog });
-  if (currentUser) updateDoc(doc(db, 'users', currentUser.uid, 'webLeads', id), { commsLog: arrayUnion(entry) }).catch(() => {});
+  if (currentUser) updateDoc(webLeadDocRef(id), { commsLog: arrayUnion(entry) }).catch(() => {});
   logLeadHistory(id, `a consigné un courriel (${direction === 'sent' ? 'envoyé' : 'reçu'})`);
   renderWebLeadDetail(id);
 };
@@ -3240,7 +3279,7 @@ window.seedDemoLeads = async function() {
   showToast('🎭 Adding demo leads…');
   try {
     const batch = writeBatch(db);
-    const col = collection(db, 'users', currentUser.uid, 'webLeads');
+    const col = webLeadsColRef();
     DEMO_WEB_LEADS.forEach(l => {
       batch.set(doc(col), { ...l, status: 'new', receivedAt: serverTimestamp() });
     });
@@ -3262,8 +3301,10 @@ function renderLeadWebLink() {
   if (!currentUser) return;
   const linkEl = document.getElementById('leadWebLink');
   const codeEl = document.getElementById('leadEmbedCode');
-  const uid = currentUser.uid;
-  const link = `https://4238582.github.io/project-mouse/lead-form.html?uid=${uid}`;
+  // Org teams share one lead inbox: the capture link carries org= instead of uid=
+  const link = hubMembership
+    ? `https://4238582.github.io/project-mouse/lead-form.html?org=${hubMembership.org_id}`
+    : `https://4238582.github.io/project-mouse/lead-form.html?uid=${currentUser.uid}`;
   if (linkEl) linkEl.value = link;
   if (codeEl) codeEl.value = `<!-- Snake's Hustle Lead Web — paste anywhere in your site -->
 <form id="snake-lead-form" onsubmit="return snakeSubmitLead(event)">
@@ -3314,7 +3355,7 @@ function autoPushToCloud(immediate) {
   clearTimeout(pushTimer);
   const run = async () => {
     try {
-      await setDoc(doc(db, 'users', currentUser.uid, 'data', 'inventory'), {
+      await setDoc(invDocRef(), {
         cars: cloudCarsString(), deletedIds: JSON.stringify(deletedIds), updatedAt: new Date().toISOString()
       });
       const sd = document.getElementById('syncDot');
@@ -3347,7 +3388,7 @@ window.forcePushToCloud = async function() {
   try {
     const payload = cloudCarsString();
     const kb = (payload.length / 1024).toFixed(0);
-    await setDoc(doc(db, 'users', currentUser.uid, 'data', 'inventory'), {
+    await setDoc(invDocRef(), {
       cars: payload, deletedIds: JSON.stringify(deletedIds), updatedAt: new Date().toISOString()
     });
     showToast(`✅ Pushed ${cars.length} cars to cloud (${kb} KB) — refresh your phone!`);
@@ -3359,7 +3400,7 @@ window.forcePushToCloud = async function() {
 window.syncToCloud = async function() {
   if(!currentUser) { showToast('⚠️ Please sign in first!'); return; }
   try {
-    await setDoc(doc(db, 'users', currentUser.uid, 'data', 'inventory'), {
+    await setDoc(invDocRef(), {
       cars: JSON.stringify(cars), updatedAt: new Date().toISOString()
     });
     showToast('☁️ Synced to cloud!');
@@ -3369,7 +3410,7 @@ window.syncToCloud = async function() {
 window.syncFromCloud = async function() {
   if(!currentUser) { showToast('⚠️ Please sign in first!'); return; }
   try {
-    const snap = await getDoc(doc(db, 'users', currentUser.uid, 'data', 'inventory'));
+    const snap = await getDoc(invDocRef());
     if(snap.exists() && snap.data().cars) {
       const cloudCars = JSON.parse(snap.data().cars);
       // For each car, fetch photo URLs from Storage
@@ -3378,7 +3419,7 @@ window.syncFromCloud = async function() {
           for(const photo of car.photos) {
             if(photo.id && !photo.url) {
               try {
-                const path = `users/${currentUser.uid}/cars/${car.id}/${photo.id}.jpg`;
+                const path = `${storageBasePath()}/cars/${car.id}/${photo.id}.jpg`;
                 photo.url = await getDownloadURL(storageRef(storage, path));
                 photo.uploaded = true;
                 photo.data = ''; // clear local data
@@ -3417,7 +3458,7 @@ async function loadStoragePhotos(silent) {
     await Promise.all(cars.map(async (car) => {
       let fileList;
       try {
-        fileList = await listAll(storageRef(storage, `users/${currentUser.uid}/cars/${car.id}`));
+        fileList = await listAll(storageRef(storage, `${storageBasePath()}/cars/${car.id}`));
       } catch(e) { return; } // folder might not exist
       if(!fileList.items.length) return;
 
@@ -5508,10 +5549,12 @@ window.toggleAcctMenu = function() {
   const roleItem = (key, lbl, desc) =>
     `<button class="acct-item check" onclick="window.tqSetRole('${key}')"><span><div>${lbl}</div><div style="font-size:11px;color:var(--muted);">${desc}</div></span>${tqRole === key ? '✓' : ''}</button>`;
   m.innerHTML = `
-    <div class="acct-head"><div class="nm">${name}</div><div class="rl">${roleBadge} · Hull Hyundai</div></div>
+    <div class="acct-head"><div class="nm">${name}</div><div class="rl">${roleBadge} · ${hubMembership ? hubMembership.org_name : 'Hull Hyundai'}</div></div>
     <div class="acct-lbl">Rôle du compte</div>
-    ${roleItem('director', 'Directeur', 'Peut attribuer une valeur de reprise')}
-    ${roleItem('salesman', 'Vendeur', 'Ne peut pas attribuer de valeur')}
+    ${hubMembership
+      ? `<div style="padding:6px 12px 10px;font-size:12px;color:var(--muted);">🔒 Rôle assigné par l'administrateur de ${hubMembership.org_name}.</div>`
+      : roleItem('director', 'Directeur', 'Peut attribuer une valeur de reprise')
+        + roleItem('salesman', 'Vendeur', 'Ne peut pas attribuer de valeur')}
     <div class="acct-sep"></div>
     <div class="acct-lbl">Disponibilité</div>
     ${presItem('online')}${presItem('away')}${presItem('busy')}
@@ -5522,6 +5565,7 @@ window.toggleAcctMenu = function() {
   m.style.display = 'block';
 };
 window.tqSetRole = function(r) {
+  if (hubMembership) { showToast("🔒 Votre rôle est géré par l'administrateur."); return; }
   tqRole = r; localStorage.setItem('pm_role', r);
   tqApplyRole();
   renderAcctAvatar();
@@ -5922,7 +5966,7 @@ window.snapPhoto = async function() {
   // Upload to Firebase Storage in background
   if(currentUser) {
     try {
-      const path = `users/${currentUser.uid}/cars/${car.id}/${photoId}.jpg`;
+      const path = `${storageBasePath()}/cars/${car.id}/${photoId}.jpg`;
       const ref = storageRef(storage, path);
       // cacheControl lets the browser keep the image for a year → reopening the app uses the
       // cached copy instead of re-downloading (saves Firebase bandwidth).
@@ -5968,7 +6012,7 @@ window.deletePhoto = async function(carId, idx) {
   // Delete from Firebase Storage if uploaded
   if(photo && photo.uploaded && photo.id && currentUser) {
     try {
-      const path = `users/${currentUser.uid}/cars/${carId}/${photo.id}.jpg`;
+      const path = `${storageBasePath()}/cars/${carId}/${photo.id}.jpg`;
       await deleteObject(storageRef(storage, path));
     } catch(e) {} // ignore if already deleted
   }
@@ -6004,7 +6048,7 @@ window.clearActiveInventory = async function() {
     for (const car of removed) {
       for (const photo of (car.photos || [])) {
         if (photo.uploaded && photo.id) {
-          try { await deleteObject(storageRef(storage, `users/${currentUser.uid}/cars/${car.id}/${photo.id}.jpg`)); } catch (e) {}
+          try { await deleteObject(storageRef(storage, `${storageBasePath()}/cars/${car.id}/${photo.id}.jpg`)); } catch (e) {}
         }
       }
     }
@@ -6025,7 +6069,7 @@ window.deleteCar = async function(id) {
     for(const photo of car.photos) {
       if(photo.uploaded && photo.id) {
         try {
-          await deleteObject(storageRef(storage, `users/${currentUser.uid}/cars/${id}/${photo.id}.jpg`));
+          await deleteObject(storageRef(storage, `${storageBasePath()}/cars/${id}/${photo.id}.jpg`));
         } catch(e) {}
       }
     }
@@ -6047,7 +6091,7 @@ async function sweepDeliveredExpiry() {
       for (const photo of car.photos) {
         if (photo.uploaded && photo.id) {
           try {
-            await deleteObject(storageRef(storage, `users/${currentUser.uid}/cars/${car.id}/${photo.id}.jpg`));
+            await deleteObject(storageRef(storage, `${storageBasePath()}/cars/${car.id}/${photo.id}.jpg`));
           } catch (e) {}
         }
       }
@@ -6270,7 +6314,7 @@ window.clearAllData = function() {
   showToast('🗑️ All data cleared');
 };
 
-const CURRENT_VERSION = '3.35.0';
+const CURRENT_VERSION = '3.36.0';
 
 async function autoCheckVersion(silent = true) {
   try {

@@ -32,9 +32,8 @@ powershell -NoProfile -Command ^
   "$ico = '%INSTALL_DIR%\ProjectMouse.ico';" ^
   "$ws = New-Object -ComObject WScript.Shell;" ^
   "$s = $ws.CreateShortcut([Environment]::GetFolderPath('Desktop') + '\Project Mouse.lnk');" ^
-  "$s.TargetPath = (Get-Command chrome.exe -ErrorAction SilentlyContinue).Source;" ^
-  "if (-not $s.TargetPath) { $s.TargetPath = 'C:\Program Files\Google\Chrome\Application\chrome.exe' };" ^
-  "$s.Arguments = '--app=""file:///%INSTALL_DIR:\=/%/index.html"" --window-size=430,900';" ^
+  "$s.TargetPath = 'C:\Windows\System32\wscript.exe';" ^
+  "$s.Arguments = '%INSTALL_DIR%\LaunchProjectMouse.vbs';" ^
   "$s.IconLocation = $ico + ',0';" ^
   "$s.WorkingDirectory = '%INSTALL_DIR%';" ^
   "$s.Description = 'Project Mouse - Car Photo Manager';" ^
@@ -50,9 +49,8 @@ powershell -NoProfile -Command ^
   "$ico = '%INSTALL_DIR%\ProjectMouse.ico';" ^
   "$ws = New-Object -ComObject WScript.Shell;" ^
   "$s = $ws.CreateShortcut((Join-Path $smDir 'Project Mouse.lnk'));" ^
-  "$s.TargetPath = (Get-Command chrome.exe -ErrorAction SilentlyContinue).Source;" ^
-  "if (-not $s.TargetPath) { $s.TargetPath = 'C:\Program Files\Google\Chrome\Application\chrome.exe' };" ^
-  "$s.Arguments = '--app=""file:///%INSTALL_DIR:\=/%/index.html"" --window-size=430,900';" ^
+  "$s.TargetPath = 'C:\Windows\System32\wscript.exe';" ^
+  "$s.Arguments = '%INSTALL_DIR%\LaunchProjectMouse.vbs';" ^
   "$s.IconLocation = $ico + ',0';" ^
   "$s.Description = 'Project Mouse - Car Photo Manager';" ^
   "$s.Save()"
@@ -83,4 +81,4 @@ echo  ============================================================
 echo.
 pause
 
-start "" "C:\Program Files\Google\Chrome\Application\chrome.exe" --app="file:///%INSTALL_DIR:\=/%/index.html" --window-size=430,900
+start "" "C:\Windows\System32\wscript.exe" "%INSTALL_DIR%\LaunchProjectMouse.vbs"

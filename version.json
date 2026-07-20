@@ -1,5 +1,5 @@
 {
-  "version": "3.35.0",
-  "releaseDate": "2026-07-19",
-  "changelog": "Trade-In redesign: the whole section now uses Snake's Hustle's own look instead of borrowed styling — app-native cards and colors (adapts to Light/Dark theme now!), green accent, pill-style tabs and buttons, reworded French labels, renamed statuses (Terminée / relance, Brouillon, Reprise), the filter panel moved to the left of the evaluation list, dashboard cards reordered (Inventaire first), quick actions became compact chips, and the greyed-out placeholder tiles are gone. Same features, same flow — just its own identity."
+  "version": "3.36.0",
+  "releaseDate": "2026-07-20",
+  "changelog": "Organizations (dealership teams): if the Accounts Hub assigns your email to an organization, Snake's Hustle now shares ONE data pool (inventory, leads, photos) with every member of that org, your Directeur/Vendeur role comes from the hub (locked in the account menu — no more self-serve switch), the account menu shows your real dealership name, and the lead-capture link becomes a team inbox. Solo accounts keep working exactly as before. Includes new Firestore security rules (deployed) gating org data by the hub-mirrored member roster, and the lead-intake function now accepts org links."
 }

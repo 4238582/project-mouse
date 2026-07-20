@@ -60,6 +60,7 @@ exports.receiveWebLead = onRequest({ region: "us-central1", cors: true }, async 
 
   const body = req.body || {};
   const uid = String(body.uid || "").trim();
+  const org = String(body.org || "").trim(); // organization (team) inbox — takes priority over uid
   const name = String(body.name || "").trim().slice(0, 120);
   const phoneDigits = String(body.phone || "").replace(/[^0-9]/g, "");
   const email = String(body.email || "").trim().slice(0, 200);
@@ -68,11 +69,14 @@ exports.receiveWebLead = onRequest({ region: "us-central1", cors: true }, async 
   const honeypot = String(body.company || ""); // hidden field — real humans leave it blank
 
   if (honeypot) { res.json({ ok: true }); return; } // silently drop likely-bot submissions
-  if (!uid) { res.status(400).json({ ok: false, error: "Missing uid — this link isn't configured correctly." }); return; }
+  if (!uid && !org) { res.status(400).json({ ok: false, error: "Missing uid — this link isn't configured correctly." }); return; }
   if (!name && !phoneDigits && !email) { res.status(400).json({ ok: false, error: "Enter at least a name, phone, or email." }); return; }
 
   try {
-    await db.collection("users").doc(uid).collection("webLeads").add({
+    const target = org
+      ? db.collection("orgs").doc(org).collection("webLeads")
+      : db.collection("users").doc(uid).collection("webLeads");
+    await target.add({
       name, phone: phoneDigits, email, message, source,
       status: "new",
       receivedAt: admin.firestore.FieldValue.serverTimestamp(),
