@@ -530,6 +530,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
   .content-area { margin-left: 70px; transition: margin-left .3s cubic-bezier(.4,0,.2,1); }
   body.nav-locked .content-area { margin-left: 256px; }
   .hamburger-btn { display: none; }
+  header { display: none; } /* sidebar + global-toolbar fully replace it on desktop */
   main { max-width: 1600px; }
 
   /* Keep icons pinned so nothing shifts as the rail widens (icon centred in the 70px rail) */
@@ -877,27 +878,9 @@ input:focus, textarea:focus { border-color: var(--accent); }
   <button class="hamburger-btn" onclick="window.openSidebar()" aria-label="Menu">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
   </button>
-  <div class="logo">
-    <div class="logo-icon"><img src="icon-192.png" alt="🐍"></div>
-    <div>
-      <div class="logo-text">Snake's Hustle</div>
-      <div class="logo-sub">Car Photo Manager</div>
-    </div>
-  </div>
-  <div class="header-right">
-    <div class="stats-bar">
-      <div class="stat">Cars: <span id="totalCars">0</span></div>
-      <div class="stat">Photos: <span id="totalPhotos">0</span></div>
-      <div class="stat">Done: <span id="doneCars">0</span></div>
-      <div class="stat">Last scan: <span id="lastScan">—</span></div>
-    </div>
-    <div id="userNameEl" class="user-name" style="display:none;"></div>
-    <span id="syncDot" title="Live sync off" style="width:8px;height:8px;border-radius:50%;background:var(--muted);display:none;"></span>
-    <button id="loginBtn" class="btn-signin" onclick="window.googleLogin()">
-      <img src="https://www.google.com/favicon.ico" width="14"> Sign in
-    </button>
-    <button id="logoutBtn" class="btn-signout" style="display:none;" onclick="window.googleLogout()">Sign out</button>
-  </div>
+  <!-- Logo, stats, sign-in/out used to live here — removed as redundant with the sidebar
+       logo + global-toolbar account menu, which already cover all of it. -->
+  <span id="syncDot" title="Live sync off" style="width:8px;height:8px;border-radius:50%;background:var(--muted);display:none;"></span>
 </header>
 
 <div class="global-toolbar">
@@ -936,7 +919,6 @@ input:focus, textarea:focus { border-color: var(--accent); }
           <button class="btn btn-secondary" style="width:auto;padding:9px 14px;font-size:13px;" onclick="window.toggleOptionsMenu()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 5v2M12 17v2M5 12h2M17 12h2M7.5 7.5l1.4 1.4M15.1 15.1l1.4 1.4M7.5 16.5l1.4-1.4M15.1 8.9l1.4-1.4"/></svg> Options</button>
           <div id="optionsMenu" class="options-dropdown" style="display:none;"></div>
         </div>
-        <input id="carSearch" type="text" placeholder="🔍 Search stock #, VIN, make, or model…" oninput="window.filterCars(this.value)" style="width:220px;box-sizing:border-box;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;outline:none;">
         <button class="btn btn-primary" style="width:auto;padding:9px 16px;font-size:13px;" onclick="window.switchTab('add')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Add Car</button>
       </div>
     </div>
@@ -964,12 +946,16 @@ input:focus, textarea:focus { border-color: var(--accent); }
       </div>
     </div>
     <div class="posted-row" id="posted-row">
+      <div id="posted-filters-wrap" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <span class="posted-row-label">Salesman — posting status</span>
       <div class="pill-row" id="posted-filters">
         <button class="pill pill-sm active" id="pf-all" onclick="window.setPostedFilter('all')">All</button>
         <button class="pill pill-sm" id="pf-unposted" onclick="window.setPostedFilter('unposted')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg> To Post</button>
         <button class="pill pill-sm" id="pf-posted" onclick="window.setPostedFilter('posted')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg> Posted</button>
       </div>
+      </div>
+      <span style="flex:1;"></span>
+      <input id="carSearch" type="text" placeholder="🔍 Search stock #, VIN, make, or model…" oninput="window.filterCars(this.value)" style="width:280px;box-sizing:border-box;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;outline:none;">
     </div>
     <div class="table-scroll">
       <table class="inv-table" id="invTable">
@@ -1043,7 +1029,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
       </div>
       <div class="input-group" style="display:flex;align-items:center;gap:10px;margin-top:4px;">
         <input type="checkbox" id="ecPosted" style="width:auto;">
-        <label style="margin:0;text-transform:none;letter-spacing:0;font-size:14px;color:var(--text);">Marked as posted on Facebook</label>
+        <label style="margin:0;text-transform:none;letter-spacing:0;font-size:14px;color:var(--text);">Marked as posted on Facebook (your status only — not shared with teammates)</label>
       </div>
       <div class="input-group" style="display:flex;align-items:center;gap:10px;margin-top:4px;">
         <input type="checkbox" id="ecPublished" style="width:auto;" checked>
@@ -1266,9 +1252,9 @@ input:focus, textarea:focus { border-color: var(--accent); }
           <div class="config-title" style="margin-bottom:2px;">Danger Zone</div>
           <div class="config-desc" style="margin-bottom:14px;">Irreversible actions — think twice.</div>
           <div class="card">
-            <div class="config-title" style="color:var(--danger);">Clear All Data</div>
-            <div class="config-desc">Clear all local data. Cannot be undone.</div>
-            <button class="btn-danger" onclick="window.clearAllData()">🗑️ Clear All Data</button>
+            <div class="config-title" style="color:var(--danger);">Clear All Inventory</div>
+            <div class="config-desc">Deletes every car and photo. Leads and Trade-In evaluations are never touched. Cannot be undone.</div>
+            <button class="btn-danger" onclick="window.clearAllData()">🗑️ Clear All Inventory</button>
           </div>
         </div>
       </div>
@@ -1993,10 +1979,55 @@ async function checkHubAccess(email) {
   try {
     const { data, error } = await hub.rpc('check_entitlement', { p_email: email, p_product: 'snakes-hustle' });
     if (error) return true; // fail open on network/RPC errors — don't lock people out over a hiccup
-    return Array.isArray(data) && data.length > 0;
+    const ok = Array.isArray(data) && data.length > 0;
+    if (ok && data[0].plan) hubPlan = String(data[0].plan).toLowerCase();
+    return ok;
   } catch (e) {
     return true; // fail open
   }
+}
+
+// ── Plans / packaging ────────────────────────────────────────────────────────
+// Sold as three bundles. Each tier includes everything below it:
+//   base     — Inventory + auto-posting to Facebook/Kijiji (the posting tool)
+//   pro      — the above + the Trade-In evaluation system
+//   ultimate — the above + the full CRM (Lead Web, Customers, Mass Texting, Calendar, Analytics)
+// hubPlan stays null for solo/dev/offline use, which means FULL access (never lock JP out
+// of his own app over a network hiccup or a missing entitlement row).
+let hubPlan = null;
+const PLAN_FEATURES = {
+  base:     ['inventory', 'posting'],
+  pro:      ['inventory', 'posting', 'tradein'],
+  ultimate: ['inventory', 'posting', 'tradein', 'crm'],
+};
+const PLAN_LABELS = { base: 'Base', pro: 'Pro', ultimate: 'Ultimate' };
+// Which feature each page belongs to. Pages not listed are always available (e.g. Settings).
+const PAGE_FEATURE = {
+  inventory: 'inventory', add: 'inventory', editcar: 'inventory', dashboard: 'inventory',
+  tradein: 'tradein', evalnew: 'tradein', evallist: 'tradein',
+  leadweb: 'crm', customers: 'crm', leads: 'crm', schedule: 'crm',
+  emails: 'crm', inbox: 'crm', analytics: 'crm',
+};
+function planFeatures() {
+  if (!hubPlan) return null;                  // unknown plan → unrestricted
+  return PLAN_FEATURES[hubPlan] || null;      // unrecognized plan name → unrestricted, don't lock out
+}
+function hasFeature(f) {
+  const feats = planFeatures();
+  return !feats || feats.includes(f);
+}
+function pageAllowed(page) {
+  const f = PAGE_FEATURE[page];
+  return !f || hasFeature(f);
+}
+function currentPageId() {
+  const el = document.querySelector('.sidebar-nav-item.active');
+  if (el && el.dataset.page) return el.dataset.page;
+  const open = ALL_PAGES.find(p => { const n = document.getElementById('tab-' + p); return n && n.style.display === 'block'; });
+  return open || 'inventory';
+}
+function defaultPageForPlan() {
+  return ['inventory', 'tradein', 'setup'].find(pageAllowed) || 'setup';
 }
 
 const fbApp = initializeApp({
@@ -2065,6 +2096,7 @@ onAuthStateChanged(auth, async (user) => {
   if (!user) {
     currentUser = null;
     hubMembership = null;
+    hubPlan = null;
     stopCloudSync();
     stopWebLeadsSync();
     showAuthGate('signin');
@@ -2081,6 +2113,10 @@ onAuthStateChanged(auth, async (user) => {
 
   hideAuthGate();
   currentUser = user;
+  // Plan is known now (set by checkHubAccess) — rebuild the nav so locked bundles disappear,
+  // and bounce off the current page if this plan doesn't include it.
+  renderSidebar();
+  if (!pageAllowed(currentPageId())) window.switchTab(defaultPageForPlan());
   // Org membership (dealership team) — decides shared-vs-solo data paths + enforced role
   hubMembership = await fetchHubMembership(user.email);
   if (hubMembership) {
@@ -2093,15 +2129,8 @@ onAuthStateChanged(auth, async (user) => {
     window._pendingSnakePush = false;
     setTimeout(autoPushToCloud, 500);
   }
-  const loginBtn = document.getElementById('loginBtn');
-  const logoutBtn = document.getElementById('logoutBtn');
-  const userNameEl = document.getElementById('userNameEl');
   const cloudOut = document.getElementById('cloudLoggedOut');
   const cloudIn = document.getElementById('cloudLoggedIn');
-  loginBtn.style.display = 'none';
-  logoutBtn.style.display = 'block';
-  userNameEl.textContent = '☁️ ' + user.displayName.split(' ')[0];
-  userNameEl.style.display = 'block';
   const sidebarUserEl = document.getElementById('sidebarUserEl');
   const sidebarLogoutBtn = document.getElementById('sidebarLogoutBtn');
   if (sidebarUserEl) { sidebarUserEl.textContent = user.email; sidebarUserEl.style.display = 'block'; }
@@ -4059,14 +4088,6 @@ function saveCars() {
 }
 
 function updateStats() {
-  document.getElementById('totalCars').textContent = cars.length;
-  document.getElementById('totalPhotos').textContent = cars.reduce((s,c) => s + c.photos.length, 0);
-  document.getElementById('doneCars').textContent = cars.filter(c => c.photos.length > 0).length;
-  const ts = Number(localStorage.getItem('pm_lastScan') || 0);
-  const el = document.getElementById('lastScan');
-  if (el) el.textContent = ts
-    ? new Date(ts).toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-    : '—';
   const cntActive = document.getElementById('cnt-active');
   const cntSold = document.getElementById('cnt-sold');
   const cntDelivered = document.getElementById('cnt-delivered');
@@ -4189,7 +4210,7 @@ function lifecycleCars() {
 function baseCars() {
   let base = lifecycleCars();
   if (currentInvTab === 'active' && currentPostedFilter !== 'all') {
-    base = base.filter(c => currentPostedFilter === 'posted' ? !!c.posted : !c.posted);
+    base = base.filter(c => currentPostedFilter === 'posted' ? myPostedState(c).posted : !myPostedState(c).posted);
   }
   if (currentTypeFilter !== 'all') {
     base = base.filter(c => {
@@ -4215,13 +4236,27 @@ function baseCars() {
   return base;
 }
 
+// Posted status is PER SALESPERSON, not shared — with an org's inventory shared across the
+// team, "posted" has to mean "did I personally post this," not "has anyone." Each car carries
+// car.postedBy = { "email@x.com": { posted, postedAt } }. Falls back to the old shared
+// car.posted/postedAt (pre-org data) the first time a given person's key doesn't exist yet,
+// so nobody's history gets silently wiped by this change.
+function myPostedKey() { return (currentUser && currentUser.email) || 'local'; }
+function myPostedState(car) {
+  if (car.postedBy && car.postedBy[myPostedKey()]) return car.postedBy[myPostedKey()];
+  return { posted: !!car.posted, postedAt: car.postedAt || null };
+}
+function setMyPosted(car, posted) {
+  if (!car.postedBy) car.postedBy = {};
+  car.postedBy[myPostedKey()] = { posted, postedAt: posted ? Date.now() : null };
+}
 window.togglePosted = function(id) {
   const car = cars.find(c => c.id === id);
   if(!car) return;
-  car.posted = !car.posted;
-  car.postedAt = car.posted ? Date.now() : null;
+  const next = !myPostedState(car).posted;
+  setMyPosted(car, next);
   saveCars(); renderCars();
-  showToast(car.posted ? '✅ Marked as posted!' : '↩ Moved back to To Post');
+  showToast(next ? '✅ Marked as posted!' : '↩ Moved back to To Post');
 };
 
 // Scout Facebook: hand the extension every active car's stock # to check (posted + renew).
@@ -4253,8 +4288,9 @@ window.addEventListener('message', function(e) {
     const car = cars.find(c => c.stock && String(c.stock).toLowerCase() === String(stock).toLowerCase());
     if (!car) return;
     const isPosted = !!results[stock].posted;
-    car.posted = isPosted;
-    car.postedAt = isPosted ? Date.now() : null;
+    // Scout reads YOUR OWN Facebook "Your listings" page, so the result only ever tells us
+    // whether YOU posted it — write it to your own key, never the shared car fields.
+    setMyPosted(car, isPosted);
     car.needsRenew = renewable.has(String(stock).toLowerCase());
     isPosted ? posted++ : toPost++;
     if (car.needsRenew) renew++;
@@ -4269,8 +4305,9 @@ window.switchInvTab = function(tab) {
     const el = document.getElementById('inv-tab-' + t);
     if(el) el.classList.toggle('active', t === tab);
   });
-  // The posted filter only applies to active inventory.
-  const pf = document.getElementById('posted-row');
+  // The posted filter only applies to active inventory — hide just the pills, not the
+  // whole row, so the search box beside them stays available on Sold/Delivered too.
+  const pf = document.getElementById('posted-filters-wrap');
   if(pf) pf.style.display = tab === 'active' ? 'flex' : 'none';
   const search = document.getElementById('carSearch');
   if(search) search.value = '';
@@ -4343,7 +4380,7 @@ function renderCars(list_) {
       <td>
         <button class="btn-edit-icon" onclick="event.stopPropagation();window.openEditCar(${car.id})" title="Edit vehicle details"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
         <button class="btn-edit-icon" onclick="event.stopPropagation();window.downloadPhotos(${car.id})" title="Download photos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg></button>
-        ${(!car.sold && !car.delivered) ? (car.posted ? `<span class="status-pill posted" onclick="event.stopPropagation();window.togglePosted(${car.id})" title="Click to move back to To Post">Posted</span>` : `<span class="status-pill topost" onclick="event.stopPropagation();window.togglePosted(${car.id})" title="Click to mark as Posted">To Post</span>`) : ''}
+        ${(!car.sold && !car.delivered) ? (myPostedState(car).posted ? `<span class="status-pill posted" onclick="event.stopPropagation();window.togglePosted(${car.id})" title="Click to move back to To Post (this is your own status, not shared with teammates)">Posted</span>` : `<span class="status-pill topost" onclick="event.stopPropagation();window.togglePosted(${car.id})" title="Click to mark as Posted (this is your own status, not shared with teammates)">To Post</span>`) : ''}
         ${(!car.sold && !car.delivered && car.needsRenew) ? `<span class="status-pill renew">Renew</span>` : ''}
         ${car.delivered
           ? `<button class="btn-unsold" onclick="event.stopPropagation();window.markSold(${car.id},'sold')">↩ Unsold</button>`
@@ -4464,7 +4501,7 @@ function renderPostingTab(car) {
     </button>
     <div id="post-now-status-${car.id}" style="text-align:center;font-size:12px;color:var(--muted);margin-top:8px;"></div>
     <button class="btn btn-secondary" style="width:100%;margin-top:12px;" onclick="window.togglePosted(${car.id})">
-      ${car.posted ? '↩ Mark as NOT posted' : '📣 Mark as posted (without sending)'}
+      ${myPostedState(car).posted ? '↩ Mark as NOT posted (just for you)' : '📣 Mark as posted (just for you, without sending)'}
     </button>`;
 }
 
@@ -4611,11 +4648,11 @@ window.postNowToFacebook = async function(carId) {
   // postMessage crosses the content script isolation boundary (CustomEvent doesn't)
   window.postMessage({ type: 'mouse:postNow', vehicle }, '*');
 
-  // Auto-mark this car as posted so it moves to the "✅ Posted" section.
+  // Auto-mark this car as posted (for ME — not the whole team) so it moves to the
+  // "✅ Posted" section on my own screen.
   // (No re-render here — it would collapse this open card and wipe the status below.
   //  saveCars persists + syncs; the badge/filter update on the next render.)
-  car.posted = true;
-  car.postedAt = Date.now();
+  setMyPosted(car, true);
   saveCars();
 
   // Wait up to 3 seconds for Snake to confirm it received the message
@@ -5549,7 +5586,8 @@ window.toggleAcctMenu = function() {
   const roleItem = (key, lbl, desc) =>
     `<button class="acct-item check" onclick="window.tqSetRole('${key}')"><span><div>${lbl}</div><div style="font-size:11px;color:var(--muted);">${desc}</div></span>${tqRole === key ? '✓' : ''}</button>`;
   m.innerHTML = `
-    <div class="acct-head"><div class="nm">${name}</div><div class="rl">${roleBadge} · ${hubMembership ? hubMembership.org_name : 'Hull Hyundai'}</div></div>
+    <div class="acct-head"><div class="nm">${name}</div><div class="rl">${roleBadge} · ${hubMembership ? hubMembership.org_name : 'Hull Hyundai'}</div>
+      ${hubPlan ? `<div class="rl" style="margin-top:4px;">Forfait <b style="color:#16a34a;">${PLAN_LABELS[hubPlan] || hubPlan}</b></div>` : ''}</div>
     <div class="acct-lbl">Rôle du compte</div>
     ${hubMembership
       ? `<div style="padding:6px 12px 10px;font-size:12px;color:var(--muted);">🔒 Rôle assigné par l'administrateur de ${hubMembership.org_name}.</div>`
@@ -5612,11 +5650,13 @@ function navItemHtml(item) {
   </div>`;
 }
 function renderSidebar() {
-  document.getElementById('sidebarNavMain').innerHTML = NAV_MAIN.map(navItemHtml).join('')
-    + '<div class="sidebar-divider"></div>'
-    + NAV_TRADEIN.map(navItemHtml).join('')
+  // Only show what the customer's plan includes — locked sections aren't rendered at all.
+  const allow = (items) => items.filter(i => pageAllowed(i.id));
+  const main = allow(NAV_MAIN), trade = allow(NAV_TRADEIN);
+  document.getElementById('sidebarNavMain').innerHTML = main.map(navItemHtml).join('')
+    + (trade.length ? '<div class="sidebar-divider"></div>' + trade.map(navItemHtml).join('') : '')
     + '<div class="sidebar-divider"></div>';
-  document.getElementById('sidebarNavManage').innerHTML = NAV_MANAGE.map(navItemHtml).join('');
+  document.getElementById('sidebarNavManage').innerHTML = allow(NAV_MANAGE).map(navItemHtml).join('');
 }
 // Nav lock — pins the hover rail open (Activix's "Verrouiller la navigation"), remembered per device.
 window.toggleNavLock = function() {
@@ -5719,7 +5759,7 @@ function renderAnalytics() {
 function renderDashboard() {
   const active = cars.filter(c => !c.sold && !c.delivered);
   document.getElementById('dashActiveCars').textContent = active.length;
-  document.getElementById('dashToPost').textContent = active.filter(c => !c.posted).length;
+  document.getElementById('dashToPost').textContent = active.filter(c => !myPostedState(c).posted).length;
   document.getElementById('dashNeedsRenew').textContent = active.filter(c => c.needsRenew).length;
   document.getElementById('dashLeadsCount').textContent = leads.length;
 
@@ -5731,7 +5771,7 @@ function renderDashboard() {
       ${carAvatar(c)}
       <div style="flex:1;min-width:0;">
         <div class="dash-row-name">${c.year||''} ${c.make||''} ${c.model||''}</div>
-        <div class="dash-row-sub">${c.stock||''} · $${c.price||'—'} · ${c.posted ? 'Posted' : 'To Post'}</div>
+        <div class="dash-row-sub">${c.stock||''} · $${c.price||'—'} · ${myPostedState(c).posted ? 'Posted' : 'To Post'}</div>
       </div>
     </div>`).join('') : '<div class="dash-empty">No cars yet — add your first one.</div>';
 
@@ -5756,6 +5796,12 @@ function renderDashboard() {
     </div>`).join('') : '<div class="dash-empty">No leads yet.</div>';
 }
 window.switchTab = function(name) {
+  // Plan gate: a locked page can't be opened, even by a direct call/deep link.
+  if (!pageAllowed(name)) {
+    const need = PAGE_FEATURE[name] === 'tradein' ? 'Pro' : 'Ultimate';
+    showToast(`🔒 Cette section fait partie du forfait ${need}.`);
+    return;
+  }
   ALL_PAGES.forEach(t => {
     document.getElementById('tab-'+t).style.display = t===name ? 'block' : 'none';
   });
@@ -5813,7 +5859,7 @@ window.openEditCar = function(id) {
     const el = document.getElementById(elId);
     if (el) el.value = car[EDIT_CAR_FIELDS[elId]] ?? '';
   });
-  document.getElementById('ecPosted').checked = !!car.posted;
+  document.getElementById('ecPosted').checked = myPostedState(car).posted;
   document.getElementById('ecPublished').checked = car.published !== false;
   document.getElementById('ecFeatures').value = Array.isArray(car.features) ? car.features.join(', ') : (car.features || '');
   window.switchTab('editcar');
@@ -5830,7 +5876,7 @@ window.saveEditCar = function() {
     if (!el) return;
     car[EDIT_CAR_FIELDS[elId]] = elId === 'ecStock' ? newStock : elId === 'ecVin' ? el.value.trim().toUpperCase() : el.value.trim();
   });
-  car.posted = document.getElementById('ecPosted').checked;
+  setMyPosted(car, document.getElementById('ecPosted').checked);
   car.published = document.getElementById('ecPublished').checked;
   const featuresRaw = document.getElementById('ecFeatures').value.trim();
   car.features = featuresRaw ? featuresRaw.split(',').map(f => f.trim()).filter(Boolean) : [];
@@ -6309,12 +6355,15 @@ window.setMode = function(mode) {
 };
 
 window.clearAllData = function() {
-  if(!confirm('Delete ALL cars and photos?')) return;
+  if(!confirm('Delete ALL cars and photos? Leads and Trade-In evaluations will NOT be touched.')) return;
+  const pw = prompt('Enter the password to confirm:');
+  if (pw === null) return; // cancelled
+  if (pw !== '911') { showToast('❌ Wrong password — inventory not cleared.'); return; }
   cars = []; saveCars(); renderCars();
-  showToast('🗑️ All data cleared');
+  showToast('🗑️ Inventory cleared');
 };
 
-const CURRENT_VERSION = '3.36.0';
+const CURRENT_VERSION = '3.39.2';
 
 async function autoCheckVersion(silent = true) {
   try {

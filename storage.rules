@@ -1,0 +1,26 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Car photos live at:
+    //   users/{uid}/cars/{carId}/{photoId}.jpg   — solo accounts
+    //   orgs/{orgId}/cars/{carId}/{photoId}.jpg  — dealership teams
+    // Anything not matched below is denied by default.
+
+    // ── Solo: only the owner of that uid ──
+    match /users/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ── Org teams: only emails on that org's roster ──
+    // The roster is mirrored from the Accounts Hub into Firestore at
+    // orgs/{orgId}/meta/members as { emails: { "someone@x.com": "director"|"salesman" } }.
+    // Cross-service read — same source of truth the Firestore rules use.
+    match /orgs/{orgId}/{allPaths=**} {
+      allow read, write: if request.auth != null
+        && request.auth.token.email != null
+        && firestore.get(/databases/(default)/documents/orgs/$(orgId)/meta/members)
+             .data.emails[request.auth.token.email] != null;
+    }
+  }
+}

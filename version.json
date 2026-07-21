@@ -1,5 +1,5 @@
 {
-  "version": "3.36.0",
+  "version": "3.39.2",
   "releaseDate": "2026-07-20",
-  "changelog": "Organizations (dealership teams): if the Accounts Hub assigns your email to an organization, Snake's Hustle now shares ONE data pool (inventory, leads, photos) with every member of that org, your Directeur/Vendeur role comes from the hub (locked in the account menu — no more self-serve switch), the account menu shows your real dealership name, and the lead-capture link becomes a team inbox. Solo accounts keep working exactly as before. Includes new Firestore security rules (deployed) gating org data by the hub-mirrored member roster, and the lead-intake function now accepts org links."
+  "changelog": "Removed the old top header bar (logo, Cars/Photos/Done/Last scan stats, user name, Sign in/out) — it was left over from before the sidebar + account menu existed and duplicated both. On desktop the header is gone entirely; on mobile it now shows just the menu button."
 }
