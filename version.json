@@ -1,5 +1,5 @@
 {
-  "version": "3.39.2",
-  "releaseDate": "2026-07-20",
-  "changelog": "Removed the old top header bar (logo, Cars/Photos/Done/Last scan stats, user name, Sign in/out) — it was left over from before the sidebar + account menu existed and duplicated both. On desktop the header is gone entirely; on mobile it now shows just the menu button."
+  "version": "3.40.0",
+  "releaseDate": "2026-07-21",
+  "changelog": "Scanning: every car now records the date it was scanned in, so the Days column keeps counting up on its own even when D2C gives no day count — and re-scanning never resets it. Duplicates: a re-scan now matches an existing car by stock number (ignoring case/spacing) or by VIN, so scanning the same vehicle twice updates it instead of adding it again. Danger Zone: Clear Inventory is now per-section — All, New, Pre-owned, Certified, or Not published — each still password-protected and never touching Leads or Trade-In evaluations."
 }

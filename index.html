@@ -1252,9 +1252,15 @@ input:focus, textarea:focus { border-color: var(--accent); }
           <div class="config-title" style="margin-bottom:2px;">Danger Zone</div>
           <div class="config-desc" style="margin-bottom:14px;">Irreversible actions — think twice.</div>
           <div class="card">
-            <div class="config-title" style="color:var(--danger);">Clear All Inventory</div>
-            <div class="config-desc">Deletes every car and photo. Leads and Trade-In evaluations are never touched. Cannot be undone.</div>
-            <button class="btn-danger" onclick="window.clearAllData()">🗑️ Clear All Inventory</button>
+            <div class="config-title" style="color:var(--danger);">Clear Inventory</div>
+            <div class="config-desc">Delete cars and their photos — all of them, or just one section. Leads and Trade-In evaluations are never touched. Requires a password. Cannot be undone.</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
+              <button class="btn-danger" onclick="window.clearInventorySection('all')">🗑️ Clear All Inventory</button>
+              <button class="btn-danger" onclick="window.clearInventorySection('new')">🗑️ Clear New only</button>
+              <button class="btn-danger" onclick="window.clearInventorySection('preowned')">🗑️ Clear Pre-owned only</button>
+              <button class="btn-danger" onclick="window.clearInventorySection('certified')">🗑️ Clear Certified only</button>
+              <button class="btn-danger" onclick="window.clearInventorySection('notpub')">🗑️ Clear Not published only</button>
+            </div>
           </div>
         </div>
       </div>
@@ -4139,11 +4145,30 @@ window.setTypeFilter = function(f) {
 
 // Effective days on lot = the days from the last D2C scan + days elapsed since,
 // so it stays current between scans. Returns null if the car was never scanned.
+// Days on lot, kept current automatically without re-scanning:
+//  • If D2C gave us a "Days" number, use it + however long since that scan.
+//  • Otherwise fall back to counting from when WE first scanned the car in
+//    (scannedAt), so every car still shows a day count that grows on its own.
 function effDays(car) {
-  if (!car.daysListed) return null;
-  const base = Number(car.daysListed) || 0;
-  const elapsed = car.daysScannedAt ? Math.floor((Date.now() - car.daysScannedAt) / 86400000) : 0;
-  return base + elapsed;
+  if (car.daysListed) {
+    const base = Number(car.daysListed) || 0;
+    const elapsed = car.daysScannedAt ? Math.floor((Date.now() - car.daysScannedAt) / 86400000) : 0;
+    return base + elapsed;
+  }
+  if (car.scannedAt) return Math.floor((Date.now() - car.scannedAt) / 86400000);
+  return null;
+}
+
+// One car per vehicle: match an incoming scan to an existing car by stock # (trimmed,
+// case-insensitive) or, failing that, by VIN — so re-scanning updates instead of duplicating.
+function findExistingCar(stockNumber, vin) {
+  const s = String(stockNumber || '').trim().toLowerCase();
+  const v = String(vin || '').trim().toLowerCase();
+  return cars.find(c => {
+    if (s && String(c.stock || '').trim().toLowerCase() === s) return true;
+    if (v && String(c.vin || '').trim().toLowerCase() === v) return true;
+    return false;
+  }) || null;
 }
 
 // ============ COLUMN VISIBILITY (Options menu) ============
@@ -4753,21 +4778,23 @@ window.addEventListener('message', function(e) {
     const fields = {
       year: v.year, make: v.make, model: v.model, bodyStyle: v.bodyStyle,
       exteriorColor: v.exteriorColor, odometer: v.odometer, transmission: v.transmission,
-      doors: v.doors, price: v.price, d2cEditUrl: v.d2cEditUrl,
+      doors: v.doors, price: v.price, d2cEditUrl: v.d2cEditUrl, vin: v.vin,
       daysListed: v.daysListed, daysScannedAt: v.daysListed ? Date.now() : undefined,
       // condition/published come from which D2C tab (New/Pre-owned/Not published/Certified) Snake scanned —
       // only present when the extension could tell; otherwise left undefined so we don't clobber existing data.
       condition: v.condition, published: v.published,
     };
-    const car = cars.find(c => c.stock && String(c.stock).toLowerCase() === String(v.stockNumber).toLowerCase());
+    const car = findExistingCar(v.stockNumber, v.vin);
     if (car) {
       Object.keys(fields).forEach(k => {
         if (k === 'published') { if (fields[k] !== undefined) car[k] = fields[k]; return; }
         if (fields[k]) car[k] = fields[k];
       });
+      // Keep the ORIGINAL first-scan date — re-scanning must not reset the day counter.
+      if (!car.scannedAt) car.scannedAt = Date.now();
       updated++;
     } else {
-      cars.push(Object.assign({ id: base + i, stock: v.stockNumber, vin: '', photos: [], posted: false }, fields));
+      cars.push(Object.assign({ id: base + i, stock: v.stockNumber, vin: v.vin || '', photos: [], posted: false, scannedAt: Date.now() }, fields));
       added++;
     }
   });
@@ -4781,8 +4808,9 @@ window.addEventListener('message', function(e) {
   const v = e.data.vehicle;
   if (!v) return;
 
-  // Check if car with same stock number already exists
-  const existing = cars.find(c => c.stock && v.stockNumber && c.stock === v.stockNumber);
+  // Match on stock # (trimmed/case-insensitive) or VIN so a second scan updates
+  // the same car instead of creating a duplicate.
+  const existing = findExistingCar(v.stockNumber, v.vin);
   if (existing) {
     // Update existing car with D2C data
     Object.assign(existing, {
@@ -4804,6 +4832,10 @@ window.addEventListener('message', function(e) {
       description: v.description || existing.description,
       descriptionFr: v.descriptionFr || existing.descriptionFr,
       features: v.features || existing.features,
+      // Fill in the stock # if this car was created without one (VIN-matched)
+      stock: existing.stock || v.stockNumber || '',
+      // Keep the ORIGINAL first-scan date so re-scanning doesn't reset the day counter
+      scannedAt: existing.scannedAt || Date.now(),
     });
     saveCars(); renderCars();
     if (currentUser) autoPushToCloud(true); // push update immediately so phone matches
@@ -4842,6 +4874,7 @@ window.addEventListener('message', function(e) {
     features: v.features || [],
     photos: [],
     notes: '',
+    scannedAt: Date.now(), // day-counter starts now; survives future re-scans
   };
   cars.unshift(newCar);
   saveCars(); renderCars();
@@ -6354,16 +6387,32 @@ window.setMode = function(mode) {
   }
 };
 
-window.clearAllData = function() {
-  if(!confirm('Delete ALL cars and photos? Leads and Trade-In evaluations will NOT be touched.')) return;
+// Clear the whole inventory or just one section. Section logic mirrors the inventory
+// filter pills exactly, so "Clear New only" removes precisely what the New pill shows.
+const CLEAR_SECTIONS = {
+  all:       { label: 'ALL cars',            match: () => true },
+  new:       { label: 'NEW cars',            match: c => (c.condition || 'Used').toLowerCase() === 'new' },
+  preowned:  { label: 'PRE-OWNED cars',      match: c => (c.condition || 'Used').toLowerCase() === 'used' },
+  certified: { label: 'CERTIFIED cars',      match: c => (c.condition || 'Used').toLowerCase() === 'certified' },
+  notpub:    { label: 'NOT PUBLISHED cars',  match: c => c.published === false },
+};
+window.clearInventorySection = function(section) {
+  const sec = CLEAR_SECTIONS[section];
+  if (!sec) return;
+  const doomed = cars.filter(sec.match);
+  if (!doomed.length) { showToast(`Nothing to clear — no ${sec.label.toLowerCase()}.`); return; }
+  if (!confirm(`Delete ${doomed.length} ${sec.label} and their photos?\n\nLeads and Trade-In evaluations will NOT be touched.`)) return;
   const pw = prompt('Enter the password to confirm:');
   if (pw === null) return; // cancelled
-  if (pw !== '911') { showToast('❌ Wrong password — inventory not cleared.'); return; }
-  cars = []; saveCars(); renderCars();
-  showToast('🗑️ Inventory cleared');
+  if (pw !== '911') { showToast('❌ Wrong password — nothing was cleared.'); return; }
+  cars = cars.filter(c => !sec.match(c));
+  saveCars(); renderCars();
+  showToast(`🗑️ Cleared ${doomed.length} ${sec.label.toLowerCase()}`);
 };
+// Back-compat: anything still calling clearAllData() gets the full-inventory clear.
+window.clearAllData = () => window.clearInventorySection('all');
 
-const CURRENT_VERSION = '3.39.2';
+const CURRENT_VERSION = '3.40.0';
 
 async function autoCheckVersion(silent = true) {
   try {
