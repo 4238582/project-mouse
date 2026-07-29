@@ -1,5 +1,5 @@
 {
-  "version": "3.43.0",
+  "version": "3.43.1",
   "releaseDate": "2026-07-29",
-  "changelog": "Customers now open the FULL client sheet. Clicking a customer opens the same rich Activix-style sheet as Lead Web — 6-stage pipeline, contact tab, notes, communications and history — instead of the old plain card. Existing customers are migrated automatically on first open: their name, phone, email, address and note are carried straight into the sheet, nothing lost. Customer clients stay in the Customers tab (they don't clutter Lead Web). Delete moved onto each customer row (trash icon) and also cleans up the cloud. Plus: '+ Nouveau lead' in Lead Web now really creates a lead (was opening the plain card by mistake), and Clear Inventory finally sticks across all your devices instead of loading back up."
+  "changelog": "Trade-In damage diagram: your uploaded côté-conducteur car image is now baked into the app as the default (assets/car-side.png), so it shows on every machine — including work — with no re-uploading. The passenger side auto-mirrors from it. Front/rear still use the placeholder drawings until their images are added too."
 }
