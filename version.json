@@ -1,5 +1,5 @@
 {
-  "version": "3.40.0",
-  "releaseDate": "2026-07-21",
-  "changelog": "Scanning: every car now records the date it was scanned in, so the Days column keeps counting up on its own even when D2C gives no day count — and re-scanning never resets it. Duplicates: a re-scan now matches an existing car by stock number (ignoring case/spacing) or by VIN, so scanning the same vehicle twice updates it instead of adding it again. Danger Zone: Clear Inventory is now per-section — All, New, Pre-owned, Certified, or Not published — each still password-protected and never touching Leads or Trade-In evaluations."
+  "version": "3.43.0",
+  "releaseDate": "2026-07-29",
+  "changelog": "Customers now open the FULL client sheet. Clicking a customer opens the same rich Activix-style sheet as Lead Web — 6-stage pipeline, contact tab, notes, communications and history — instead of the old plain card. Existing customers are migrated automatically on first open: their name, phone, email, address and note are carried straight into the sheet, nothing lost. Customer clients stay in the Customers tab (they don't clutter Lead Web). Delete moved onto each customer row (trash icon) and also cleans up the cloud. Plus: '+ Nouveau lead' in Lead Web now really creates a lead (was opening the plain card by mistake), and Clear Inventory finally sticks across all your devices instead of loading back up."
 }

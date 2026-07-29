@@ -1356,7 +1356,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
       <div class="ax-card" style="padding:0;">
         <div class="lx-table-head">
           <span class="lx-table-title" data-i18n="lx.leads">Leads</span>
-          <span class="ax-icon-sq" title="Nouveau lead" onclick="window.openGlobalNewClient()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+          <span class="ax-icon-sq" title="Nouveau lead" onclick="window.newWebLead()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
           <span style="flex:1;"></span>
           <button class="ax-btn-blue" onclick="window.lxClearFilters()" data-i18n="lx.clear">Effacer</button>
         </div>
@@ -2355,7 +2355,7 @@ function renderWebLeads() {
   window.renderNotifBadge();
   const pills = document.getElementById('lxPills');
   if (!pills) return;
-  const all = webLeads;
+  const all = webLeads.filter(l => l.origin !== 'customer'); // customer-backed leads live in the Customers tab, not here
   const infos = all.map(lxInfo);
   const n = all.length;
   const cnt = s => infos.filter(i => i.state === s).length;
@@ -2553,6 +2553,7 @@ function updateWebLead(id, fields) {
 }
 // Per-open UI state for the client sheet (not persisted — just which sub-tab is showing).
 let leadInfoTab = 'general';
+let leadSheetReturn = 'leadweb'; // where the client-sheet ← Back button returns (leadweb list or customers)
 let leadCarPickerOpen = false;
 let leadCarMenuOpen = false;   // vehicle ••• actions dropdown
 let noteTags = [];             // colleagues tagged on the note being composed
@@ -2562,16 +2563,38 @@ let editingNoteId = null;      // note currently in inline-edit mode
 // (no .exe/.js/.bat/.sh/.zip). "cannot contain viruses" per JP: PDFs, text, and pictures.
 const NOTE_FILE_TYPES = ['application/pdf','text/plain','text/csv','image/png','image/jpeg','image/gif','image/webp'];
 const NOTE_FILE_MAX = 2 * 1024 * 1024; // 2MB cap so we don't blow the Firestore 1MB doc / localStorage
-window.openWebLeadDetail = function(id) {
+window.openWebLeadDetail = function(id, from) {
   leadInfoTab = 'general';
   leadCarPickerOpen = false;
   leadCarMenuOpen = false;
   noteTags = [];
   pendingNoteFiles = [];
   editingNoteId = null;
+  leadSheetReturn = from === 'customers' ? 'customers' : 'leadweb';
   document.getElementById('webLeadsListView').style.display = 'none';
   document.getElementById('webLeadDetailView').style.display = 'block';
   renderWebLeadDetail(id);
+};
+// Manually create a Lead Web client (a walk-in, a phone-up, or just a test/"fictive" client) —
+// it gets the SAME rich client sheet as web-form leads because it lives in the same webLeads
+// collection. Writes to the cloud (setDoc with a server timestamp so the orderBy('receivedAt')
+// listener picks it up) then opens the full sheet. onSnapshot reconciles the optimistic local copy.
+window.newWebLead = async function() {
+  if (!currentUser) { showToast('⚠️ Connecte-toi d’abord pour créer un client'); return; }
+  const name = (prompt('Nom du nouveau client :', '') || '').trim();
+  if (!name) return;
+  const ref = doc(webLeadsColRef()); // auto-generated id
+  try {
+    await setDoc(ref, { name, source: 'manual', stage: 'submission', status: 'new', receivedAt: serverTimestamp() });
+    // Make sure it's in the local list even before the snapshot lands, so the sheet opens instantly.
+    if (!webLeads.find(x => x.id === ref.id)) {
+      webLeads.unshift({ id: ref.id, name, source: 'manual', stage: 'submission', status: 'new', receivedAt: null, receivedAtMs: Date.now() });
+    }
+    window.openWebLeadDetail(ref.id);
+    showToast('✅ Client créé — remplis sa fiche');
+  } catch (e) {
+    showToast('⚠️ Création échouée : ' + e.message);
+  }
 };
 window.setLeadInfoTab = function(id, tab) { leadInfoTab = tab; renderWebLeadDetail(id); };
 window.toggleLeadCarPicker = function(id) { leadCarPickerOpen = !leadCarPickerOpen; renderWebLeadDetail(id); };
@@ -2596,6 +2619,12 @@ window.saveLeadContactField = function(id, field, value) {
 };
 window.backToWebLeadsList = function() {
   document.getElementById('webLeadDetailView').style.display = 'none';
+  // A client sheet opened from the Customers list returns there, not to the Lead Web list.
+  if (leadSheetReturn === 'customers') {
+    leadSheetReturn = 'leadweb';
+    window.switchTab('customers');
+    return;
+  }
   document.getElementById('webLeadsListView').style.display = 'block';
   renderWebLeads();
 };
@@ -6401,18 +6430,25 @@ window.clearInventorySection = function(section) {
   if (!sec) return;
   const doomed = cars.filter(sec.match);
   if (!doomed.length) { showToast(`Nothing to clear — no ${sec.label.toLowerCase()}.`); return; }
-  if (!confirm(`Delete ${doomed.length} ${sec.label} and their photos?\n\nLeads and Trade-In evaluations will NOT be touched.`)) return;
+  if (!confirm(`Delete ${doomed.length} ${sec.label} and their photos?\n\n⚠️ This wipes them from the CLOUD too — every device (phone, work, home) — and they will NOT come back on their own. You can re-scan fresh afterward. Leads and Trade-In evaluations will NOT be touched.`)) return;
   const pw = prompt('Enter the password to confirm:');
   if (pw === null) return; // cancelled
   if (pw !== '911') { showToast('❌ Wrong password — nothing was cleared.'); return; }
+  // Tombstone every doomed car BEFORE removing it. Without this, another device that still holds
+  // these cars sees the emptied cloud, thinks they're "stranded local-only" cars, and re-uploads
+  // them — the "I wipe it but it loads back up" bug. The tombstones tell every device the cars are
+  // intentionally deleted, so nobody resurrects them. Re-scans get fresh Date.now() ids, so a
+  // tombstoned car never blocks scanning the same vehicle again.
+  doomed.forEach(c => markDeleted(c.id));
   cars = cars.filter(c => !sec.match(c));
   saveCars(); renderCars();
-  showToast(`🗑️ Cleared ${doomed.length} ${sec.label.toLowerCase()}`);
+  autoPushToCloud(true); // push NOW (skip the 0.8s debounce) so the cloud clears immediately
+  showToast(`🗑️ Cleared ${doomed.length} ${sec.label.toLowerCase()} — wiped from the cloud too`);
 };
 // Back-compat: anything still calling clearAllData() gets the full-inventory clear.
 window.clearAllData = () => window.clearInventorySection('all');
 
-const CURRENT_VERSION = '3.40.0';
+const CURRENT_VERSION = '3.43.0';
 
 async function autoCheckVersion(silent = true) {
   try {
@@ -6492,11 +6528,18 @@ window.seedDemoCustomer = function() {
   window.renderCustomers();
   showToast('✅ Demo customers added!');
 };
-window.deleteCustomer = function(id) {
-  if (!confirm('Delete this customer?')) return;
-  customers = customers.filter(c => c.id !== id);
+window.deleteCustomer = async function(id) {
+  const c = customers.find(x => x.id === id);
+  if (!c) return;
+  if (!confirm(`Delete ${c.name}? Their client sheet and notes will be erased.`)) return;
+  // Also remove the backing lead so it doesn't orphan in the cloud.
+  if (c.leadId) {
+    if (currentUser) { try { await deleteDoc(webLeadDocRef(c.leadId)); } catch (e) {} }
+    webLeads = webLeads.filter(l => l.id !== c.leadId);
+  }
+  customers = customers.filter(x => x.id !== id);
   saveCustomers();
-  window.backToCustomerList();
+  window.renderCustomers();
 };
 window.toggleCustomerComplete = function(id) {
   const c = customers.find(x => x.id === id);
@@ -6511,35 +6554,42 @@ window.backToCustomerList = function() {
   document.getElementById('customersListView').style.display = 'block';
   window.renderCustomers();
 };
-window.openCustomerDetail = function(id) {
+// Clicking a customer now opens the SAME rich client sheet as Lead Web. Each customer is backed
+// by a lead in the cloud (created once, tagged origin:'customer' so it stays out of the Lead Web
+// list). Existing customers are migrated on first open — their name/phone/email/address and their
+// note are carried into the sheet, so nothing is lost. The link is remembered on c.leadId.
+window.openCustomerDetail = async function(id) {
   const c = customers.find(x => x.id === id);
   if (!c) return;
-  document.getElementById('customersListView').style.display = 'none';
-  const view = document.getElementById('customerDetailView');
-  view.style.display = 'block';
-  view.innerHTML = `
-    <button class="btn btn-secondary" style="width:auto;padding:8px 12px;margin-bottom:14px;" onclick="window.backToCustomerList()">← Back to Customers</button>
-    <div class="dash-panel" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-      <div class="dash-avatar" style="width:52px;height:52px;font-size:16px;flex-shrink:0;">${custInitials(c.name)}</div>
-      <div style="flex:1;min-width:200px;">
-        <div style="font-weight:700;font-size:17px;">${c.name}</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:5px;display:flex;gap:14px;flex-wrap:wrap;">
-          ${c.phone ? `<span>📞 ${formatPhone(c.phone)}</span>` : ''}
-          ${c.email ? `<span>✉️ ${c.email}</span>` : ''}
-          ${c.address ? `<span>📍 ${c.address}</span>` : ''}
-        </div>
-      </div>
-      <div style="text-align:right;font-size:11px;color:var(--muted);flex-shrink:0;">
-        Customer since ${c.date}<br>
-        <span class="inv-tab ${c.dealStatus==='complete'?'active':''}" style="display:inline-block;margin-top:6px;cursor:pointer;" onclick="window.toggleCustomerComplete('${c.id}')">${c.dealStatus==='complete'?'✅ Complete':'🔵 Active'}</span>
-      </div>
-    </div>
-    <div class="dash-panel">
-      <div class="dash-panel-title">Notes</div>
-      <textarea rows="5" placeholder="Deal notes, trade-in info, follow-up reminders…" style="width:100%;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;white-space:pre-wrap;" oninput="window.saveCustomerNotes('${c.id}', this.value)">${c.notes||''}</textarea>
-    </div>
-    <button class="btn-danger" onclick="window.deleteCustomer('${c.id}')">🗑️ Delete Customer</button>
-  `;
+  if (!currentUser) { showToast('⚠️ Connecte-toi pour ouvrir la fiche client complète'); return; }
+  let leadId = c.leadId;
+  if (!leadId || !webLeads.find(l => l.id === leadId)) {
+    const ref = doc(webLeadsColRef()); // auto-id
+    leadId = ref.id;
+    const lead = {
+      name: c.name || '',
+      phone: c.phone || '',
+      email: c.email || '',
+      address: c.address || '',
+      origin: 'customer',           // keeps it out of the Lead Web list + new-lead notifications
+      source: 'customer',
+      stage: c.dealStatus === 'complete' ? 'delivery' : 'submission',
+      status: 'new',
+      receivedAt: serverTimestamp(),
+    };
+    if (c.notes && c.notes.trim()) {
+      lead.notesLog = [{ id: 'n' + Date.now(), text: c.notes.trim(), tags: [], attachments: [], createdAt: Date.now() }];
+    }
+    try {
+      await setDoc(ref, lead);
+      if (!webLeads.find(l => l.id === leadId)) {
+        webLeads.unshift({ id: leadId, ...lead, receivedAt: null, receivedAtMs: Date.now() });
+      }
+      c.leadId = leadId; saveCustomers();
+    } catch (e) { showToast('⚠️ Impossible d’ouvrir la fiche : ' + e.message); return; }
+  }
+  window.switchTab('leadweb');
+  window.openWebLeadDetail(leadId, 'customers');
 };
 window.renderCustomers = function() {
   const search = (document.getElementById('customerSearch')?.value || '').toLowerCase();
@@ -6559,6 +6609,7 @@ window.renderCustomers = function() {
         <div style="font-size:11px;color:var(--muted);margin-top:2px;">${c.phone?formatPhone(c.phone):''}${c.phone&&c.email?' · ':''}${c.email||''}</div>
       </div>
       <span class="inv-tab ${c.dealStatus==='complete'?'active':''}" style="flex-shrink:0;">${c.dealStatus==='complete'?'Complete':'Active'}</span>
+      <button onclick="event.stopPropagation(); window.deleteCustomer('${c.id}')" title="Delete customer" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:15px;padding:4px 8px;flex-shrink:0;line-height:1;">🗑️</button>
     </div>`).join('');
 };
 
@@ -6914,7 +6965,7 @@ function pushTagNotification(leadId, leadName, tags, text) {
   window.renderNotifBadge();
 }
 function computeNewLeadNotifications() {
-  return webLeads.filter(l => (l.stage || 'submission') === 'submission' && !(l.notesLog && l.notesLog.length) && !(l.commsLog && l.commsLog.length));
+  return webLeads.filter(l => l.origin !== 'customer' && (l.stage || 'submission') === 'submission' && !(l.notesLog && l.notesLog.length) && !(l.commsLog && l.commsLog.length));
 }
 window.renderNotifBadge = function() {
   const badge = document.getElementById('notifBadge');
