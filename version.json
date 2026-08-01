@@ -1,5 +1,5 @@
 {
-  "version": "3.43.1",
-  "releaseDate": "2026-07-29",
-  "changelog": "Trade-In damage diagram: your uploaded côté-conducteur car image is now baked into the app as the default (assets/car-side.png), so it shows on every machine — including work — with no re-uploading. The passenger side auto-mirrors from it. Front/rear still use the placeholder drawings until their images are added too."
+  "version": "3.46.0",
+  "releaseDate": "2026-07-30",
+  "changelog": "The Facebook Buy Scout is wired up end-to-end. In the Project Snake extension there's now a 🔎 Buy Scout panel on Marketplace: set year/price/max-km and how many cars to open, hit Scout, and it scrolls the results, filters them, opens each keeper to read the km (+ transmission, colours, fuel, VIN, description), and drops them straight into your Cars to Buy list — no messaging, human-paced, one tab. Snake's Hustle now receives that scout hand-off automatically."
 }

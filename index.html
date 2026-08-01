@@ -1729,6 +1729,72 @@ input:focus, textarea:focus { border-color: var(--accent); }
     </div>
     <div id="customerDetailView" style="display:none;"></div>
   </div>
+  <div id="tab-buycars" style="display:none;">
+    <div id="buyCarsListView">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap;">
+        <div class="section-title" style="margin-bottom:0;" data-i18n="nav.buycars">Cars to Buy</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-secondary" style="width:auto;padding:9px 14px;font-size:13px;" onclick="window.seedDemoBuyCars()" title="Adds sample Marketplace cars so you can see how this page works">🎭 Demo</button>
+          <button class="btn btn-primary" style="width:auto;padding:9px 16px;font-size:13px;" onclick="window.openNewBuyCar()">＋ Add car</button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:14px;">
+        <div class="config-title" style="margin-bottom:8px;">🎯 Scout filter</div>
+        <div class="row">
+          <div class="input-group"><label>Year from</label><input type="number" id="bcYearFrom" placeholder="2015" oninput="window.renderBuyCars()"></div>
+          <div class="input-group"><label>Year to</label><input type="number" id="bcYearTo" placeholder="2024" oninput="window.renderBuyCars()"></div>
+        </div>
+        <div class="row">
+          <div class="input-group"><label>Make</label><input type="text" id="bcMake" placeholder="any" oninput="window.renderBuyCars()"></div>
+          <div class="input-group"><label>Model</label><input type="text" id="bcModel" placeholder="any" oninput="window.renderBuyCars()"></div>
+          <div class="input-group"><label>City</label><input type="text" id="bcCity" placeholder="any" oninput="window.renderBuyCars()"></div>
+        </div>
+        <div class="row">
+          <div class="input-group"><label>Max km</label><input type="number" id="bcMaxKm" placeholder="150000" oninput="window.renderBuyCars()"></div>
+          <div class="input-group"><label>Price min</label><input type="number" id="bcPriceMin" placeholder="2000" oninput="window.renderBuyCars()"></div>
+          <div class="input-group"><label>Price max</label><input type="number" id="bcPriceMax" placeholder="30000" oninput="window.renderBuyCars()"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <button class="btn btn-secondary" style="width:auto;padding:7px 12px;font-size:12px;" onclick="window.clearBuyFilters()">Clear filter</button>
+          <span style="flex:1;"></span>
+          <label style="font-size:12px;color:var(--muted);">Sort</label>
+          <select class="sort-select" id="bcSort" onchange="window.renderBuyCars()" style="padding:6px 10px;">
+            <option value="km">Lowest km</option>
+            <option value="price">Lowest price</option>
+            <option value="year">Newest year</option>
+            <option value="seen">Recently scouted</option>
+          </select>
+        </div>
+      </div>
+      <div class="inv-tabs" style="margin-bottom:12px;">
+        <button class="inv-tab active" id="bc-tab-all" onclick="window.setBuyTab('all')">All</button>
+        <button class="inv-tab" id="bc-tab-new" onclick="window.setBuyTab('new')">New</button>
+        <button class="inv-tab" id="bc-tab-contacted" onclick="window.setBuyTab('contacted')">Contacted</button>
+        <button class="inv-tab" id="bc-tab-bought" onclick="window.setBuyTab('bought')">Bought</button>
+        <button class="inv-tab" id="bc-tab-passed" onclick="window.setBuyTab('passed')">Passed</button>
+      </div>
+      <div id="newBuyCarForm" class="card" style="display:none;margin-bottom:14px;">
+        <div class="config-title">Add a car manually</div>
+        <div class="row">
+          <div class="input-group"><label>Year</label><input type="number" id="bcNewYear" placeholder="2019"></div>
+          <div class="input-group"><label>Make</label><input type="text" id="bcNewMake" placeholder="Hyundai"></div>
+          <div class="input-group"><label>Model</label><input type="text" id="bcNewModel" placeholder="Tucson"></div>
+        </div>
+        <div class="row">
+          <div class="input-group"><label>Km</label><input type="number" id="bcNewKm" placeholder="120000"></div>
+          <div class="input-group"><label>Price ($)</label><input type="number" id="bcNewPrice" placeholder="14500"></div>
+          <div class="input-group"><label>Location</label><input type="text" id="bcNewLoc" placeholder="Gatineau"></div>
+        </div>
+        <div class="input-group"><label>Facebook listing link</label><input type="text" id="bcNewUrl" placeholder="https://www.facebook.com/marketplace/item/…"></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-secondary" style="flex:1;" onclick="window.closeNewBuyCar()">Cancel</button>
+          <button class="btn btn-primary" style="flex:1;" onclick="window.saveNewBuyCar()">Save car</button>
+        </div>
+      </div>
+      <div id="buyCarsList"></div>
+    </div>
+    <div id="buyCarDetailView" style="display:none;"></div>
+  </div>
   <div id="tab-schedule" style="display:none;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;flex-wrap:wrap;">
       <div class="section-title" style="margin-bottom:0;" data-i18n="cal.title">Calendrier</div>
@@ -2011,7 +2077,7 @@ const PLAN_LABELS = { base: 'Base', pro: 'Pro', ultimate: 'Ultimate' };
 const PAGE_FEATURE = {
   inventory: 'inventory', add: 'inventory', editcar: 'inventory', dashboard: 'inventory',
   tradein: 'tradein', evalnew: 'tradein', evallist: 'tradein',
-  leadweb: 'crm', customers: 'crm', leads: 'crm', schedule: 'crm',
+  leadweb: 'crm', customers: 'crm', leads: 'crm', schedule: 'crm', buycars: 'inventory',
   emails: 'crm', inbox: 'crm', analytics: 'crm',
 };
 function planFeatures() {
@@ -3638,7 +3704,7 @@ const I18N = {
   fr: {
     'nav.dashboard':'Tableau de bord','nav.inventory':'Inventaire','nav.leads':'Textos de masse','nav.leadweb':'Lead Web',
     'nav.tradein':'Trade-In','nav.evalnew':'Nouvelle évaluation','nav.evallist':'Liste des évaluations',
-    'nav.customers':'Clients','nav.schedule':'Calendrier','nav.emails':'Courriels','nav.inbox':'Boîte de réception',
+    'nav.customers':'Clients','nav.buycars':'Voitures à acheter','nav.schedule':'Calendrier','nav.emails':'Courriels','nav.inbox':'Boîte de réception',
     'nav.analytics':'Analytique','nav.setup':'Réglages','nav.lock':'Verrouiller la navigation',
     'toolbar.searchPh':'Rechercher voitures, leads, clients…','toolbar.newClient':'Nouveau client',
     'cal.title':'Calendrier','cal.new':'Nouvel événement','cal.today':"Aujourd'hui",'cal.month':'Mois','cal.week':'Semaine','cal.day':'Jour',
@@ -3706,7 +3772,7 @@ const I18N = {
   en: {
     'nav.dashboard':'Dashboard','nav.inventory':'Inventory','nav.leads':'Mass Texting','nav.leadweb':'Lead Web',
     'nav.tradein':'Trade-In','nav.evalnew':'New Evaluation','nav.evallist':'Evaluation List',
-    'nav.customers':'Customers','nav.schedule':'Calendar','nav.emails':'Emails','nav.inbox':'Inbox',
+    'nav.customers':'Customers','nav.buycars':'Cars to Buy','nav.schedule':'Calendar','nav.emails':'Emails','nav.inbox':'Inbox',
     'nav.analytics':'Analytics','nav.setup':'Settings','nav.lock':'Lock navigation',
     'toolbar.searchPh':'Search cars, leads, customers…','toolbar.newClient':'New Client',
     'cal.title':'Calendar','cal.new':'New Event','cal.today':'Today','cal.month':'Month','cal.week':'Week','cal.day':'Day',
@@ -4832,6 +4898,15 @@ window.addEventListener('message', function(e) {
   showToast(`🐍 Imported from D2C — ${added} new, ${updated} updated`);
 });
 
+// Facebook Marketplace Buy Scout → "Cars to Buy" list (window.importBuyCars handles dedupe/parse).
+window.addEventListener('message', function(e) {
+  if (e.source !== window || !e.data || e.data.type !== 'snake:importBuyCars') return;
+  if (typeof window.importBuyCars === 'function') {
+    window.importBuyCars(e.data.cars || []);
+    if (typeof window.switchTab === 'function') window.switchTab('buycars');
+  }
+});
+
 window.addEventListener('message', function(e) {
   if (e.source !== window || !e.data || e.data.type !== 'snake:importVehicle') return;
   const v = e.data.vehicle;
@@ -5684,13 +5759,14 @@ document.addEventListener('click', (e) => {
 renderAcctAvatar();
 
 // ============ WINDOW FUNCTIONS ============
-const ALL_PAGES = ['dashboard','inventory','add','editcar','leads','leadweb','customers','schedule','emails','inbox','analytics','setup','tradein','evallist','evalnew'];
+const ALL_PAGES = ['dashboard','inventory','add','editcar','leads','leadweb','customers','buycars','schedule','emails','inbox','analytics','setup','tradein','evallist','evalnew'];
 const NAV_MAIN = [
   { id: 'dashboard', label: 'Dashboard', icon: '<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>' },
   { id: 'inventory', label: 'Inventory', icon: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 7l9-4 9 4"/><path d="M12 12v8"/>' },
   { id: 'leads', label: 'Mass Texting', icon: '<path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.4 8.5 8.5 0 0 1-4-1L3 20l1.1-5.5A8.38 8.38 0 0 1 3.5 11 8.38 8.38 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/>' },
   { id: 'leadweb', label: 'Lead Web', icon: '<circle cx="12" cy="12" r="9"/><path d="M2.5 12h19"/><path d="M12 2.5a15.5 15.5 0 0 1 0 19"/><path d="M12 2.5a15.5 15.5 0 0 0 0 19"/>' },
   { id: 'customers', label: 'Customers', icon: '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14c2.5.3 4.5 2.3 4.5 6"/>' },
+  { id: 'buycars', label: 'Cars to Buy', icon: '<path d="M5 12l1.3-3.8A2 2 0 0 1 8.2 7h4.6a2 2 0 0 1 1.9 1.2L16 12"/><rect x="3" y="12" width="13" height="5" rx="1.5"/><circle cx="6.5" cy="17" r="1.2"/><circle cx="12.5" cy="17" r="1.2"/><circle cx="18" cy="9" r="2.4"/><path d="M19.8 10.8L22 13"/>' },
   { id: 'schedule', label: 'Calendar', icon: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M8 3v4"/><path d="M16 3v4"/>' },
   { id: 'emails', label: 'Emails', icon: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>' },
   { id: 'inbox', label: 'Inbox', icon: '<path d="M4 12h4l2 3h4l2-3h4"/><rect x="3" y="5" width="18" height="14" rx="2"/>' },
@@ -5875,6 +5951,7 @@ window.switchTab = function(name) {
   if(name==='dashboard') renderDashboard();
   if(name==='analytics') renderAnalytics();
   if(name==='customers') { document.getElementById('customerDetailView').style.display='none'; document.getElementById('customersListView').style.display='block'; window.renderCustomers(); }
+  if(name==='buycars') { document.getElementById('buyCarDetailView').style.display='none'; document.getElementById('buyCarsListView').style.display='block'; window.renderBuyCars(); }
   if(name==='leadweb') { renderLeadWebLink(); renderWebLeads(); }
   if(name==='schedule') renderCalendar();
   if(name==='tradein') renderTradein();
@@ -6448,7 +6525,7 @@ window.clearInventorySection = function(section) {
 // Back-compat: anything still calling clearAllData() gets the full-inventory clear.
 window.clearAllData = () => window.clearInventorySection('all');
 
-const CURRENT_VERSION = '3.43.1';
+const CURRENT_VERSION = '3.46.0';
 
 async function autoCheckVersion(silent = true) {
   try {
@@ -6611,6 +6688,245 @@ window.renderCustomers = function() {
       <span class="inv-tab ${c.dealStatus==='complete'?'active':''}" style="flex-shrink:0;">${c.dealStatus==='complete'?'Complete':'Active'}</span>
       <button onclick="event.stopPropagation(); window.deleteCustomer('${c.id}')" title="Delete customer" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:15px;padding:4px 8px;flex-shrink:0;line-height:1;">🗑️</button>
     </div>`).join('');
+};
+
+// ===== CARS TO BUY — Marketplace acquisition scout list =====
+// Local-only for now (localStorage pm_buycars). Fed manually / by the 🎭 Demo seeder today, and by
+// the extension's Buy Scout later via window.importBuyCars(). Mirrors Lead Web's feel: filter → list
+// → detail with notes + a link out to the real Facebook post. No messaging — read/track only.
+let buyCars = JSON.parse(localStorage.getItem('pm_buycars') || '[]');
+let buyTab = 'all';
+function saveBuyCars() { try { localStorage.setItem('pm_buycars', JSON.stringify(buyCars)); } catch(e){} }
+const BUY_STATUS = {
+  new:       { label: 'New',       color: '#2563eb' },
+  contacted: { label: 'Contacted', color: '#d97706' },
+  bought:    { label: 'Bought',    color: '#16a34a' },
+  passed:    { label: 'Passed',    color: '#6b7280' },
+};
+function bcEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function bcNum(v){ const n = parseInt(String(v==null?'':v).replace(/[^0-9]/g,''),10); return isNaN(n)?null:n; }
+function bcFmtKm(km){ return km==null ? 'km ?' : (Number(km).toLocaleString('en-CA')+' km'); }
+function bcFmtPrice(p){ return p==null ? '—' : ('$'+Number(p).toLocaleString('en-CA')); }
+function bcTitle(c){ return [c.year, c.make, c.model].filter(Boolean).join(' ') || 'Vehicle'; }
+
+window.setBuyTab = function(tab){
+  buyTab = tab;
+  ['all','new','contacted','bought','passed'].forEach(t => { const el=document.getElementById('bc-tab-'+t); if(el) el.classList.toggle('active', t===tab); });
+  window.renderBuyCars();
+};
+window.clearBuyFilters = function(){
+  ['bcYearFrom','bcYearTo','bcMake','bcModel','bcCity','bcMaxKm','bcPriceMin','bcPriceMax'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  window.renderBuyCars();
+};
+function buyFilters(){
+  const g = id => (document.getElementById(id)?.value || '').trim();
+  return {
+    yearFrom: bcNum(g('bcYearFrom')), yearTo: bcNum(g('bcYearTo')),
+    make: g('bcMake').toLowerCase(), model: g('bcModel').toLowerCase(), city: g('bcCity').toLowerCase(),
+    maxKm: bcNum(g('bcMaxKm')), priceMin: bcNum(g('bcPriceMin')), priceMax: bcNum(g('bcPriceMax')),
+    sort: document.getElementById('bcSort')?.value || 'km',
+  };
+}
+window.renderBuyCars = function(){
+  const list = document.getElementById('buyCarsList');
+  if(!list) return;
+  const f = buyFilters();
+  let shown = buyCars.filter(c => {
+    if(buyTab!=='all' && (c.status||'new')!==buyTab) return false;
+    const yr = bcNum(c.year);
+    if(f.yearFrom && yr && yr < f.yearFrom) return false;
+    if(f.yearTo && yr && yr > f.yearTo) return false;
+    if(f.make && !String(c.make||'').toLowerCase().includes(f.make)) return false;
+    if(f.model && !String(c.model||'').toLowerCase().includes(f.model)) return false;
+    if(f.city && !String(c.location||'').toLowerCase().includes(f.city)) return false;
+    if(f.maxKm!=null && c.km!=null && c.km > f.maxKm) return false;
+    if(f.priceMin!=null && c.price!=null && c.price < f.priceMin) return false;
+    if(f.priceMax!=null && c.price!=null && c.price > f.priceMax) return false;
+    return true;
+  });
+  shown.sort((a,b) => {
+    if(f.sort==='km') return (a.km==null?Infinity:a.km) - (b.km==null?Infinity:b.km);
+    if(f.sort==='price') return (a.price==null?Infinity:a.price) - (b.price==null?Infinity:b.price);
+    if(f.sort==='year') return (bcNum(b.year)||0) - (bcNum(a.year)||0);
+    return (b.seenAt||0) - (a.seenAt||0);
+  });
+  if(!shown.length){
+    list.innerHTML = `<div class="empty-state"><div class="big-icon">🚗</div><h3>No cars here yet</h3><p>Scout Facebook Marketplace with the extension, add one manually with ＋ Add car, or hit 🎭 Demo to see how it works.</p></div>`;
+    return;
+  }
+  list.innerHTML = shown.map(c => {
+    const st = BUY_STATUS[c.status||'new'] || BUY_STATUS.new;
+    return `<div class="card" style="display:flex;align-items:center;gap:12px;padding:12px;cursor:pointer;" onclick="window.openBuyCarDetail('${c.id}')">
+      <div style="width:64px;height:48px;border-radius:8px;overflow:hidden;flex-shrink:0;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:20px;">${c.photo?`<img src="${bcEsc(c.photo)}" style="width:100%;height:100%;object-fit:cover;">`:'🚗'}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;font-size:14px;">${bcEsc(bcTitle(c))}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;display:flex;gap:10px;flex-wrap:wrap;">
+          <span style="color:var(--text);font-weight:600;">${bcFmtPrice(c.price)}</span>
+          <span>${bcFmtKm(c.km)}</span>
+          ${c.location?`<span>📍 ${bcEsc(c.location)}</span>`:''}
+        </div>
+      </div>
+      <span style="flex-shrink:0;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:${st.color}22;color:${st.color};">${st.label}</span>
+    </div>`;
+  }).join('');
+};
+window.openBuyCarDetail = function(id){
+  const c = buyCars.find(x => x.id===id);
+  if(!c) return;
+  document.getElementById('buyCarsListView').style.display='none';
+  const view = document.getElementById('buyCarDetailView');
+  view.style.display='block';
+  const notes = (c.notes||[]).slice().reverse();
+  const statusBtns = Object.entries(BUY_STATUS).map(([k,v]) => {
+    const on = (c.status||'new')===k;
+    return `<button onclick="window.setBuyCarStatus('${c.id}','${k}')" style="padding:6px 12px;border-radius:20px;border:1px solid ${v.color}66;font-size:12px;font-weight:600;cursor:pointer;background:${on?v.color:'transparent'};color:${on?'#fff':v.color};">${v.label}</button>`;
+  }).join('');
+  view.innerHTML = `
+    <button class="btn btn-secondary" style="width:auto;padding:8px 12px;margin-bottom:14px;" onclick="window.backToBuyList()">← Back to Cars to Buy</button>
+    <div class="dash-panel" style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;">
+      <div style="width:170px;height:126px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:40px;">${c.photo?`<img src="${bcEsc(c.photo)}" style="width:100%;height:100%;object-fit:cover;">`:'🚗'}</div>
+      <div style="flex:1;min-width:220px;">
+        <div style="font-weight:700;font-size:19px;">${bcEsc(bcTitle(c))}</div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:14px;">
+          <span style="font-weight:700;color:var(--success);">${bcFmtPrice(c.price)}</span>
+          <span>${bcFmtKm(c.km)}</span>
+          ${c.location?`<span style="color:var(--muted);">📍 ${bcEsc(c.location)}</span>`:''}
+        </div>
+        ${c.seenAt?`<div style="font-size:11px;color:var(--muted);margin-top:6px;">Scouted ${new Date(c.seenAt).toLocaleDateString()}</div>`:''}
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+          ${c.url?`<a href="${bcEsc(c.url)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="width:auto;padding:8px 14px;font-size:13px;text-decoration:none;">🔗 Open Facebook listing</a>`:''}
+          <button class="btn-danger" style="width:auto;padding:8px 14px;font-size:13px;" onclick="window.deleteBuyCar('${c.id}')">🗑️ Delete</button>
+        </div>
+      </div>
+    </div>
+    ${(c.trans||c.extColor||c.intColor||c.fuel||c.vin)?`<div class="dash-panel">
+      <div class="dash-panel-title">Vehicle details</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:13px;">
+        ${c.trans?`<span style="background:var(--surface2);padding:4px 10px;border-radius:6px;">⚙️ ${bcEsc(c.trans)}</span>`:''}
+        ${c.extColor?`<span style="background:var(--surface2);padding:4px 10px;border-radius:6px;">🎨 Ext: ${bcEsc(c.extColor)}</span>`:''}
+        ${c.intColor?`<span style="background:var(--surface2);padding:4px 10px;border-radius:6px;">🪑 Int: ${bcEsc(c.intColor)}</span>`:''}
+        ${c.fuel?`<span style="background:var(--surface2);padding:4px 10px;border-radius:6px;">⛽ ${bcEsc(c.fuel)}</span>`:''}
+      </div>
+      ${c.vin?`<div style="margin-top:10px;font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><span style="color:var(--muted);">VIN:</span><span style="font-family:monospace;font-weight:600;letter-spacing:.5px;">${bcEsc(c.vin)}</span><button onclick="navigator.clipboard&&navigator.clipboard.writeText('${bcEsc(c.vin)}');showToast('📋 VIN copied')" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer;font-size:11px;padding:2px 8px;">Copy</button></div>`:''}
+    </div>`:''}
+    ${c.desc?`<div class="dash-panel">
+      <div class="dash-panel-title">Seller's description</div>
+      <div style="font-size:13px;white-space:pre-wrap;max-height:190px;overflow:auto;color:var(--text);line-height:1.5;">${bcEsc(c.desc)}</div>
+    </div>`:''}
+    <div class="dash-panel">
+      <div class="dash-panel-title">Status</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">${statusBtns}</div>
+    </div>
+    <div class="dash-panel">
+      <div class="dash-panel-title">Notes</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;align-items:flex-end;">
+        <textarea id="bcNoteInput" rows="2" placeholder="Called seller — wants $9k firm. Rust on rear quarter. Follow up Friday…" style="flex:1;padding:9px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;resize:vertical;"></textarea>
+        <button class="btn btn-primary" style="width:auto;padding:9px 16px;font-size:13px;" onclick="window.addBuyCarNote('${c.id}')">Add</button>
+      </div>
+      <div>${notes.length ? notes.map(n => `<div style="padding:8px 10px;border-left:2px solid var(--accent);background:var(--surface2);border-radius:0 6px 6px 0;margin-bottom:8px;">
+        <div style="font-size:13px;white-space:pre-wrap;">${bcEsc(n.text)}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px;display:flex;justify-content:space-between;gap:10px;"><span>${new Date(n.at).toLocaleString()}</span><span style="cursor:pointer;color:var(--danger);" onclick="window.deleteBuyCarNote('${c.id}','${n.id}')">delete</span></div>
+      </div>`).join('') : `<div style="font-size:12.5px;color:var(--muted);">No notes yet.</div>`}</div>
+    </div>
+  `;
+};
+window.backToBuyList = function(){
+  document.getElementById('buyCarDetailView').style.display='none';
+  document.getElementById('buyCarsListView').style.display='block';
+  window.renderBuyCars();
+};
+window.setBuyCarStatus = function(id, status){
+  const c = buyCars.find(x => x.id===id);
+  if(!c) return;
+  c.status = status; saveBuyCars();
+  window.openBuyCarDetail(id);
+};
+window.addBuyCarNote = function(id){
+  const c = buyCars.find(x => x.id===id);
+  if(!c) return;
+  const ta = document.getElementById('bcNoteInput');
+  const text = (ta?.value || '').trim();
+  if(!text) return;
+  c.notes = (c.notes||[]).concat([{ id:'bn'+Date.now(), text, at:Date.now() }]);
+  saveBuyCars();
+  window.openBuyCarDetail(id);
+};
+window.deleteBuyCarNote = function(id, noteId){
+  const c = buyCars.find(x => x.id===id);
+  if(!c) return;
+  c.notes = (c.notes||[]).filter(n => n.id!==noteId);
+  saveBuyCars();
+  window.openBuyCarDetail(id);
+};
+window.deleteBuyCar = function(id){
+  const c = buyCars.find(x => x.id===id);
+  if(!c) return;
+  if(!confirm(`Remove ${bcTitle(c)} from your Cars to Buy list?`)) return;
+  buyCars = buyCars.filter(x => x.id!==id);
+  saveBuyCars();
+  window.backToBuyList();
+};
+window.openNewBuyCar = function(){
+  document.getElementById('newBuyCarForm').style.display='block';
+  ['bcNewYear','bcNewMake','bcNewModel','bcNewKm','bcNewPrice','bcNewLoc','bcNewUrl'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+};
+window.closeNewBuyCar = function(){ document.getElementById('newBuyCarForm').style.display='none'; };
+window.saveNewBuyCar = function(){
+  const g = id => (document.getElementById(id)?.value || '').trim();
+  const car = {
+    id: 'bc'+Date.now(),
+    year: g('bcNewYear'), make: g('bcNewMake'), model: g('bcNewModel'),
+    km: bcNum(g('bcNewKm')), price: bcNum(g('bcNewPrice')),
+    location: g('bcNewLoc'), url: g('bcNewUrl'),
+    status: 'new', notes: [], seenAt: Date.now(),
+  };
+  if(!car.year && !car.make && !car.model){ showToast('⚠️ Enter at least a year/make/model'); return; }
+  buyCars.unshift(car);
+  saveBuyCars();
+  window.closeNewBuyCar();
+  window.renderBuyCars();
+  showToast('✅ Car added to your buy list');
+};
+// Extension bridge (used later by the Buy Scout). Dedupes by fbId first, then by listing URL.
+window.importBuyCars = function(incoming){
+  if(!Array.isArray(incoming) || !incoming.length) return 0;
+  let added = 0, updated = 0;
+  incoming.forEach(raw => {
+    const car = {
+      fbId: raw.fbId || null,
+      year: raw.year||'', make: raw.make||'', model: raw.model||'',
+      km: raw.km!=null ? bcNum(raw.km) : null,
+      price: raw.price!=null ? bcNum(raw.price) : null,
+      location: raw.location||'', url: raw.url||'', photo: raw.photo||'',
+      trans: raw.trans||'', extColor: raw.extColor||'', intColor: raw.intColor||'',
+      fuel: raw.fuel||'', vin: raw.vin||'', desc: raw.desc||'',
+    };
+    const match = buyCars.find(c => (car.fbId && c.fbId===car.fbId) || (car.url && c.url===car.url));
+    if(match){
+      // refresh the live fields (price/km can change) but keep status + notes
+      Object.assign(match, { year:car.year||match.year, make:car.make||match.make, model:car.model||match.model, km:car.km??match.km, price:car.price??match.price, location:car.location||match.location, photo:car.photo||match.photo, trans:car.trans||match.trans, extColor:car.extColor||match.extColor, intColor:car.intColor||match.intColor, fuel:car.fuel||match.fuel, vin:car.vin||match.vin, desc:car.desc||match.desc });
+      updated++;
+    } else {
+      buyCars.unshift({ id:'bc'+Date.now()+Math.random().toString(36).slice(2,6), ...car, status:'new', notes:[], seenAt:Date.now() });
+      added++;
+    }
+  });
+  saveBuyCars();
+  window.renderBuyCars();
+  showToast(`🔎 Scout: ${added} new, ${updated} updated`);
+  return added;
+};
+window.seedDemoBuyCars = function(){
+  const demo = [
+    { year:'2018', make:'Hyundai', model:'Tucson', km:118000, price:15900, location:'Gatineau, QC', url:'https://www.facebook.com/marketplace/', trans:'Automatic', extColor:'Grey', intColor:'Black', fuel:'Gasoline', vin:'KM8J3CA46JU728891', desc:'Clean title, one owner, winter tires included. Regular maintenance at the dealer.' },
+    { year:'2016', make:'Honda',   model:'Civic',  km:142000, price:11500, location:'Ottawa, ON',    url:'https://www.facebook.com/marketplace/', trans:'Manual',    extColor:'White', intColor:'Black', fuel:'Gasoline', vin:'', desc:'Great on gas, no accidents. Selling because I bought a truck.' },
+    { year:'2019', make:'Toyota',  model:'RAV4',   km:96000,  price:22000, location:'Aylmer, QC',    url:'https://www.facebook.com/marketplace/', trans:'Automatic', extColor:'Blue',  intColor:'Grey',  fuel:'Gasoline', vin:'2T3P1RFV8KW012345', desc:'AWD, very clean, non-smoker.' },
+    { year:'2014', make:'Ford',    model:'Escape', km:187000, price:6800,  location:'Gatineau, QC',   url:'https://www.facebook.com/marketplace/', trans:'Automatic', extColor:'Black', intColor:'Black', fuel:'Gasoline', vin:'', desc:'High km but runs great, mechanic special maybe. As-is.' },
+  ];
+  demo.forEach(d => buyCars.unshift({ id:'bc'+Date.now()+Math.random().toString(36).slice(2,6), ...d, status:'new', notes:[], seenAt:Date.now() }));
+  saveBuyCars();
+  window.renderBuyCars();
+  showToast('✅ Demo cars added!');
 };
 
 function saveLeads() { try { localStorage.setItem('pm_leads', JSON.stringify(leads)); } catch(e){} }
