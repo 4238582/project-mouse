@@ -1,5 +1,5 @@
 {
-  "version": "3.48.0",
+  "version": "3.50.0",
   "releaseDate": "2026-07-30",
-  "changelog": "Cars to Buy now has a 🔎 Scout Facebook button right in the app. Set your filters (make, model, year, max price, max km) and click it — it sends the Project Snake extension to Facebook Marketplace, runs that search, scouts each keeper for km + details, and drops them back into your Cars to Buy list. No more needing to start the scout from the Facebook panel. (Reload the Snake extension once to pick this up.)"
+  "changelog": "The 🔎 Scout Facebook button now confirms the extension actually received the request — if it doesn't hear back (almost always because the extension needs reloading), it tells you exactly what to do instead of silently doing nothing. (Reload Project Snake at chrome://extensions, then F5 this page.)"
 }

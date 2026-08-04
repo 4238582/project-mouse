@@ -1736,6 +1736,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
         <div style="display:flex;gap:8px;">
           <button class="btn btn-secondary" style="width:auto;padding:9px 14px;font-size:13px;" onclick="window.seedDemoBuyCars()" title="Adds sample Marketplace cars so you can see how this page works">🎭 Demo</button>
           <button class="btn btn-secondary" style="width:auto;padding:9px 14px;font-size:13px;" onclick="window.openNewBuyCar()">＋ Add car</button>
+          <button class="btn btn-secondary" style="width:auto;padding:9px 14px;font-size:13px;" onclick="window.archiveResolvedBuyCars()" title="Move all Bought + Passed cars to the Archived tab">🗄️ Archive resolved</button>
           <button class="btn btn-primary" style="width:auto;padding:9px 16px;font-size:13px;" onclick="window.scoutFacebookNow()" title="Sends the Project Snake extension to Facebook Marketplace to scout using the filters above">🔎 Scout Facebook</button>
         </div>
       </div>
@@ -1774,6 +1775,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
         <button class="inv-tab" id="bc-tab-contacted" onclick="window.setBuyTab('contacted')">Contacted</button>
         <button class="inv-tab" id="bc-tab-bought" onclick="window.setBuyTab('bought')">Bought</button>
         <button class="inv-tab" id="bc-tab-passed" onclick="window.setBuyTab('passed')">Passed</button>
+        <button class="inv-tab" id="bc-tab-archived" onclick="window.setBuyTab('archived')">🗄️ Archived</button>
       </div>
       <div id="newBuyCarForm" class="card" style="display:none;margin-bottom:14px;">
         <div class="config-title">Add a car manually</div>
@@ -6527,7 +6529,7 @@ window.clearInventorySection = function(section) {
 // Back-compat: anything still calling clearAllData() gets the full-inventory clear.
 window.clearAllData = () => window.clearInventorySection('all');
 
-const CURRENT_VERSION = '3.48.0';
+const CURRENT_VERSION = '3.50.0';
 
 async function autoCheckVersion(silent = true) {
   try {
@@ -6738,8 +6740,21 @@ function bcDeal(c, stats){
 
 window.setBuyTab = function(tab){
   buyTab = tab;
-  ['all','new','contacted','bought','passed'].forEach(t => { const el=document.getElementById('bc-tab-'+t); if(el) el.classList.toggle('active', t===tab); });
+  ['all','new','contacted','bought','passed','archived'].forEach(t => { const el=document.getElementById('bc-tab-'+t); if(el) el.classList.toggle('active', t===tab); });
   window.renderBuyCars();
+};
+window.archiveResolvedBuyCars = function(){
+  const doomed = buyCars.filter(c => !c.archived && (c.status === 'passed' || c.status === 'bought'));
+  if(!doomed.length){ showToast('Nothing resolved to archive (no Bought/Passed cars).'); return; }
+  if(!confirm(`Move ${doomed.length} resolved car${doomed.length===1?'':'s'} (Bought/Passed) to Archived?`)) return;
+  doomed.forEach(c => { c.archived = true; });
+  saveBuyCars(); window.renderBuyCars();
+  showToast(`🗄️ Archived ${doomed.length} resolved car${doomed.length===1?'':'s'}`);
+};
+window.toggleArchiveBuyCar = function(id){
+  const c = buyCars.find(x => x.id === id); if(!c) return;
+  c.archived = !c.archived; saveBuyCars();
+  window.openBuyCarDetail(id);
 };
 window.clearBuyFilters = function(){
   ['bcYearFrom','bcYearTo','bcMake','bcModel','bcCity','bcMaxKm','bcPriceMin','bcPriceMax'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
@@ -6760,7 +6775,9 @@ window.renderBuyCars = function(){
   const f = buyFilters();
   const stats = bcMarketStats();
   let shown = buyCars.filter(c => {
-    if(buyTab!=='all' && (c.status||'new')!==buyTab) return false;
+    // Archived cars only show on the Archived tab; every other tab hides them.
+    if(buyTab==='archived'){ if(!c.archived) return false; }
+    else { if(c.archived) return false; if(buyTab!=='all' && (c.status||'new')!==buyTab) return false; }
     const yr = bcNum(c.year);
     if(f.yearFrom && yr && yr < f.yearFrom) return false;
     if(f.yearTo && yr && yr > f.yearTo) return false;
@@ -6829,6 +6846,7 @@ window.openBuyCarDetail = function(id){
         ${c.seenAt?`<div style="font-size:11px;color:var(--muted);margin-top:6px;">Scouted ${new Date(c.seenAt).toLocaleDateString()}</div>`:''}
         <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
           ${c.url?`<a href="${bcEsc(c.url)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="width:auto;padding:8px 14px;font-size:13px;text-decoration:none;">🔗 Open Facebook listing</a>`:''}
+          <button class="btn btn-secondary" style="width:auto;padding:8px 14px;font-size:13px;" onclick="window.toggleArchiveBuyCar('${c.id}')">${c.archived?'↩️ Unarchive':'🗄️ Archive'}</button>
           <button class="btn-danger" style="width:auto;padding:8px 14px;font-size:13px;" onclick="window.deleteBuyCar('${c.id}')">🗑️ Delete</button>
         </div>
       </div>
@@ -6931,8 +6949,17 @@ window.scoutFacebookNow = function(){
     yearFrom: bcNum(g('bcYearFrom')), yearTo: bcNum(g('bcYearTo')),
     maxPrice: bcNum(g('bcPriceMax')), maxKm: bcNum(g('bcMaxKm')),
   };
+  // Listen for the extension's ack so we can tell the user if it didn't receive the request
+  // (almost always = the extension wasn't reloaded / this tab wasn't F5'd after reloading it).
+  let acked = false;
+  const onAck = e => { if(e.data && (e.data.type === 'snake:buyScoutAck' || e.data.type === 'snake:error')){ acked = true; window.removeEventListener('message', onAck); if(e.data.type === 'snake:error') showToast('⚠️ ' + e.data.message); } };
+  window.addEventListener('message', onAck);
   window.postMessage({ type: 'mouse:buyScout', query: query || 'cars', filter, cap: 10, city: g('bcCity') }, '*');
-  showToast(`🔎 Scouting Facebook for "${query || 'vehicles'}" — keep this tab open. (If nothing happens, reload the Snake extension + F5.)`);
+  showToast(`🔎 Scouting Facebook for "${query || 'vehicles'}"…`);
+  setTimeout(() => {
+    window.removeEventListener('message', onAck);
+    if(!acked) showToast('⚠️ The Snake extension didn’t respond. Reload it at chrome://extensions, THEN press F5 on this page, then try Scout again.');
+  }, 1800);
 };
 window.saveNewBuyCar = function(){
   const g = id => (document.getElementById(id)?.value || '').trim();
