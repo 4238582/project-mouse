@@ -1,5 +1,5 @@
 {
-  "version": "3.46.0",
+  "version": "3.47.0",
   "releaseDate": "2026-07-30",
-  "changelog": "The Facebook Buy Scout is wired up end-to-end. In the Project Snake extension there's now a 🔎 Buy Scout panel on Marketplace: set year/price/max-km and how many cars to open, hit Scout, and it scrolls the results, filters them, opens each keeper to read the km (+ transmission, colours, fuel, VIN, description), and drops them straight into your Cars to Buy list — no messaging, human-paced, one tab. Snake's Hustle now receives that scout hand-off automatically."
+  "changelog": "Cars to Buy — market deal check. Each scouted car is now compared to the median asking price of the SAME make/model across everything you've scouted, and colour-coded: green = good deal (well under market), yellow = decent (around market), red = over market. Cards show a coloured stripe + how many $ under/over, the detail page has a Market check panel, and there's a new '🔥 Best deals' sort that floats the underpriced cars to the top. Asking-price comps (needs a few of the same model to kick in) — a fast screen to find cars worth chasing; confirm true value with your dealer tools."
 }
