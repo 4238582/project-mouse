@@ -1,5 +1,5 @@
 {
-  "version": "3.47.0",
+  "version": "3.48.0",
   "releaseDate": "2026-07-30",
-  "changelog": "Cars to Buy — market deal check. Each scouted car is now compared to the median asking price of the SAME make/model across everything you've scouted, and colour-coded: green = good deal (well under market), yellow = decent (around market), red = over market. Cards show a coloured stripe + how many $ under/over, the detail page has a Market check panel, and there's a new '🔥 Best deals' sort that floats the underpriced cars to the top. Asking-price comps (needs a few of the same model to kick in) — a fast screen to find cars worth chasing; confirm true value with your dealer tools."
+  "changelog": "Cars to Buy now has a 🔎 Scout Facebook button right in the app. Set your filters (make, model, year, max price, max km) and click it — it sends the Project Snake extension to Facebook Marketplace, runs that search, scouts each keeper for km + details, and drops them back into your Cars to Buy list. No more needing to start the scout from the Facebook panel. (Reload the Snake extension once to pick this up.)"
 }

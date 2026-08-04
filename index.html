@@ -1735,7 +1735,8 @@ input:focus, textarea:focus { border-color: var(--accent); }
         <div class="section-title" style="margin-bottom:0;" data-i18n="nav.buycars">Cars to Buy</div>
         <div style="display:flex;gap:8px;">
           <button class="btn btn-secondary" style="width:auto;padding:9px 14px;font-size:13px;" onclick="window.seedDemoBuyCars()" title="Adds sample Marketplace cars so you can see how this page works">🎭 Demo</button>
-          <button class="btn btn-primary" style="width:auto;padding:9px 16px;font-size:13px;" onclick="window.openNewBuyCar()">＋ Add car</button>
+          <button class="btn btn-secondary" style="width:auto;padding:9px 14px;font-size:13px;" onclick="window.openNewBuyCar()">＋ Add car</button>
+          <button class="btn btn-primary" style="width:auto;padding:9px 16px;font-size:13px;" onclick="window.scoutFacebookNow()" title="Sends the Project Snake extension to Facebook Marketplace to scout using the filters above">🔎 Scout Facebook</button>
         </div>
       </div>
       <div class="card" style="margin-bottom:14px;">
@@ -6526,7 +6527,7 @@ window.clearInventorySection = function(section) {
 // Back-compat: anything still calling clearAllData() gets the full-inventory clear.
 window.clearAllData = () => window.clearInventorySection('all');
 
-const CURRENT_VERSION = '3.47.0';
+const CURRENT_VERSION = '3.48.0';
 
 async function autoCheckVersion(silent = true) {
   try {
@@ -6919,6 +6920,20 @@ window.openNewBuyCar = function(){
   ['bcNewYear','bcNewMake','bcNewModel','bcNewKm','bcNewPrice','bcNewLoc','bcNewUrl'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
 };
 window.closeNewBuyCar = function(){ document.getElementById('newBuyCarForm').style.display='none'; };
+// Fire the Project Snake extension off to Facebook Marketplace to scout, using the filter-bar
+// values here. Mirrors the "Post Now" bridge: postMessage → pm-receiver → background → opens the
+// Marketplace search + sets the scout running. Requires the Snake extension loaded (F5 if not).
+window.scoutFacebookNow = function(){
+  const g = id => (document.getElementById(id)?.value || '').trim();
+  const make = g('bcMake'), model = g('bcModel');
+  const query = [make, model].filter(Boolean).join(' ');
+  const filter = {
+    yearFrom: bcNum(g('bcYearFrom')), yearTo: bcNum(g('bcYearTo')),
+    maxPrice: bcNum(g('bcPriceMax')), maxKm: bcNum(g('bcMaxKm')),
+  };
+  window.postMessage({ type: 'mouse:buyScout', query: query || 'cars', filter, cap: 10, city: g('bcCity') }, '*');
+  showToast(`🔎 Scouting Facebook for "${query || 'vehicles'}" — keep this tab open. (If nothing happens, reload the Snake extension + F5.)`);
+};
 window.saveNewBuyCar = function(){
   const g = id => (document.getElementById(id)?.value || '').trim();
   const car = {
