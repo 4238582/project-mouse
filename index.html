@@ -1737,6 +1737,7 @@ input:focus, textarea:focus { border-color: var(--accent); }
           <button class="btn btn-secondary" style="width:auto;padding:9px 14px;font-size:13px;" onclick="window.seedDemoBuyCars()" title="Adds sample Marketplace cars so you can see how this page works">🎭 Demo</button>
           <button class="btn btn-secondary" style="width:auto;padding:9px 14px;font-size:13px;" onclick="window.openNewBuyCar()">＋ Add car</button>
           <button class="btn btn-secondary" style="width:auto;padding:9px 14px;font-size:13px;" onclick="window.archiveResolvedBuyCars()" title="Move all Bought + Passed cars to the Archived tab">🗄️ Archive resolved</button>
+          <button class="btn btn-secondary" style="width:auto;padding:9px 14px;font-size:13px;" onclick="window.openCarGurusForValues()" title="Opens CarGurus — search your model there, then click the green 💲 button to send its market value back here">💲 CarGurus values</button>
           <button class="btn btn-primary" style="width:auto;padding:9px 16px;font-size:13px;" onclick="window.scoutFacebookNow()" title="Sends the Project Snake extension to Facebook Marketplace to scout using the filters above">🔎 Scout Facebook</button>
         </div>
       </div>
@@ -4910,6 +4911,14 @@ window.addEventListener('message', function(e) {
     if (typeof window.switchTab === 'function') window.switchTab('buycars');
   }
 });
+// CarGurus value scraper → applies real market values to the Cars to Buy list.
+window.addEventListener('message', function(e) {
+  if (e.source !== window || !e.data || e.data.type !== 'snake:importBuyValues') return;
+  if (typeof window.importBuyValues === 'function') {
+    window.importBuyValues(e.data.values || []);
+    if (typeof window.switchTab === 'function') window.switchTab('buycars');
+  }
+});
 
 window.addEventListener('message', function(e) {
   if (e.source !== window || !e.data || e.data.type !== 'snake:importVehicle') return;
@@ -6529,7 +6538,7 @@ window.clearInventorySection = function(section) {
 // Back-compat: anything still calling clearAllData() gets the full-inventory clear.
 window.clearAllData = () => window.clearInventorySection('all');
 
-const CURRENT_VERSION = '3.50.0';
+const CURRENT_VERSION = '3.52.1';
 
 async function autoCheckVersion(silent = true) {
   try {
@@ -6724,18 +6733,22 @@ function bcMarketStats(){
   Object.keys(groups).forEach(k => { stats[k] = { median: bcMedian(groups[k]), n: groups[k].length }; });
   return stats;
 }
-// Returns {tier,label,color,delta,median,n}: green=good deal, yellow=decent, red=at/over market.
+// Returns {tier,label,color,delta,median,n,source}: green=good deal, yellow=decent, red=at/over market.
+// Prefers a REAL market value scouted from CarGurus (car.marketMedian); otherwise falls back to the
+// median of the same model's FB asking prices (needs ≥3 comps).
 function bcDeal(c, stats){
   if(c.price==null) return null;
-  const g = (stats || bcMarketStats())[bcModelKey(c)];
-  if(!g || g.n < 3 || !g.median) return { tier:'neutral', label:'Few comps', color:'#6b7280', delta:null, median:g?g.median:null, n:g?g.n:0 };
-  const delta = g.median - c.price;            // + = under market (good)
-  const pct = delta / g.median;
+  let median = null, n = 0, source = 'asking';
+  if(c.marketMedian != null){ median = c.marketMedian; n = c.marketCount || 0; source = 'cargurus'; }
+  else { const g = (stats || bcMarketStats())[bcModelKey(c)]; if(g && g.n >= 3 && g.median){ median = g.median; n = g.n; } }
+  if(median == null) return { tier:'neutral', label:'Few comps', color:'#6b7280', delta:null, median:null, n:0, source };
+  const delta = median - c.price;              // + = under market (good)
+  const pct = delta / median;
   let tier, label, color;
   if(pct >= 0.08)      { tier='good';   label='Good deal';   color='#16a34a'; }  // ≥8% under
   else if(pct >= -0.02){ tier='decent'; label='Decent';      color='#d97706'; }  // ~market
   else                 { tier='over';   label='Over market'; color='#dc2626'; }  // above market
-  return { tier, label, color, delta, median:g.median, n:g.n, pct };
+  return { tier, label, color, delta, median, n, pct, source };
 }
 
 window.setBuyTab = function(tab){
@@ -6857,13 +6870,17 @@ window.openBuyCarDetail = function(id){
       if(d.tier==='neutral') return `<div class="dash-panel"><div class="dash-panel-title">Market check</div><div style="font-size:12.5px;color:var(--muted);">Not enough comparable listings yet${d.n?` (only ${d.n} scouted)`:''}. Scout more ${bcEsc([c.make,c.model].filter(Boolean).join(' '))} to unlock the deal rating.</div></div>`;
       const dir = d.delta>=0 ? 'under' : 'over';
       const amt = '$' + Math.round(Math.abs(d.delta)).toLocaleString('en-CA');
+      const isCG = d.source === 'cargurus';
+      const explain = isCG
+        ? `This car ${bcFmtPrice(c.price)} vs. <b>CarGurus market value ${bcFmtPrice(Math.round(d.median))}</b>${(c.marketLow!=null&&c.marketHigh!=null)?` (range ${bcFmtPrice(c.marketLow)}–${bcFmtPrice(c.marketHigh)}, ${d.n} listings)`:''}.`
+        : `This car ${bcFmtPrice(c.price)} vs. median asking ${bcFmtPrice(Math.round(d.median))} across ${d.n} scouted ${bcEsc([c.make,c.model].filter(Boolean).join(' '))} listings. Asking-price only — scout CarGurus for the real market value.`;
       return `<div class="dash-panel" style="border-left:4px solid ${d.color};">
-        <div class="dash-panel-title">Market check</div>
+        <div class="dash-panel-title">Market check${isCG?' · CarGurus':''}</div>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <span style="font-size:13px;font-weight:700;padding:4px 12px;border-radius:20px;background:${d.color}22;color:${d.color};">${d.label}</span>
           <span style="font-size:14px;font-weight:700;color:${d.color};">${amt} ${dir} market</span>
         </div>
-        <div style="font-size:12.5px;color:var(--muted);margin-top:8px;">This car ${bcFmtPrice(c.price)} vs. median asking ${bcFmtPrice(Math.round(d.median))} across ${d.n} scouted ${bcEsc([c.make,c.model].filter(Boolean).join(' '))} listings. Asking-price comparison — confirm true value with your dealer tools.</div>
+        <div style="font-size:12.5px;color:var(--muted);margin-top:8px;">${explain}</div>
       </div>`;
     })()}
     ${(c.trans||c.extColor||c.intColor||c.fuel||c.vin)?`<div class="dash-panel">
@@ -6961,6 +6978,24 @@ window.scoutFacebookNow = function(){
     if(!acked) showToast('⚠️ The Snake extension didn’t respond. Reload it at chrome://extensions, THEN press F5 on this page, then try Scout again.');
   }, 1800);
 };
+// Opens CarGurus in a new tab. The value-grab button (💲) is injected there by the extension —
+// JP searches the model on CarGurus, clicks that green button, and the value flows back here.
+window.openCarGurusForValues = function(){
+  const g = id => (document.getElementById(id)?.value || '').trim();
+  const model = [g('bcMake'), g('bcModel')].filter(Boolean).join(' ');
+  // Anchor-click opens a real new TAB tied to the user gesture — not popup-blocked (window.open with
+  // an options string was being treated as a blockable popup).
+  const a = document.createElement('a');
+  a.href = 'https://www.cargurus.ca/';
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  showToast(model
+    ? `Opened CarGurus — search "${model}", then click the green 💲 button on that page.`
+    : 'Opened CarGurus — search your model, then click the green 💲 button on that page to send its value back here.');
+};
 window.saveNewBuyCar = function(){
   const g = id => (document.getElementById(id)?.value || '').trim();
   const car = {
@@ -7005,6 +7040,30 @@ window.importBuyCars = function(incoming){
   window.renderBuyCars();
   showToast(`🔎 Scout: ${added} new, ${updated} updated`);
   return added;
+};
+// Fed by the CarGurus value scraper (via snake:importBuyValues). Each group = {year,make,model,
+// low,median,high,count}; applied to every matching car in the buy list so the deal colour uses the
+// REAL market value instead of the FB-asking median.
+window.importBuyValues = function(groups){
+  if(!Array.isArray(groups) || !groups.length) return 0;
+  const norm = s => String(s||'').toLowerCase().trim().replace(/\s+/g,' ');
+  let applied = 0;
+  groups.forEach(g => {
+    const gKey = norm(g.make) + ' ' + norm(g.model);
+    const gYear = String(g.year||'');
+    buyCars.forEach(c => {
+      const cKey = norm(c.make) + ' ' + norm(c.model);
+      // match make+model; year must match when the group specifies one
+      if(cKey === gKey && (!gYear || String(c.year) === gYear)){
+        c.marketLow = bcNum(g.low); c.marketMedian = bcNum(g.median); c.marketHigh = bcNum(g.high);
+        c.marketCount = g.count || 0; c.marketSource = 'cargurus';
+        applied++;
+      }
+    });
+  });
+  saveBuyCars(); window.renderBuyCars();
+  showToast(`💲 CarGurus market value applied to ${applied} car${applied===1?'':'s'}`);
+  return applied;
 };
 window.seedDemoBuyCars = function(){
   // Several Elantras (varying prices) so the market check has comps → shows green/yellow/red.

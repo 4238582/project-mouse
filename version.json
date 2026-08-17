@@ -1,5 +1,5 @@
 {
-  "version": "3.50.0",
-  "releaseDate": "2026-07-30",
-  "changelog": "The 🔎 Scout Facebook button now confirms the extension actually received the request — if it doesn't hear back (almost always because the extension needs reloading), it tells you exactly what to do instead of silently doing nothing. (Reload Project Snake at chrome://extensions, then F5 this page.)"
+  "version": "3.52.1",
+  "releaseDate": "2026-08-17",
+  "changelog": "Fix: the '💲 CarGurus values' button wasn't opening CarGurus (the browser was silently blocking it as a popup). It now opens a proper new tab. Search your model on CarGurus, click the green '💲 Send market values' button there, and each matching car's deal rating lights up."
 }
